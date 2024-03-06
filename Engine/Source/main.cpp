@@ -1,12 +1,22 @@
-#include "Window.hpp"
+#include "Application.hpp"
 
 // clang-format off
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 // clang-format on
 
-int main() {
-  Window window{800, 600};
+#include <cstdlib>
+#include <iostream>
 
-  return 0;
+int main() {
+    Application application{};
+
+    try {
+        application.Run();
+    } catch (std::exception &exception) {
+        std::cerr << exception.what() << std::endl;
+        return EXIT_FAILURE;
+    }
+
+    return EXIT_SUCCESS;
 }
