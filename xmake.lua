@@ -13,7 +13,7 @@ if (is_mode("release")) then
   set_optimize("fastest")
 end
 
-add_requires("glfw", "glm", "glad")
+add_requires("glfw", "glm", "vulkan-loader")
 
 local outputdir = "$(mode)-$(os)-$(arch)"
 
@@ -29,9 +29,9 @@ target("Engine")
   set_objectdir("build/" .. outputdir .. "/Engine/obj")
 
   add_files("Engine/Source/**.cpp")
-  add_headerfiles("Engine/Include/**.hpp", "Engine/Include/**.h", "Engine/Include/**.tpp")
+  add_headerfiles("Engine/Include/**.hpp", "Engine/Include/**.h", "Engine/Include/**.inl")
   add_includedirs("Engine/Include", {public = true})
 
   add_packages("glfw")
-  add_packages("glad")
+  add_packages("vulkan-loader")
   add_packages("glm")

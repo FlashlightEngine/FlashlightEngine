@@ -1,20 +1,16 @@
 #include "Application.hpp"
 
-// clang-format off
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
-// clang-format on
-
 #include <cstdlib>
 #include <iostream>
+#include <exception>
 
 int main() {
-    Application application{};
+    Application app;
 
     try {
-        application.Run();
-    } catch (std::exception &exception) {
-        std::cerr << exception.what() << std::endl;
+        app.Run();
+    } catch (const std::exception &e) {
+        std::cerr << e.what() << std::endl;
         return EXIT_FAILURE;
     }
 

@@ -1,43 +1,43 @@
-#ifndef CORE_WINDOW_HPP
-#define CORE_WINDOW_HPP
+#pragma once
 
-// clang-format off
-#include <glad/glad.h>
+#include "defines.hpp"
+
+#define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
-// clang-format on
 
+#include <memory>
 #include <string>
-#include <tuple>
-#include <utility>
 
 struct WindowProperties {
-    WindowProperties(const int windowWidth, const int windowHeight, std::string windowTitle)
-        : Width(windowWidth), Height(windowHeight), Title(std::move(windowTitle)) {}
-    int Width, Height;
+    int32 Width, Height;
     std::string Title;
+
+    explicit WindowProperties(int32 width = 1920, int32 height = 1080,
+                              std::string title = "Vulkan Window") : Width(width), Height(height),
+                                                                     Title(std::move(title)) {
+    }
 };
 
 class Window {
 public:
-    explicit Window(const WindowProperties& properties);
+    Window(WindowProperties properties);
     ~Window();
 
+    bool ShouldClose() const noexcept;
     WindowProperties GetProperties() const noexcept;
-    [[nodiscard]] bool ShouldClose() const noexcept;
 
-    void Update() const noexcept;
-    void Terminate() const noexcept;
+    void Update();
 
-    static void FramebufferSizeCallback(GLFWwindow *window, int width, int height) noexcept;
+    static std::unique_ptr<Window> Create();
+    static std::unique_ptr<Window> Create(int32 Width, int32 Height, std::string Title);
 
 private:
     GLFWwindow *m_Window;
+
     WindowProperties m_Properties;
-    int m_CurrentWidth, m_CurrentHeight;
 
-    void InitCallbacks() const noexcept;
+    bool m_GLFWInitialized = false;
 
-    void UpdateWindowProperties() noexcept;
+    void Init();
+    void Close() const noexcept;
 };
-
-#endif // CORE_WINDOW_HPP

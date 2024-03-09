@@ -1,73 +1,57 @@
 #include "Core/Window.hpp"
-#include "OpenGLRenderer/GLLoader.hpp"
 
-#include <GLFW/glfw3.h>
+#include "defines.hpp"
 
-#include <iostream>
+#include <memory>
 #include <stdexcept>
 
-
-Window::Window(const WindowProperties& properties) : m_Properties(properties) {
-    glfwInit();
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-#ifdef __APPLE__
-  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-#endif
-
-    m_Window = glfwCreateWindow(properties.Width, properties.Height, properties.Title.c_str(), nullptr, nullptr);
-    if (m_Window == nullptr) {
-        throw std::runtime_error("Failed to create window.");
-    }
-    glfwMakeContextCurrent(m_Window);
-
-    // Store the initial resolution.
-    m_CurrentWidth = properties.Width;
-    m_CurrentHeight = properties.Height;
-
-    InitCallbacks();
+Window::Window(WindowProperties properties) : m_Properties(std::move(properties)) {
+    Init();
 }
 
-Window::~Window() { glfwDestroyWindow(m_Window); }
-
-WindowProperties Window::GetProperties() const noexcept {
-    return m_Properties;
+Window::~Window() {
+    Close();
 }
 
 bool Window::ShouldClose() const noexcept {
     return glfwWindowShouldClose(m_Window);
 }
 
-void Window::Update() const noexcept {
-    glfwSwapBuffers(m_Window);
-    glfwPollEvents();
+WindowProperties Window::GetProperties() const noexcept {
+    return m_Properties;
 }
 
-void Window::Terminate() const noexcept {
-    glfwTerminate();
+void Window::Update() {
+    if (m_GLFWInitialized) {
+        glfwPollEvents();
+    }
 }
 
-void Window::FramebufferSizeCallback(GLFWwindow *window, int width, int height) noexcept {
-    GLLoader::UpdateViewportSize(width, height);
+std::unique_ptr<Window> Window::Create() {
+    return std::make_unique<Window>(WindowProperties()); // Create a window using the default properties.
 }
 
-void Window::InitCallbacks() const noexcept {
-    glfwSetWindowSizeCallback(m_Window, FramebufferSizeCallback);
+std::unique_ptr<Window> Window::Create(int32 Width, int32 Height, std::string Title) {
+    return std::make_unique<Window>(WindowProperties(Width, Height, std::move(Title)));
 }
 
-void Window::UpdateWindowProperties() noexcept {
-    int newWidth = 0, newHeight = 0;
-    glfwGetWindowSize(m_Window, &newWidth, &newHeight);
+void Window::Init() {
+    glfwInit();
+    m_GLFWInitialized = true;
 
-    // Check if the window is resized.
-    if (newWidth != m_CurrentWidth || newHeight != m_CurrentHeight) {
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
-        // Set the width and height stored in properties to the new values.
-        m_Properties.Width =  newWidth;
-        m_Properties.Height = newHeight;
+    m_Window = glfwCreateWindow(m_Properties.Width, m_Properties.Height, m_Properties.Title.c_str(), nullptr, nullptr);
 
-        m_CurrentWidth = newWidth;
-        m_CurrentHeight = newHeight;
+    if (!m_Window) {
+        throw std::runtime_error("Failed to create window.");
+    }
+}
+
+void Window::Close() const noexcept {
+    if (m_GLFWInitialized) {
+        glfwDestroyWindow(m_Window);
+        glfwTerminate();
     }
 }

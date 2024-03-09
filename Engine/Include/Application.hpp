@@ -1,22 +1,17 @@
-#ifndef APPLICATION_HPP
-#define APPLICATION_HPP
+#pragma once
 
 #include "Core/Window.hpp"
 
-#include <memory>
+#define GLFW_INCLUDE_VULKAN
+#include <GLFW/glfw3.h>
 
 class Application {
 public:
-    ~Application() = default;
-
     void Run();
 
 private:
-    std::unique_ptr<Window> m_Window;
+    std::unique_ptr<Window> m_Window = Window::Create();
 
     void Start();
-    void MainLoop();
-    void End();
+    void Update();
 };
-
-#endif // APPLICATION_HPP
