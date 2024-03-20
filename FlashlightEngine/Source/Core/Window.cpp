@@ -1,9 +1,9 @@
 #include "Core/Window.hpp"
 
 #include "defines.hpp"
+#include "pch.hpp"
 
-#include <memory>
-#include <stdexcept>
+namespace Flashlight {
 
 Window::Window(WindowProperties properties) : m_Properties(std::move(properties)) {
     Init();
@@ -36,16 +36,18 @@ std::unique_ptr<Window> Window::Create(int32 Width, int32 Height, std::string Ti
 }
 
 void Window::Init() {
-    glfwInit();
-    m_GLFWInitialized = true;
+    if (!m_GLFWInitialized) {
+        glfwInit();
+        m_GLFWInitialized = true;
 
-    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+        glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+        glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
-    m_Window = glfwCreateWindow(m_Properties.Width, m_Properties.Height, m_Properties.Title.c_str(), nullptr, nullptr);
+        m_Window = glfwCreateWindow(m_Properties.Width, m_Properties.Height, m_Properties.Title.c_str(), nullptr, nullptr);
 
-    if (!m_Window) {
-        throw std::runtime_error("Failed to create window.");
+        if (!m_Window) {
+            throw std::runtime_error("Failed to create window.");
+        }
     }
 }
 
@@ -54,4 +56,6 @@ void Window::Close() const noexcept {
         glfwDestroyWindow(m_Window);
         glfwTerminate();
     }
+}
+
 }

@@ -1,12 +1,8 @@
 #pragma once
 
-#include "defines.hpp"
+#include "pch.hpp"
 
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
-
-#include <memory>
-#include <string>
+namespace Flashlight {
 
 struct WindowProperties {
     int32 Width, Height;
@@ -41,3 +37,5 @@ private:
     void Init();
     void Close() const noexcept;
 };
+
+}

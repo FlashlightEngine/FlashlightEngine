@@ -1,11 +1,9 @@
 #include "Application.hpp"
 
-#include <cstdlib>
-#include <iostream>
-#include <exception>
+#include "pch.hpp"
 
 int main() {
-    Application app;
+    Flashlight::Application app;
 
     try {
         app.Run();

@@ -1,5 +1,5 @@
-# Engine
-This is my own game engine written in C++ using Vulkan.
+# Flashlight Engine
+Flashlight engine is a graphics engine using C++20 and Vulkan.
 
 ## Compiling & Running
 1. Install [xmake](https://xmake.io/)

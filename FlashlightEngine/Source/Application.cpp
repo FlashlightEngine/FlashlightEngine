@@ -1,5 +1,6 @@
 #include "Application.hpp"
 
+namespace Flashlight {
 void Application::Run() {
     Start();
     Update();
@@ -11,4 +12,5 @@ void Application::Update() {
     while (!m_Window->ShouldClose()) {
         m_Window->Update();
     }
+}
 }
