@@ -1,40 +1,73 @@
+/* Copyright (C) 2024 Jean "Pixfri" Letessier (jean.letessier@protonmail.com)
+ * This file is part of "FlashLight Engine"
+ * For conditions of distribution and use, see copyright notice in FlashLightEngine.hpp
+ *
+ * Window.cpp - Definitions of the Window class methods.
+ * This file contains the definitions of methods from the Flashlight::Window class.
+ */
+
 #include "Core/Window.hpp"
 
-#include "defines.hpp"
 #include "pch.hpp"
 
 namespace Flashlight {
 
+/// @ingroup Core
+/// @class Flashlight::Window
+/// @brief Core class that represents the window
+
+/// @brief The window construction
+///
+/// @param properties The window properties
 Window::Window(WindowProperties properties) : m_Properties(std::move(properties)) {
     Init();
 }
 
+/// @brief The window destruction
 Window::~Window() {
     Close();
 }
 
+/// @brief Returns if the window should be closed.
+///
+/// @returns A boolean telling of the window should close.
 bool Window::ShouldClose() const noexcept {
     return glfwWindowShouldClose(m_Window);
 }
 
+/// @brief Returns the window properties (width, height, titile).
+///
+/// @returns A WindowProperties struct containing the current properties of the window.
 WindowProperties Window::GetProperties() const noexcept {
     return m_Properties;
 }
 
+/// @brief Update the window and poll the events.
 void Window::Update() {
     if (m_GLFWInitialized) {
         glfwPollEvents();
     }
 }
 
+/// @brief Creates a window with the default values of the WindowProperties constructor.
+///
+/// @see Flashlight::WindowProperties
+///
+/// @returns A std::unique_pointer to the newly created window.
 std::unique_ptr<Window> Window::Create() {
     return std::make_unique<Window>(WindowProperties()); // Create a window using the default properties.
 }
 
-std::unique_ptr<Window> Window::Create(int32 Width, int32 Height, std::string Title) {
-    return std::make_unique<Window>(WindowProperties(Width, Height, std::move(Title)));
+/// @brief Creates a window with specific properties.
+///
+/// @param properties The window properties struct with the specific window parameters set.
+///
+/// @returns A std::unique_pointer to the newly created window.
+std::unique_ptr<Window> Window::Create(const WindowProperties &properties) {
+    return std::make_unique<Window>(properties);
 }
 
+/// @brief Initializes GLFW and the native GLFW window.
 void Window::Init() {
     if (!m_GLFWInitialized) {
         glfwInit();
@@ -51,6 +84,7 @@ void Window::Init() {
     }
 }
 
+/// @brief Destroys the window then terminates GLFW.
 void Window::Close() const noexcept {
     if (m_GLFWInitialized) {
         glfwDestroyWindow(m_Window);

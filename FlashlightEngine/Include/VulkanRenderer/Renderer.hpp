@@ -1,3 +1,11 @@
+/* Copyright (C) 2024 Jean "Pixfri" Letessier (jean.letessier@protonmail.com)
+ * This file is part of "FlashLight Engine"
+ * For conditions of distribution and use, see copyright notice in FlashLightEngine.hpp
+ *
+ * Renderer.hpp - The definition of the Render class.
+ * This header file contains the definition of the Renderer class, which handles every object concerning rendering with Vulkan.
+ */
+
 #pragma once
 
 #include "Core/Window.hpp"
