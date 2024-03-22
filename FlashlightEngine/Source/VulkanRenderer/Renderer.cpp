@@ -8,7 +8,7 @@ Renderer::Renderer(const Window &window) : m_Window(window) {
 }
 
 void Renderer::Init() {
-    m_Device = VulkanDevice::Create(m_Window);
+    m_Instance = VulkanInstance::Create();
 }
 
 std::unique_ptr<Renderer> Renderer::Create(const Window& window) {

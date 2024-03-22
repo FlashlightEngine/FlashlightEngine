@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Core/Window.hpp"
-#include "VulkanObjects/VulkanDevice.hpp"
+#include "VulkanObjects/VulkanInstance.hpp"
 
 namespace Flashlight {
 
@@ -14,7 +14,7 @@ public:
 
 private:
     Window m_Window;
-    std::unique_ptr<VulkanDevice> m_Device;
+    std::unique_ptr<VulkanInstance> m_Instance;
 
     void Init();
 };

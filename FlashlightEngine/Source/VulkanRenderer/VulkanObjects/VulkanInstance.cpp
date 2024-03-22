@@ -1,29 +1,29 @@
-#include "VulkanRenderer/VulkanObjects/VulkanDevice.hpp"
+#include "VulkanRenderer/VulkanObjects/VulkanInstance.hpp"
 
 #include "pch.hpp"
 
 namespace Flashlight {
-VulkanDevice::VulkanDevice(const Window& window) : m_Window(window) {
+VulkanInstance::VulkanInstance() {
     Init();
 }
 
-VulkanDevice::~VulkanDevice() {
+VulkanInstance::~VulkanInstance() {
     Cleanup();
 }
 
-std::unique_ptr<VulkanDevice> VulkanDevice::Create(const Window& window) {
-    return std::make_unique<VulkanDevice>(window);
+std::unique_ptr<VulkanInstance> VulkanInstance::Create() {
+    return std::make_unique<VulkanInstance>();
 }
 
-void VulkanDevice::Init() {
+void VulkanInstance::Init() {
     CreateInstance();
 }
 
-void VulkanDevice::Cleanup() {
+void VulkanInstance::Cleanup() {
     DestroyInstance();
 }
 
-void VulkanDevice::CreateInstance() {
+void VulkanInstance::CreateInstance() {
     VkApplicationInfo appInfo{};
     appInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
     appInfo.pApplicationName = "Pixfri Engine Application";
@@ -65,13 +65,13 @@ void VulkanDevice::CreateInstance() {
     }
 }
 
-void VulkanDevice::DestroyInstance() {
+void VulkanInstance::DestroyInstance() {
     if (m_Instance) {
         vkDestroyInstance(m_Instance, nullptr);
     }
 }
 
-std::vector<const char*> VulkanDevice::GetRequiredInstanceExtensions() const noexcept {
+std::vector<const char*> VulkanInstance::GetRequiredInstanceExtensions() const noexcept {
     uint32_t glfwRequiredExtensionCount = 0;
     const char** glfwRequiredExtensions = glfwGetRequiredInstanceExtensions(&glfwRequiredExtensionCount);
 
@@ -88,7 +88,7 @@ std::vector<const char*> VulkanDevice::GetRequiredInstanceExtensions() const noe
     return requiredExtensions;
 }
 
-std::vector<VkExtensionProperties> VulkanDevice::GetAvailableInstanceExtensions() const noexcept {
+std::vector<VkExtensionProperties> VulkanInstance::GetAvailableInstanceExtensions() const noexcept {
     uint32 extensionCount = 0;
     vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
 
@@ -98,7 +98,7 @@ std::vector<VkExtensionProperties> VulkanDevice::GetAvailableInstanceExtensions(
     return extensions;
 }
 
-bool VulkanDevice::CheckRequiredInstanceExtensionsSupport() const noexcept {
+bool VulkanInstance::CheckRequiredInstanceExtensionsSupport() const noexcept {
     auto requiredInstanceExtensions = GetRequiredInstanceExtensions();
     std::set<std::string> requiredExtensions(requiredInstanceExtensions.begin(), requiredInstanceExtensions.end());
 
