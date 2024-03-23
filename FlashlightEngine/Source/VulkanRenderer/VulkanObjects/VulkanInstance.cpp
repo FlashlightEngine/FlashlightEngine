@@ -12,6 +12,61 @@
 
 namespace Flashlight {
 
+// Local functions for debug callback and debug messenger creation.
+
+/// @brief Debug callback for the debug messenger.
+///
+/// @param messageSeverity The severity of the message.
+/// @param messageType The type of the message.
+/// @param pCallbackData A pointer to the data passed to the callback function.
+/// @param pUserData Custom data you can pass to the callback.
+///
+/// @returns This function always returns VK_FALSE. If it returns VK_TRUE, it aborts the Vulkan call is aborted. This should only be used to test validation layers themselves.
+static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(
+    VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+    VkDebugUtilsMessageTypeFlagsEXT messageType,
+    const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData,
+    void *pUserData) {
+
+    std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
+
+    return VK_FALSE;
+}
+
+/// @brief Loads the function to create a debug messenger and calls it.
+///
+/// @param instance The Vulkan instance.
+/// @param pCreateInfo A pointer to the VkDebugUtilsMessengerCreateInfoEXT struct.
+/// @param pAllocator Optional. A pointer to the custom allocator.
+/// @param pDebugMessenger A pointer to the debug messenger to create.
+///
+/// @returns Returns the result of the loaded function. VK_SUCCESS if the function succeeded, VK_ERROR_EXTENSION_NOT_PRESENT
+/// if the function couldn't be loaded, or any other error the loaded extension might produce.
+VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT *pCreateInfo,
+                                      const VkAllocationCallbacks *pAllocator, VkDebugUtilsMessengerEXT *pDebugMessenger) {
+
+    auto func = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT"));
+
+    if (func != nullptr) {
+        return func(instance, pCreateInfo, pAllocator, pDebugMessenger);
+    } else {
+        return VK_ERROR_EXTENSION_NOT_PRESENT;
+    }
+}
+
+/// @brief Loads the function to destroy a debug messenger and calls it.
+///
+/// @param instance The Vulkan instance.
+/// @param debugMessenger The debug messenger to destroy.
+/// @param pAllocator Optional. A pointer to the custom allocator.
+void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks *pAllocator) {
+    auto func = reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT"));
+
+    if (func != nullptr) {
+        func(instance, debugMessenger, pAllocator);
+    }
+}
+
 /// @ingroup VulkanRenderer
 /// @class Flashlight::VulkanInstance
 /// @brief VulkanRenderer class that represents the Vulkan instance.
@@ -40,20 +95,26 @@ std::unique_ptr<VulkanInstance> VulkanInstance::Create(const Window &window) {
 /// @brief Initializes all of the Vulkan objects this class is a wrapper of.
 void VulkanInstance::Init() {
     CreateInstance();
+    CreateDebugMessenger();
 }
 
 /// @brief Destroys all of the Vulkan objects this class is a wrapper of.
 void VulkanInstance::Cleanup() {
+    DestroyDebugMessenger();
     DestroyInstance();
 }
 
 /// @brief Initializes the Vulkan instance.
 void VulkanInstance::CreateInstance() {
+    if (m_EnableValidationLayers && !CheckValidationLayerSupport()) {
+        throw std::runtime_error("Validation layers requested, but not available.");
+    }
+
     VkApplicationInfo appInfo{};
-    appInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-    appInfo.pApplicationName = "Pixfri Engine Application";
+    appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+    appInfo.pApplicationName = "Flashlight Engine Application";
     appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
-    appInfo.pEngineName = "Pixfri Engine";
+    appInfo.pEngineName = "Flashlight Engine";
     appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
     appInfo.apiVersion = VK_API_VERSION_1_0;
 
@@ -61,8 +122,8 @@ void VulkanInstance::CreateInstance() {
     createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
     createInfo.pApplicationInfo = &appInfo;
 
-    std::vector<const char*> requiredExtensions = GetRequiredInstanceExtensions();
-    std::vector<VkExtensionProperties> availableExtensions = GetAvailableInstanceExtensions();
+    auto requiredExtensions = GetRequiredInstanceExtensions();
+    auto availableExtensions = GetAvailableInstanceExtensions();
 
     std::cout << "Required instance extensions :\n";
     for (const auto &extension : requiredExtensions) {
@@ -81,6 +142,19 @@ void VulkanInstance::CreateInstance() {
     createInfo.enabledExtensionCount = static_cast<uint32_t>(requiredExtensions.size());
     createInfo.ppEnabledExtensionNames = requiredExtensions.data();
 
+    VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
+    if (m_EnableValidationLayers) {
+        createInfo.enabledLayerCount = static_cast<uint32_t>(m_validationLayers.size());
+        createInfo.ppEnabledLayerNames = m_validationLayers.data();
+
+        PopulateDebugMessengerCreateInfo(debugCreateInfo);
+        createInfo.pNext = reinterpret_cast<VkDebugUtilsMessengerCreateInfoEXT*>(&debugCreateInfo);
+    } else {
+        createInfo.enabledLayerCount = 0;
+
+        createInfo.pNext = nullptr;
+    }
+
 #ifdef __APPLE__
     createInfo.flags |= VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
 #endif
@@ -97,6 +171,26 @@ void VulkanInstance::DestroyInstance() {
     }
 }
 
+/// @brief Creates and setup the debug messenger.
+void VulkanInstance::CreateDebugMessenger() {
+    if (!m_EnableValidationLayers) return;
+
+    VkDebugUtilsMessengerCreateInfoEXT createInfo;
+    PopulateDebugMessengerCreateInfo(createInfo);
+
+
+    if (CreateDebugUtilsMessengerEXT(m_Instance, &createInfo, nullptr, &m_DebugMessenger) != VK_SUCCESS) {
+        throw std::runtime_error("Failed to create debug messenger.");
+    }
+}
+
+/// @brief Destroys the debug messenger.
+void VulkanInstance::DestroyDebugMessenger() {
+    if (m_EnableValidationLayers) {
+        DestroyDebugUtilsMessengerEXT(m_Instance, m_DebugMessenger, nullptr);
+    }
+}
+
 /// @brief Returns the required instance extension for the application to work.
 ///
 /// @returns A std::vector containing the names of the required instance extensions.
@@ -104,11 +198,12 @@ std::vector<const char*> VulkanInstance::GetRequiredInstanceExtensions() const n
     uint32_t glfwRequiredExtensionCount = 0;
     const char** glfwRequiredExtensions = glfwGetRequiredInstanceExtensions(&glfwRequiredExtensionCount);
 
-    std::vector<const char*> requiredExtensions;
+    std::vector<const char*> requiredExtensions(glfwRequiredExtensions, glfwRequiredExtensions + glfwRequiredExtensionCount);
 
-    for (uint32 i = 0; i < glfwRequiredExtensionCount; i++) {
-        requiredExtensions.emplace_back(glfwRequiredExtensions[i]);
+    if (m_EnableValidationLayers) {
+        requiredExtensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
     }
+
 
 #ifdef __APPLE__
         requiredExtensions.emplace_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
@@ -149,6 +244,50 @@ bool VulkanInstance::CheckRequiredInstanceExtensionsSupport() const noexcept {
     }
 
     return requiredExtensions.empty();
+}
+
+/// @brief Checks if validations layers are supported.
+///
+/// @returns A boolean telling if validation layers are supported.
+bool VulkanInstance::CheckValidationLayerSupport() const noexcept {
+    uint32 layerCount;
+    vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
+
+    std::vector<VkLayerProperties> availableLayers(layerCount);
+    vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
+
+    for (const char *layerName : m_validationLayers) {
+        bool layerFound = false;
+
+        for (const auto &layerProperties : availableLayers) {
+            if (strcmp(layerName, layerProperties.layerName) == 0) {
+                layerFound = true;
+                break;
+            }
+        }
+
+        if (!layerFound) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+/// @brief Fills the VkDebugUtilsMessengerCreateInfoEXT passed to the function.
+///
+/// @param createInfo The `VkDebugUtilsMessengerCreateInfoEXT` to fill.
+void VulkanInstance::PopulateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT &createInfo) noexcept {
+    createInfo = {};
+    createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+    createInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT |
+                                 VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
+                                 VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+    createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
+                             VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
+                             VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+    createInfo.pfnUserCallback = DebugCallback;
+    createInfo.pUserData = nullptr;
 }
 
 }

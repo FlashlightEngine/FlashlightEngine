@@ -29,6 +29,8 @@ namespace Flashlight {
     private:
         VkInstance m_Instance{};
 
+        VkDebugUtilsMessengerEXT m_DebugMessenger{};
+
         Window m_Window;
 
         void Init();
@@ -38,19 +40,24 @@ namespace Flashlight {
         void CreateInstance();
         void DestroyInstance();
 
+        void CreateDebugMessenger();
+        void DestroyDebugMessenger();
+
         // Utility functions.
         std::vector<const char*> GetRequiredInstanceExtensions() const noexcept;
         std::vector<VkExtensionProperties> GetAvailableInstanceExtensions() const noexcept;
         bool CheckRequiredInstanceExtensionsSupport() const noexcept;
+        bool CheckValidationLayerSupport() const noexcept;
+        void PopulateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT &createInfo) noexcept;
 
-        const std::vector<const char*> validationLayers = {
+        const std::vector<const char*> m_validationLayers = {
             "VK_LAYER_KHRONOS_validation"
         };
 
 #ifdef NDEBUG
-        const bool enableValidationLayers = false;
+        const bool m_EnableValidationLayers = false;
 #else
-        const bool enableValidationLayers = true;
+        const bool m_EnableValidationLayers = true;
 #endif
     };
 
