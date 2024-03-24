@@ -6,7 +6,7 @@
  * This file contains definitions of methods from the Flashlight::Application class.
  */
 
-#include "Application.hpp"
+#include "FlashlightEngine/Application.hpp"
 
 namespace Flashlight {
 
@@ -14,19 +14,27 @@ namespace Flashlight {
 /// @class Flashlight::Application
 /// @brief The boilerplate class for any application using Flashlight Engine.
 
-/// @brief The first method called at the beginning of the Application.
-void Application::Run() {
-    Start();
-    Update();
+Application *Application::s_Application = nullptr;
+
+/// @brief Constructor for the Application class.
+Application::Application() {
+    if (s_Application) {
+        throw std::runtime_error("You can only run this application once.");
+    }
 }
 
-/// @brief The method called once at the start of the application.
-void Application::Start() {}
-
-/// @brief The method called every frame to update the game.
-void Application::Update() {
-    while (!m_Window->ShouldClose()) {
+/// @brief The first method called at the beginning of the Application.
+void Application::Run() {
+    while (m_Running) {
         m_Window->Update();
+
+        Update();
+
+        Render();
+
+        if (m_Window->ShouldClose()) {
+            m_Running = false;
+        }
     }
 }
 }

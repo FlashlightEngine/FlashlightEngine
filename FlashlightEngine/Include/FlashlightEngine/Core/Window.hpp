@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "pch.hpp"
+#include "FlashlightEngine/pch.hpp"
 
 #include <GLFW/glfw3.h>
 

@@ -6,9 +6,9 @@
  * This class contains the definitions of methods from the Flashlight::VulkanDevice class.
  */
 
-#include "VulkanRenderer/VulkanObjects/VulkanBase.hpp"
-#include "defines.hpp"
-#include "pch.hpp"
+#include "FlashlightEngine/VulkanRenderer/VulkanObjects/VulkanBase.hpp"
+#include "FlashlightEngine/defines.hpp"
+#include "FlashlightEngine/pch.hpp"
 
 #include <volk.h>
 

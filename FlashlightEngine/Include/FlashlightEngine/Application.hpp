@@ -15,14 +15,22 @@ namespace Flashlight {
 
 class Application {
 public:
+    Application();
+    virtual ~Application() = default;
+
     void Run();
+    virtual void Update() = 0;
+    virtual void Render() = 0;
+
+protected:
+    std::unique_ptr<Window> m_Window = Window::Create();
+    Renderer m_Renderer{*m_Window};
 
 private:
-    std::unique_ptr<Window> m_Window = Window::Create();
-    std::unique_ptr<Renderer> m_Renderer = Renderer::Create(*m_Window);
-
-    void Start();
-    void Update();
+    bool m_Running = true;
+    static Application *s_Application;
 };
+
+std::unique_ptr<Application> CreateApp();
 
 }

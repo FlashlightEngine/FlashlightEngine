@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "pch.hpp"
-#include "Core/Window.hpp"
+#include "FlashlightEngine/pch.hpp"
+#include "FlashlightEngine/Core/Window.hpp"
 
 #include <volk.h>
 

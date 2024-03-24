@@ -23,16 +23,28 @@ rule("cp-resources")
   end)
 
 target("FlashlightEngine")
-  set_kind("binary")
+  set_kind("static")
   
-  set_targetdir("build/" .. outputdir .. "/Engine/bin")
-  set_objectdir("build/" .. outputdir .. "/Engine/obj")
+  set_targetdir("build/" .. outputdir .. "/FlashlightEngine/bin")
+  set_objectdir("build/" .. outputdir .. "/FlashlightEngine/obj")
 
   add_files("FlashlightEngine/Source/**.cpp")
   add_headerfiles("FlashlightEngine/Include/**.hpp", "FlashlightEngine/Include/**.h", "FlashlightEngine/Include/**.inl")
   add_includedirs("FlashlightEngine/Include", {public = true})
-  set_pcxxheader("FlashlightEngine/Include/pch.hpp")
+  set_pcxxheader("FlashlightEngine/Include/FlashlightEngine/pch.hpp")
 
-  add_packages("glfw")
-  add_packages("volk")
-  add_packages("glm")
+  add_packages("glfw", "volk", "glm")
+
+target("TestApplication")
+    set_kind("binary")
+
+    set_targetdir("build/" .. outputdir .. "/TestApplication/bin")
+    set_objectdir("build/" .. outputdir .. "/TestApplication/obj")
+
+    add_files("TestApplication/Source/**.cpp")
+    add_headerfiles("TestApplication/Include/**.hpp", "TestApplication/Include/**.h", "TestApplication/Include/**.inl")
+    add_includedirs("TestApplication/Include")
+
+    add_packages("glfw", "glm", "volk")
+
+    add_deps("FlashlightEngine")

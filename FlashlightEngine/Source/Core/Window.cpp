@@ -6,9 +6,9 @@
  * This file contains the definitions of methods from the Flashlight::Window class.
  */
 
-#include "Core/Window.hpp"
+#include "FlashlightEngine/Core/Window.hpp"
 
-#include "pch.hpp"
+#include "FlashlightEngine/pch.hpp"
 
 namespace Flashlight {
 
