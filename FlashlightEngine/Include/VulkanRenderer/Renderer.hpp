@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Core/Window.hpp"
-#include "VulkanObjects/VulkanInstance.hpp"
+#include "VulkanObjects/VulkanBase.hpp"
 
 namespace Flashlight {
 
@@ -22,7 +22,7 @@ public:
 
 private:
     Window m_Window;
-    std::unique_ptr<VulkanInstance> m_Instance;
+    std::unique_ptr<VulkanBase> m_Vulkan;
 
     void Init();
 };

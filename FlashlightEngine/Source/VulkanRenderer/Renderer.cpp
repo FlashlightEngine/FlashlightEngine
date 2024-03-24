@@ -8,7 +8,7 @@
 
 #include "VulkanRenderer/Renderer.hpp"
 
-#include "VulkanRenderer/VulkanObjects/VulkanInstance.hpp"
+#include "VulkanRenderer/VulkanObjects/VulkanBase.hpp"
 
 namespace Flashlight {
 
@@ -25,7 +25,7 @@ Renderer::Renderer(const Window &window) : m_Window(window) {
 
 /// @brief Initializes every object in the Renderer.
 void Renderer::Init() {
-    m_Instance = VulkanInstance::Create(m_Window);
+    m_Vulkan = VulkanBase::Create(m_Window);
 }
 
 /// @brief Creates a new Renderer object and returns a std::unique_pointer of it.

@@ -2,12 +2,12 @@
  * This file is part of "FlashLight Engine"
  * For conditions of distribution and use, see copyright notice in FlashLightEngine.hpp
  *
- * VulkanInstance.cpp - Definitions of methods from the VulkanInstance class.
- * This class contains the definitions of methods from the Flashlight::VulkanInstance class.
+ * VulkanInstance.cpp - Definitions of methods from the VulkanDevice class.
+ * This class contains the definitions of methods from the Flashlight::VulkanDevice class.
  */
 
-#include "VulkanRenderer/VulkanObjects/VulkanInstance.hpp"
-
+#include "VulkanRenderer/VulkanObjects/VulkanBase.hpp"
+#include "defines.hpp"
 #include "pch.hpp"
 
 namespace Flashlight {
@@ -60,7 +60,7 @@ VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMes
 /// @param debugMessenger The debug messenger to destroy.
 /// @param pAllocator Optional. A pointer to the custom allocator.
 void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks *pAllocator) {
-    auto func = reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT"));
+    auto func = reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT"));
 
     if (func != nullptr) {
         func(instance, debugMessenger, pAllocator);
@@ -68,44 +68,45 @@ void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT
 }
 
 /// @ingroup VulkanRenderer
-/// @class Flashlight::VulkanInstance
-/// @brief VulkanRenderer class that represents the Vulkan instance.
+/// @class Flashlight::VulkanBase
+/// @brief VulkanRenderer wrapper class for base Vulkan objects.
 
-/// @brief Constructor for the VulkanInstance class. Initializes the Vulkan
-/// instance and the debug messenger.
+/// @brief Constructor for the VulkanBase class. Calls the function to initialize
+/// every Vulkan object.
 ///
-/// @param window The window of the application using the instance
-VulkanInstance::VulkanInstance(const Window &window) : m_Window(window) {
+/// @param window The window of the application using the renderer.
+VulkanBase::VulkanBase(const Window &window) : m_Window(window) {
     Init();
 }
 
-/// @brief Destructor of the VulkanInstance class. Destroys native Vulkan
+/// @brief Destructor of the VulkanBase class. Destroys native Vulkan
 /// objects created in this class.
-VulkanInstance::~VulkanInstance() {
+VulkanBase::~VulkanBase() {
     Cleanup();
 }
 
-/// @brief Creates an instance and returns a std::unqiue_pointer of it.
+/// @brief Creates an instance of this class and returns a std::unqiue_pointer of it.
 ///
-/// @returns A std::unique_pointer to the window.
-std::unique_ptr<VulkanInstance> VulkanInstance::Create(const Window &window) {
-    return std::make_unique<VulkanInstance>(window);
+/// @returns A std::unique_pointer to the created object.
+std::unique_ptr<VulkanBase> VulkanBase::Create(const Window &window) {
+    return std::make_unique<VulkanBase>(window);
 }
 
 /// @brief Initializes all of the Vulkan objects this class is a wrapper of.
-void VulkanInstance::Init() {
+void VulkanBase::Init() {
     CreateInstance();
     CreateDebugMessenger();
+    PickPhysicalDevice();
 }
 
-/// @brief Destroys all of the Vulkan objects this class is a wrapper of.
-void VulkanInstance::Cleanup() {
+/// @brief Destroys all the Vulkan objects this class is a wrapper of.
+void VulkanBase::Cleanup() {
     DestroyDebugMessenger();
     DestroyInstance();
 }
 
 /// @brief Initializes the Vulkan instance.
-void VulkanInstance::CreateInstance() {
+void VulkanBase::CreateInstance() {
     if (m_EnableValidationLayers && !CheckValidationLayerSupport()) {
         throw std::runtime_error("Validation layers requested, but not available.");
     }
@@ -159,42 +160,76 @@ void VulkanInstance::CreateInstance() {
     createInfo.flags |= VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
 #endif
 
-    if (vkCreateInstance(&createInfo, nullptr, &m_Instance) != VK_SUCCESS) {
+    if (vkCreateInstance(&createInfo, nullptr, &m_Vulkan.Instance) != VK_SUCCESS) {
         throw std::runtime_error("Failed to create instance.");
     }
 }
 
 /// @brief Destroys the Vulkan instance.
-void VulkanInstance::DestroyInstance() {
-    if (m_Instance) {
-        vkDestroyInstance(m_Instance, nullptr);
+void VulkanBase::DestroyInstance() const {
+    if (m_Vulkan.Instance) {
+        vkDestroyInstance(m_Vulkan.Instance, nullptr);
     }
 }
 
 /// @brief Creates and setup the debug messenger.
-void VulkanInstance::CreateDebugMessenger() {
+void VulkanBase::CreateDebugMessenger() {
     if (!m_EnableValidationLayers) return;
 
     VkDebugUtilsMessengerCreateInfoEXT createInfo;
     PopulateDebugMessengerCreateInfo(createInfo);
 
 
-    if (CreateDebugUtilsMessengerEXT(m_Instance, &createInfo, nullptr, &m_DebugMessenger) != VK_SUCCESS) {
+    if (CreateDebugUtilsMessengerEXT(m_Vulkan.Instance, &createInfo, nullptr, &m_Vulkan.DebugMessenger) != VK_SUCCESS) {
         throw std::runtime_error("Failed to create debug messenger.");
     }
 }
 
 /// @brief Destroys the debug messenger.
-void VulkanInstance::DestroyDebugMessenger() {
+void VulkanBase::DestroyDebugMessenger() const {
     if (m_EnableValidationLayers) {
-        DestroyDebugUtilsMessengerEXT(m_Instance, m_DebugMessenger, nullptr);
+        DestroyDebugUtilsMessengerEXT(m_Vulkan.Instance, m_Vulkan.DebugMessenger, nullptr);
     }
+}
+
+
+/// @brief Picks a Vulkan physical device.
+void VulkanBase::PickPhysicalDevice() {
+    uint32 deviceCount = 0;
+    vkEnumeratePhysicalDevices(m_Vulkan.Instance, &deviceCount, nullptr);
+
+    if (deviceCount == 0) {
+        throw std::runtime_error("Failed to find GPUs with Vulkan support.");
+    }
+
+    std::vector<VkPhysicalDevice> devices(deviceCount);
+    vkEnumeratePhysicalDevices(m_Vulkan.Instance, &deviceCount, devices.data());
+
+    std::multimap<int, VkPhysicalDevice> candidates;
+
+    for (const auto &device : devices) {
+        int score = RateDeviceSuitability(device);
+        candidates.insert(std::make_pair(score, device));
+    }
+
+    if (candidates.rbegin()->first > 0) {
+        m_Vulkan.PhysicalDevice = candidates.rbegin()->second;
+    } else {
+        throw std::runtime_error("Failed to find a suitable GPU");
+    }
+
+    auto deviceProperties = GetDeviceProperties(m_Vulkan.PhysicalDevice);
+
+    std::cout << "GPU Informations : " << '\n'
+    << '\t' << "GPU Name : " << deviceProperties.deviceName << '\n'
+    << '\t' <<"GPU Driver Version : " << deviceProperties.driverVersion << '\n'
+    << '\t' << "GPU Vulkan API Version : " << deviceProperties.apiVersion << '\n';
 }
 
 /// @brief Returns the required instance extension for the application to work.
 ///
 /// @returns A std::vector containing the names of the required instance extensions.
-std::vector<const char*> VulkanInstance::GetRequiredInstanceExtensions() const noexcept {
+std::vector<const char*> VulkanBase::GetRequiredInstanceExtensions() const noexcept {
     uint32_t glfwRequiredExtensionCount = 0;
     const char** glfwRequiredExtensions = glfwGetRequiredInstanceExtensions(&glfwRequiredExtensionCount);
 
@@ -215,7 +250,7 @@ std::vector<const char*> VulkanInstance::GetRequiredInstanceExtensions() const n
 /// @brief Returns the available instance extensions.
 ///
 /// @returns A std::vector of the instance extensions properties.
-std::vector<VkExtensionProperties> VulkanInstance::GetAvailableInstanceExtensions() const noexcept {
+std::vector<VkExtensionProperties> VulkanBase::GetAvailableInstanceExtensions() const noexcept {
     uint32 extensionCount = 0;
     vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
 
@@ -229,7 +264,7 @@ std::vector<VkExtensionProperties> VulkanInstance::GetAvailableInstanceExtension
 /// @brief Checks if the required instance extensions are avaiable.
 ///
 /// @returns A boolean telling if all of the required instance extensions are available.
-bool VulkanInstance::CheckRequiredInstanceExtensionsSupport() const noexcept {
+bool VulkanBase::CheckRequiredInstanceExtensionsSupport() const noexcept {
     auto requiredInstanceExtensions = GetRequiredInstanceExtensions();
     std::set<std::string> requiredExtensions(requiredInstanceExtensions.begin(), requiredInstanceExtensions.end());
 
@@ -249,7 +284,7 @@ bool VulkanInstance::CheckRequiredInstanceExtensionsSupport() const noexcept {
 /// @brief Checks if validations layers are supported.
 ///
 /// @returns A boolean telling if validation layers are supported.
-bool VulkanInstance::CheckValidationLayerSupport() const noexcept {
+bool VulkanBase::CheckValidationLayerSupport() const noexcept {
     uint32 layerCount;
     vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
 
@@ -277,7 +312,7 @@ bool VulkanInstance::CheckValidationLayerSupport() const noexcept {
 /// @brief Fills the VkDebugUtilsMessengerCreateInfoEXT passed to the function.
 ///
 /// @param createInfo The `VkDebugUtilsMessengerCreateInfoEXT` to fill.
-void VulkanInstance::PopulateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT &createInfo) noexcept {
+void VulkanBase::PopulateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT &createInfo) noexcept {
     createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
     createInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT |
@@ -289,5 +324,70 @@ void VulkanInstance::PopulateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreat
     createInfo.pfnUserCallback = DebugCallback;
     createInfo.pUserData = nullptr;
 }
+
+/// @brief Gets a physical device properties.
+///
+/// @param physicalDevice The physical device to get the properties of.
+///
+/// @returns The physical device properties.
+VkPhysicalDeviceProperties VulkanBase::GetDeviceProperties(VkPhysicalDevice physicalDevice) const noexcept {
+    VkPhysicalDeviceProperties deviceProperties;
+    vkGetPhysicalDeviceProperties(physicalDevice, &deviceProperties);
+
+    return deviceProperties;
+}
+
+/// @brief Gets a physical device features.
+///
+/// @param physicalDevice The physical device to get the properties of.
+///
+/// @returns The physical device features.
+VkPhysicalDeviceFeatures VulkanBase::GetDeviceFeatures(VkPhysicalDevice physicalDevice) const noexcept {
+    VkPhysicalDeviceFeatures deviceFeatures;
+    vkGetPhysicalDeviceFeatures(physicalDevice, &deviceFeatures);
+
+    return deviceFeatures;
+}
+
+/// @brief Checks if the provided device suits the requirements.
+///
+/// @param physicalDevice The physical device to check.
+///
+/// @returns A boolean telling if the provided device suits the requirements.
+bool VulkanBase::IsDeviceSuitable(VkPhysicalDevice physicalDevice) const noexcept {
+    VkPhysicalDeviceProperties deviceProperties;
+    VkPhysicalDeviceFeatures deviceFeatures;
+    vkGetPhysicalDeviceProperties(physicalDevice, &deviceProperties);
+    vkGetPhysicalDeviceFeatures(physicalDevice, &deviceFeatures);
+
+    return true;
+}
+
+/// @brief Rates devices with a score to help select it.
+///
+/// @param physicalDevice The physical device to rate.
+///
+/// @returns The score of the provided device.
+int VulkanBase::RateDeviceSuitability(VkPhysicalDevice physicalDevice) const noexcept {
+    if (!IsDeviceSuitable(physicalDevice)) {
+        // Devices that aren't suitable are scored 0.
+        return 0;
+    }
+
+    int score = 0;
+
+    auto deviceProperties = GetDeviceProperties(physicalDevice);
+
+    // Discrete GPUs have a significant performance advantage.
+    if (deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
+        score += 1000;
+    }
+
+    // Maximum possible size of textures affects graphics quality.
+    score += static_cast<int>(deviceProperties.limits.maxImageDimension2D);
+
+    return score;
+}
+
 
 }
