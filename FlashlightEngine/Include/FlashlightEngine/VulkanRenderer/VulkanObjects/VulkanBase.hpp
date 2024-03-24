@@ -102,12 +102,6 @@ private:
     const std::vector<const char*> m_ValidationLayers = {
         "VK_LAYER_KHRONOS_validation"
     };
-
-#ifdef NDEBUG
-    const bool m_EnableValidationLayers = false;
-#else
-    const bool m_EnableValidationLayers = true;
-#endif
 };
 
 }

@@ -113,9 +113,11 @@ void VulkanBase::Cleanup() {
 void VulkanBase::CreateInstance() {
     volkInitialize();
 
-    if (m_EnableValidationLayers && !CheckValidationLayerSupport()) {
+#if defined(FL_DEBUG)
+    if (!CheckValidationLayerSupport()) {
         throw std::runtime_error("Validation layers requested, but not available.");
     }
+#endif
 
     VkApplicationInfo appInfo{};
     appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -150,17 +152,17 @@ void VulkanBase::CreateInstance() {
     createInfo.ppEnabledExtensionNames = requiredExtensions.data();
 
     VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
-    if (m_EnableValidationLayers) {
+#if defined(FL_DEBUG)
         createInfo.enabledLayerCount = static_cast<uint32_t>(m_ValidationLayers.size());
         createInfo.ppEnabledLayerNames = m_ValidationLayers.data();
 
         PopulateDebugMessengerCreateInfo(debugCreateInfo);
         createInfo.pNext = reinterpret_cast<VkDebugUtilsMessengerCreateInfoEXT*>(&debugCreateInfo);
-    } else {
+#else
         createInfo.enabledLayerCount = 0;
 
         createInfo.pNext = nullptr;
-    }
+#endif
 
 #ifdef __APPLE__
     createInfo.flags |= VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
@@ -182,8 +184,7 @@ void VulkanBase::DestroyInstance() const {
 
 /// @brief Creates and setup the debug messenger.
 void VulkanBase::CreateDebugMessenger() {
-    if (!m_EnableValidationLayers) return;
-
+#if defined(FL_DEBUG)
     VkDebugUtilsMessengerCreateInfoEXT createInfo;
     PopulateDebugMessengerCreateInfo(createInfo);
 
@@ -191,13 +192,14 @@ void VulkanBase::CreateDebugMessenger() {
     if (CreateDebugUtilsMessengerEXT(m_Vulkan.Instance, &createInfo, nullptr, &m_Vulkan.DebugMessenger) != VK_SUCCESS) {
         throw std::runtime_error("Failed to create debug messenger.");
     }
+#endif
 }
 
 /// @brief Destroys the debug messenger.
 void VulkanBase::DestroyDebugMessenger() const {
-    if (m_EnableValidationLayers) {
+#if defined(FL_DEBUG)
         DestroyDebugUtilsMessengerEXT(m_Vulkan.Instance, m_Vulkan.DebugMessenger, nullptr);
-    }
+#endif
 }
 
 
@@ -258,12 +260,12 @@ void VulkanBase::CreateLogicalDevice() {
 
     createInfo.enabledExtensionCount = 0;
 
-    if (m_EnableValidationLayers) {
+#if defined(FL_DEBUG)
         createInfo.enabledLayerCount = static_cast<uint32_t>(m_ValidationLayers.size());
         createInfo.ppEnabledLayerNames = m_ValidationLayers.data();
-    } else {
+#else
         createInfo.enabledLayerCount = false;
-    }
+#endif
 
     if (vkCreateDevice(m_Vulkan.PhysicalDevice, &createInfo, nullptr, &m_Vulkan.LogicalDevice) != VK_SUCCESS) {
         throw std::runtime_error("Failed to create logical device.");
@@ -286,9 +288,9 @@ std::vector<const char*> VulkanBase::GetRequiredInstanceExtensions() const noexc
 
     std::vector<const char*> requiredExtensions(glfwRequiredExtensions, glfwRequiredExtensions + glfwRequiredExtensionCount);
 
-    if (m_EnableValidationLayers) {
+#if defined(FL_DEBUG)
         requiredExtensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
-    }
+#endif
 
 
 #ifdef __APPLE__

@@ -13,6 +13,10 @@ if (is_mode("release")) then
   set_optimize("fastest")
 end
 
+if (is_mode("debug")) then
+    add_defines("FL_DEBUG")
+end
+
 add_requires("glfw", "glm", "volk")
 
 local outputdir = "$(mode)-$(os)-$(arch)"
