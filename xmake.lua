@@ -13,7 +13,7 @@ if (is_mode("release")) then
   set_optimize("fastest")
 end
 
-add_requires("glfw", "glm", "vulkan-loader")
+add_requires("glfw", "glm", "volk")
 
 local outputdir = "$(mode)-$(os)-$(arch)"
 
@@ -34,5 +34,5 @@ target("FlashlightEngine")
   set_pcxxheader("FlashlightEngine/Include/pch.hpp")
 
   add_packages("glfw")
-  add_packages("vulkan-loader")
+  add_packages("volk")
   add_packages("glm")

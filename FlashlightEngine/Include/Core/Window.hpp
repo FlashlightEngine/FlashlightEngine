@@ -10,6 +10,8 @@
 
 #include "pch.hpp"
 
+#include <GLFW/glfw3.h>
+
 namespace Flashlight {
 
 /// @ingroup Core

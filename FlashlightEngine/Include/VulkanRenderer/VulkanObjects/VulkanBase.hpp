@@ -11,6 +11,8 @@
 #include "pch.hpp"
 #include "Core/Window.hpp"
 
+#include <volk.h>
+
 namespace Flashlight {
 
 /// @ingroup VulkanRenderer
@@ -27,6 +29,21 @@ struct VulkanBaseObjects {
         Instance(VK_NULL_HANDLE),
         DebugMessenger(VK_NULL_HANDLE),
         PhysicalDevice(VK_NULL_HANDLE) {}
+};
+
+/// @ingroup VulkanRenderer
+/// @struct Flashlight::QueueFamilyIndices
+/// @brief Structure that stores queue family indicies and a utility function to check if they are both present.
+struct QueueFamilyIndices {
+    uint32 GraphicsFamily = 0;
+    bool GraphicsFamilyHasValue;
+
+    /// @brief Function to check if every queue family is set.
+    ///
+    /// @returns A boolean telling if every queue family has a value.
+    bool IsComplete() {
+        return GraphicsFamilyHasValue;
+    }
 };
 
 class VulkanBase {
@@ -69,6 +86,7 @@ private:
     VkPhysicalDeviceFeatures GetDeviceFeatures(VkPhysicalDevice physicalDevice) const noexcept;
     bool IsDeviceSuitable(VkPhysicalDevice physicalDevice) const noexcept;
     int RateDeviceSuitability(VkPhysicalDevice physicalDevice) const noexcept;
+    QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice physicalDevice) const noexcept;
 
     const std::vector<const char*> m_validationLayers = {
         "VK_LAYER_KHRONOS_validation"

@@ -10,6 +10,8 @@
 #include "defines.hpp"
 #include "pch.hpp"
 
+#include <volk.h>
+
 namespace Flashlight {
 
 // Local functions for debug callback and debug messenger creation.
@@ -107,6 +109,8 @@ void VulkanBase::Cleanup() {
 
 /// @brief Initializes the Vulkan instance.
 void VulkanBase::CreateInstance() {
+    volkInitialize();
+
     if (m_EnableValidationLayers && !CheckValidationLayerSupport()) {
         throw std::runtime_error("Validation layers requested, but not available.");
     }
@@ -163,6 +167,8 @@ void VulkanBase::CreateInstance() {
     if (vkCreateInstance(&createInfo, nullptr, &m_Vulkan.Instance) != VK_SUCCESS) {
         throw std::runtime_error("Failed to create instance.");
     }
+
+    volkLoadInstance(m_Vulkan.Instance);
 }
 
 /// @brief Destroys the Vulkan instance.
@@ -355,12 +361,12 @@ VkPhysicalDeviceFeatures VulkanBase::GetDeviceFeatures(VkPhysicalDevice physical
 ///
 /// @returns A boolean telling if the provided device suits the requirements.
 bool VulkanBase::IsDeviceSuitable(VkPhysicalDevice physicalDevice) const noexcept {
-    VkPhysicalDeviceProperties deviceProperties;
-    VkPhysicalDeviceFeatures deviceFeatures;
-    vkGetPhysicalDeviceProperties(physicalDevice, &deviceProperties);
-    vkGetPhysicalDeviceFeatures(physicalDevice, &deviceFeatures);
+    auto deviceProperties = GetDeviceProperties(physicalDevice);
+    auto deviceFeatures = GetDeviceFeatures(physicalDevice);
 
-    return true;
+    QueueFamilyIndices indices = FindQueueFamilies(physicalDevice);
+
+    return indices.IsComplete();
 }
 
 /// @brief Rates devices with a score to help select it.
@@ -389,5 +395,35 @@ int VulkanBase::RateDeviceSuitability(VkPhysicalDevice physicalDevice) const noe
     return score;
 }
 
+/// @brief Retrieve queue families from the physical device and returns them.
+///
+/// @param physicalDevice The physical device to retrieve the queue families from.
+///
+/// @returns A QueueFamilyIndices struct.
+QueueFamilyIndices VulkanBase::FindQueueFamilies(VkPhysicalDevice physicalDevice) const noexcept {
+    QueueFamilyIndices indices;
+
+    uint32 queueFamilyCount = 0;
+    vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, nullptr);
+
+    std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
+    vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, queueFamilies.data());
+
+    int i = 0;
+    for (const auto &queueFamily : queueFamilies) {
+        if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
+            indices.GraphicsFamily = i;
+            indices.GraphicsFamilyHasValue = true;
+        }
+
+        if (indices.IsComplete()) {
+            break;
+        }
+
+        i++;
+    }
+
+    return indices;
+}
 
 }
