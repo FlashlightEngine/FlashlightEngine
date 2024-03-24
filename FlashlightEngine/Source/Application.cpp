@@ -37,4 +37,19 @@ void Application::Run() {
         }
     }
 }
+
+/// @brief Gets the application instance.
+///
+/// @returns The application instance.
+Application &Application::Get() noexcept {
+    return *s_Application;
+}
+
+/// @brief Returns the application window.
+///
+/// @returns The application window.
+Window Application::GetWindow() const noexcept {
+    return *m_Window;
+}
+
 }

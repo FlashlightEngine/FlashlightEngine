@@ -39,6 +39,7 @@ public:
 
     bool ShouldClose() const noexcept;
     WindowProperties GetProperties() const noexcept;
+    GLFWwindow *GetNativeWindow() const noexcept;
 
     void Update();
 

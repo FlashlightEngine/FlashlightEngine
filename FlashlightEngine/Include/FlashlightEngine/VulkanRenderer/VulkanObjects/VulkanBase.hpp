@@ -20,15 +20,23 @@ namespace Flashlight {
 /// @brief Structure that stores base Vulkan objects.
 struct VulkanBaseObjects {
     VkInstance Instance;
+
     VkDebugUtilsMessengerEXT DebugMessenger;
+
     VkPhysicalDevice PhysicalDevice;
+
+    VkDevice LogicalDevice;
+
+    VkQueue GraphicsQueue;
 
     /// @brief Constructor for the VulkanBaseObjects struct.
     /// Initalizes every object to VK_NULL_HANDLE by default.
     VulkanBaseObjects() :
         Instance(VK_NULL_HANDLE),
         DebugMessenger(VK_NULL_HANDLE),
-        PhysicalDevice(VK_NULL_HANDLE) {}
+        PhysicalDevice(VK_NULL_HANDLE),
+        LogicalDevice(VK_NULL_HANDLE),
+        GraphicsQueue(VK_NULL_HANDLE) {}
 };
 
 /// @ingroup VulkanRenderer
@@ -76,6 +84,9 @@ private:
     // The physical device doesn't need a destroy function since it's destroyed implicitly when the instance is destroyed.
     void PickPhysicalDevice();
 
+    void CreateLogicalDevice();
+    void DestroyLogicalDevice() const;
+
     // Utility functions.
     std::vector<const char*> GetRequiredInstanceExtensions() const noexcept;
     std::vector<VkExtensionProperties> GetAvailableInstanceExtensions() const noexcept;
@@ -88,7 +99,7 @@ private:
     int RateDeviceSuitability(VkPhysicalDevice physicalDevice) const noexcept;
     QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice physicalDevice) const noexcept;
 
-    const std::vector<const char*> m_validationLayers = {
+    const std::vector<const char*> m_ValidationLayers = {
         "VK_LAYER_KHRONOS_validation"
     };
 

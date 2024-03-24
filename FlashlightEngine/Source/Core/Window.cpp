@@ -42,6 +42,13 @@ WindowProperties Window::GetProperties() const noexcept {
     return m_Properties;
 }
 
+/// @brief Returns the native GLFW window handle.
+///
+/// @returns A GLFWwindow* to the native GLFW window.
+GLFWwindow* Window::GetNativeWindow() const noexcept {
+    return m_Window;
+}
+
 /// @brief Update the window and poll the events.
 void Window::Update() {
     if (m_GLFWInitialized) {

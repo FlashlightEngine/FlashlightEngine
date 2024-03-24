@@ -22,8 +22,11 @@ public:
     virtual void Update() = 0;
     virtual void Render() = 0;
 
+    static Application& Get() noexcept;
+    Window GetWindow() const noexcept;
+
 protected:
-    std::unique_ptr<Window> m_Window = Window::Create();
+    std::unique_ptr<Window> m_Window = Window::Create(WindowProperties{800, 600, "Flashlight Window"});
     Renderer m_Renderer{*m_Window};
 
 private:

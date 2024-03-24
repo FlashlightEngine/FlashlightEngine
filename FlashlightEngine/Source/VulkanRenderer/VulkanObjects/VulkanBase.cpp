@@ -99,10 +99,12 @@ void VulkanBase::Init() {
     CreateInstance();
     CreateDebugMessenger();
     PickPhysicalDevice();
+    CreateLogicalDevice();
 }
 
 /// @brief Destroys all the Vulkan objects this class is a wrapper of.
 void VulkanBase::Cleanup() {
+    DestroyLogicalDevice();
     DestroyDebugMessenger();
     DestroyInstance();
 }
@@ -149,8 +151,8 @@ void VulkanBase::CreateInstance() {
 
     VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
     if (m_EnableValidationLayers) {
-        createInfo.enabledLayerCount = static_cast<uint32_t>(m_validationLayers.size());
-        createInfo.ppEnabledLayerNames = m_validationLayers.data();
+        createInfo.enabledLayerCount = static_cast<uint32_t>(m_ValidationLayers.size());
+        createInfo.ppEnabledLayerNames = m_ValidationLayers.data();
 
         PopulateDebugMessengerCreateInfo(debugCreateInfo);
         createInfo.pNext = reinterpret_cast<VkDebugUtilsMessengerCreateInfoEXT*>(&debugCreateInfo);
@@ -232,6 +234,49 @@ void VulkanBase::PickPhysicalDevice() {
     << '\t' << "GPU Vulkan API Version : " << deviceProperties.apiVersion << '\n';
 }
 
+/// @brief Creates the Vulkan logical device.
+void VulkanBase::CreateLogicalDevice() {
+    QueueFamilyIndices indices = FindQueueFamilies(m_Vulkan.PhysicalDevice);
+
+    VkDeviceQueueCreateInfo queueCreateInfo{};
+    queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+    queueCreateInfo.queueFamilyIndex = indices.GraphicsFamily;
+    queueCreateInfo.queueCount = 1;
+
+    float queuePriority = 1.0f;
+    queueCreateInfo.pQueuePriorities = &queuePriority;
+
+    VkPhysicalDeviceFeatures deviceFeatures{};
+
+    VkDeviceCreateInfo createInfo{};
+    createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+
+    createInfo.queueCreateInfoCount = 1;
+    createInfo.pQueueCreateInfos = &queueCreateInfo;
+
+    createInfo.pEnabledFeatures = &deviceFeatures;
+
+    createInfo.enabledExtensionCount = 0;
+
+    if (m_EnableValidationLayers) {
+        createInfo.enabledLayerCount = static_cast<uint32_t>(m_ValidationLayers.size());
+        createInfo.ppEnabledLayerNames = m_ValidationLayers.data();
+    } else {
+        createInfo.enabledLayerCount = false;
+    }
+
+    if (vkCreateDevice(m_Vulkan.PhysicalDevice, &createInfo, nullptr, &m_Vulkan.LogicalDevice) != VK_SUCCESS) {
+        throw std::runtime_error("Failed to create logical device.");
+    }
+
+    vkGetDeviceQueue(m_Vulkan.LogicalDevice, indices.GraphicsFamily, 0, &m_Vulkan.GraphicsQueue);
+}
+
+/// @brief Destroys the Vulkan logical device.
+void VulkanBase::DestroyLogicalDevice() const {
+    vkDestroyDevice(m_Vulkan.LogicalDevice, nullptr);
+}
+
 /// @brief Returns the required instance extension for the application to work.
 ///
 /// @returns A std::vector containing the names of the required instance extensions.
@@ -297,7 +342,7 @@ bool VulkanBase::CheckValidationLayerSupport() const noexcept {
     std::vector<VkLayerProperties> availableLayers(layerCount);
     vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
 
-    for (const char *layerName : m_validationLayers) {
+    for (const char *layerName : m_ValidationLayers) {
         bool layerFound = false;
 
         for (const auto &layerProperties : availableLayers) {
