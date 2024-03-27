@@ -26,7 +26,7 @@ public:
     Window GetWindow() const noexcept;
 
 protected:
-    std::unique_ptr<Window> m_Window = Window::Create(WindowProperties{800, 600, "Flashlight Window"});
+    std::unique_ptr<Window> m_Window = Window::Create(WindowProperties{800, 600, "Flashlight Window <Vulkan 1.0>"});
     Renderer m_Renderer{*m_Window};
 
 private:
