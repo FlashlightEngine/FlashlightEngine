@@ -17,7 +17,7 @@ if (is_mode("debug")) then
     add_defines("FL_DEBUG")
 end
 
-add_requires("glfw", "glm", "volk")
+add_requires("glfw 3.3.8", "glm", "volk")
 
 local outputdir = "$(mode)-$(os)-$(arch)"
 
@@ -38,6 +38,8 @@ target("FlashlightEngine")
   set_pcxxheader("FlashlightEngine/Include/FlashlightEngine/pch.hpp")
 
   add_packages("glfw", "volk", "glm")
+
+  add_defines("VK_NO_PROTOTYPES", {public = true})
 
 target("TestApplication")
     set_kind("binary")

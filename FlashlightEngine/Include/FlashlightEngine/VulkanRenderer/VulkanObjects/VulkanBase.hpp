@@ -28,6 +28,9 @@ struct VulkanBaseObjects {
     VkDevice LogicalDevice;
 
     VkQueue GraphicsQueue;
+    VkQueue PresentQueue;
+
+    VkSurfaceKHR Surface;
 
     /// @brief Constructor for the VulkanBaseObjects struct.
     /// Initalizes every object to VK_NULL_HANDLE by default.
@@ -36,21 +39,25 @@ struct VulkanBaseObjects {
         DebugMessenger(VK_NULL_HANDLE),
         PhysicalDevice(VK_NULL_HANDLE),
         LogicalDevice(VK_NULL_HANDLE),
-        GraphicsQueue(VK_NULL_HANDLE) {}
+        GraphicsQueue(VK_NULL_HANDLE),
+        PresentQueue(VK_NULL_HANDLE),
+        Surface(VK_NULL_HANDLE) {}
 };
 
 /// @ingroup VulkanRenderer
 /// @struct Flashlight::QueueFamilyIndices
 /// @brief Structure that stores queue family indicies and a utility function to check if they are both present.
 struct QueueFamilyIndices {
-    uint32 GraphicsFamily = 0;
-    bool GraphicsFamilyHasValue;
+    u32 GraphicsFamily = 0;
+    u32 PresentFamily = 0;
+    bool GraphicsFamilyHasValue = false;
+    bool PresentFamilyHasValue = false;
 
     /// @brief Function to check if every queue family is set.
     ///
     /// @returns A boolean telling if every queue family has a value.
     bool IsComplete() {
-        return GraphicsFamilyHasValue;
+        return GraphicsFamilyHasValue && PresentFamilyHasValue;
     }
 };
 
@@ -81,6 +88,9 @@ private:
     void CreateDebugMessenger();
     void DestroyDebugMessenger() const;
 
+    void CreateSurface();
+    void DestroySurface() const;
+
     // The physical device doesn't need a destroy function since it's destroyed implicitly when the instance is destroyed.
     void PickPhysicalDevice();
 
@@ -90,7 +100,7 @@ private:
     // Utility functions.
     std::vector<const char*> GetRequiredInstanceExtensions() const noexcept;
     std::vector<VkExtensionProperties> GetAvailableInstanceExtensions() const noexcept;
-    bool CheckRequiredInstanceExtensionsSupport() const noexcept;
+    void CheckRequiredInstanceExtensionsSupport() const;
     bool CheckValidationLayerSupport() const noexcept;
     void PopulateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT &createInfo) noexcept;
     VkPhysicalDeviceProperties GetDeviceProperties(VkPhysicalDevice physicalDevice) const noexcept;

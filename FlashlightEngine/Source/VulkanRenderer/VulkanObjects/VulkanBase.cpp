@@ -7,10 +7,12 @@
  */
 
 #include "FlashlightEngine/VulkanRenderer/VulkanObjects/VulkanBase.hpp"
+
 #include "FlashlightEngine/defines.hpp"
 #include "FlashlightEngine/pch.hpp"
 
 #include <volk.h>
+#include <GLFW/glfw3.h>
 
 namespace Flashlight {
 
@@ -98,6 +100,7 @@ std::unique_ptr<VulkanBase> VulkanBase::Create(const Window &window) {
 void VulkanBase::Init() {
     CreateInstance();
     CreateDebugMessenger();
+    CreateSurface();
     PickPhysicalDevice();
     CreateLogicalDevice();
 }
@@ -106,6 +109,7 @@ void VulkanBase::Init() {
 void VulkanBase::Cleanup() {
     DestroyLogicalDevice();
     DestroyDebugMessenger();
+    DestroySurface();
     DestroyInstance();
 }
 
@@ -122,9 +126,9 @@ void VulkanBase::CreateInstance() {
     VkApplicationInfo appInfo{};
     appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
     appInfo.pApplicationName = "Flashlight Engine Application";
-    appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
+    appInfo.applicationVersion = VK_MAKE_API_VERSION(1, 0, 0, 0);
     appInfo.pEngineName = "Flashlight Engine";
-    appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
+    appInfo.engineVersion = VK_MAKE_API_VERSION(1, 0, 0, 0);
     appInfo.apiVersion = VK_API_VERSION_1_0;
 
     VkInstanceCreateInfo createInfo{};
@@ -132,28 +136,13 @@ void VulkanBase::CreateInstance() {
     createInfo.pApplicationInfo = &appInfo;
 
     auto requiredExtensions = GetRequiredInstanceExtensions();
-    auto availableExtensions = GetAvailableInstanceExtensions();
 
-    std::cout << "Required instance extensions :\n";
-    for (const auto &extension : requiredExtensions) {
-        std::cout << '\t' << extension << '\n';
-    }
-
-    std::cout << "Available instance extensions :\n";
-    for (const auto &extension : availableExtensions) {
-        std::cout << '\t' << extension.extensionName << '\n';
-    }
-
-    if (!CheckRequiredInstanceExtensionsSupport()) {
-        throw std::runtime_error("A required instance extension isn't supported.");
-    }
-
-    createInfo.enabledExtensionCount = static_cast<uint32_t>(requiredExtensions.size());
+    createInfo.enabledExtensionCount = static_cast<u32>(requiredExtensions.size());
     createInfo.ppEnabledExtensionNames = requiredExtensions.data();
 
     VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
 #if defined(FL_DEBUG)
-        createInfo.enabledLayerCount = static_cast<uint32_t>(m_ValidationLayers.size());
+        createInfo.enabledLayerCount = static_cast<u32>(m_ValidationLayers.size());
         createInfo.ppEnabledLayerNames = m_ValidationLayers.data();
 
         PopulateDebugMessengerCreateInfo(debugCreateInfo);
@@ -173,6 +162,10 @@ void VulkanBase::CreateInstance() {
     }
 
     volkLoadInstance(m_Vulkan.Instance);
+
+    CheckRequiredInstanceExtensionsSupport();
+
+    std::cout << glfwGetVersionString() << std::endl;
 }
 
 /// @brief Destroys the Vulkan instance.
@@ -202,10 +195,21 @@ void VulkanBase::DestroyDebugMessenger() const {
 #endif
 }
 
+/// @brief Creates the window surface.
+void VulkanBase::CreateSurface() {
+    if (glfwCreateWindowSurface(m_Vulkan.Instance, m_Window.GetNativeWindow(), nullptr, &m_Vulkan.Surface) != VK_SUCCESS) {
+        throw std::runtime_error("Failed to create window surface.");
+    }
+}
+
+/// @brief Destroys the window surface.
+void VulkanBase::DestroySurface() const {
+    vkDestroySurfaceKHR(m_Vulkan.Instance, m_Vulkan.Surface, nullptr);
+}
 
 /// @brief Picks a Vulkan physical device.
 void VulkanBase::PickPhysicalDevice() {
-    uint32 deviceCount = 0;
+    u32 deviceCount = 0;
     vkEnumeratePhysicalDevices(m_Vulkan.Instance, &deviceCount, nullptr);
 
     if (deviceCount == 0) {
@@ -240,38 +244,44 @@ void VulkanBase::PickPhysicalDevice() {
 void VulkanBase::CreateLogicalDevice() {
     QueueFamilyIndices indices = FindQueueFamilies(m_Vulkan.PhysicalDevice);
 
-    VkDeviceQueueCreateInfo queueCreateInfo{};
-    queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-    queueCreateInfo.queueFamilyIndex = indices.GraphicsFamily;
-    queueCreateInfo.queueCount = 1;
+    std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
+    std::set<u32> uniqueQueueFamilies = {indices.GraphicsFamily, indices.PresentFamily};
 
     float queuePriority = 1.0f;
-    queueCreateInfo.pQueuePriorities = &queuePriority;
+    for (uint32_t queueFamily : uniqueQueueFamilies) {
+        VkDeviceQueueCreateInfo queueCreateInfo{};
+        queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+        queueCreateInfo.queueFamilyIndex = queueFamily;
+        queueCreateInfo.queueCount = 1;
+        queueCreateInfo.pQueuePriorities = &queuePriority;
+        queueCreateInfos.push_back(queueCreateInfo);
+    }
 
     VkPhysicalDeviceFeatures deviceFeatures{};
 
     VkDeviceCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 
-    createInfo.queueCreateInfoCount = 1;
-    createInfo.pQueueCreateInfos = &queueCreateInfo;
+    createInfo.queueCreateInfoCount = static_cast<u32>(queueCreateInfos.size());
+    createInfo.pQueueCreateInfos = queueCreateInfos.data();
 
     createInfo.pEnabledFeatures = &deviceFeatures;
 
     createInfo.enabledExtensionCount = 0;
 
-#if defined(FL_DEBUG)
-        createInfo.enabledLayerCount = static_cast<uint32_t>(m_ValidationLayers.size());
+#if FL_DEBUG
+        createInfo.enabledLayerCount = static_cast<u32>(m_ValidationLayers.size());
         createInfo.ppEnabledLayerNames = m_ValidationLayers.data();
 #else
-        createInfo.enabledLayerCount = false;
+        createInfo.enabledLayerCount = 0;
 #endif
 
     if (vkCreateDevice(m_Vulkan.PhysicalDevice, &createInfo, nullptr, &m_Vulkan.LogicalDevice) != VK_SUCCESS) {
-        throw std::runtime_error("Failed to create logical device.");
+        throw std::runtime_error("failed to create logical device!");
     }
 
     vkGetDeviceQueue(m_Vulkan.LogicalDevice, indices.GraphicsFamily, 0, &m_Vulkan.GraphicsQueue);
+    vkGetDeviceQueue(m_Vulkan.LogicalDevice, indices.PresentFamily, 0, &m_Vulkan.PresentQueue);
 }
 
 /// @brief Destroys the Vulkan logical device.
@@ -283,7 +293,7 @@ void VulkanBase::DestroyLogicalDevice() const {
 ///
 /// @returns A std::vector containing the names of the required instance extensions.
 std::vector<const char*> VulkanBase::GetRequiredInstanceExtensions() const noexcept {
-    uint32_t glfwRequiredExtensionCount = 0;
+    u32 glfwRequiredExtensionCount = 0;
     const char** glfwRequiredExtensions = glfwGetRequiredInstanceExtensions(&glfwRequiredExtensionCount);
 
     std::vector<const char*> requiredExtensions(glfwRequiredExtensions, glfwRequiredExtensions + glfwRequiredExtensionCount);
@@ -304,7 +314,7 @@ std::vector<const char*> VulkanBase::GetRequiredInstanceExtensions() const noexc
 ///
 /// @returns A std::vector of the instance extensions properties.
 std::vector<VkExtensionProperties> VulkanBase::GetAvailableInstanceExtensions() const noexcept {
-    uint32 extensionCount = 0;
+    u32 extensionCount = 0;
     vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
 
     std::vector<VkExtensionProperties> extensions(extensionCount);
@@ -317,28 +327,32 @@ std::vector<VkExtensionProperties> VulkanBase::GetAvailableInstanceExtensions() 
 /// @brief Checks if the required instance extensions are avaiable.
 ///
 /// @returns A boolean telling if all of the required instance extensions are available.
-bool VulkanBase::CheckRequiredInstanceExtensionsSupport() const noexcept {
-    auto requiredInstanceExtensions = GetRequiredInstanceExtensions();
-    std::set<std::string> requiredExtensions(requiredInstanceExtensions.begin(), requiredInstanceExtensions.end());
+void VulkanBase::CheckRequiredInstanceExtensionsSupport() const {
 
-    auto availableInstanceExtensions = GetAvailableInstanceExtensions();
+    auto availableInstanceExtensionsVector = GetAvailableInstanceExtensions();
 
-    for (const auto &extension : availableInstanceExtensions) {
-        requiredExtensions.erase(extension.extensionName);
-
-        if (requiredExtensions.empty()) {
-            break;
-        }
+    std::cout << "Available instance extensions : \n";
+    std::unordered_set<std::string> availableExtensions;
+    for (const auto &extension : availableInstanceExtensionsVector) {
+        std::cout << '\t' << extension.extensionName << '\n';
+        availableExtensions.insert(extension.extensionName);
     }
 
-    return requiredExtensions.empty();
+    auto requiredInstanceExtensions = GetRequiredInstanceExtensions();
+    std::cout << "Required instance extensions : \n";
+    for (const auto &required : requiredInstanceExtensions) {
+        std::cout << '\t' << required << '\n';
+        if (availableExtensions.find(required) == availableExtensions.end()) {
+            throw std::runtime_error("Missing required instance extension.");
+        }
+    }
 }
 
 /// @brief Checks if validations layers are supported.
 ///
 /// @returns A boolean telling if validation layers are supported.
 bool VulkanBase::CheckValidationLayerSupport() const noexcept {
-    uint32 layerCount;
+    u32 layerCount;
     vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
 
     std::vector<VkLayerProperties> availableLayers(layerCount);
@@ -450,7 +464,7 @@ int VulkanBase::RateDeviceSuitability(VkPhysicalDevice physicalDevice) const noe
 QueueFamilyIndices VulkanBase::FindQueueFamilies(VkPhysicalDevice physicalDevice) const noexcept {
     QueueFamilyIndices indices;
 
-    uint32 queueFamilyCount = 0;
+    u32 queueFamilyCount = 0;
     vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, nullptr);
 
     std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
@@ -461,6 +475,14 @@ QueueFamilyIndices VulkanBase::FindQueueFamilies(VkPhysicalDevice physicalDevice
         if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
             indices.GraphicsFamily = i;
             indices.GraphicsFamilyHasValue = true;
+        }
+
+        VkBool32 presentSupport = false;
+        vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, i, m_Vulkan.Surface, &presentSupport);
+
+        if (presentSupport) {
+            indices.PresentFamily = i;
+            indices.PresentFamilyHasValue = true;
         }
 
         if (indices.IsComplete()) {

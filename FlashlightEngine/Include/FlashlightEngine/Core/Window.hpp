@@ -10,6 +10,7 @@
 
 #include "FlashlightEngine/pch.hpp"
 
+#include <vulkan/vulkan.h>
 #include <GLFW/glfw3.h>
 
 namespace Flashlight {
@@ -18,7 +19,7 @@ namespace Flashlight {
 /// @struct Flashlight::WindowProperties
 /// @brief Structure definition for window's basic properties
 struct WindowProperties {
-    int32 Width, Height;
+    i32 Width, Height;
     std::string Title;
 
     /// @brief The window properties constructor.
@@ -26,7 +27,7 @@ struct WindowProperties {
     /// @param width The window's width. By default, 1920 pixels.
     /// @param height The window's height. By default, 1080 pixels.
     /// @param title The window's title. By default, "Flashlight Window"
-    explicit WindowProperties(int32 width = 1920, int32 height = 1080,
+    explicit WindowProperties(i32 width = 1920, i32 height = 1080,
                               std::string title = "Flashlight Window") : Width(width), Height(height),
                                                                      Title(std::move(title)) {
     }
