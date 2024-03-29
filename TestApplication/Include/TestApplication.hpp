@@ -2,9 +2,9 @@
 
 #include <FlashlightEngine/FlashLightEngine.hpp>
 
-namespace Flashlight {
+namespace TestApplication {
 
-class TestApplication : public Application {
+class TestApplication : public Flashlight::Application {
 public:
     TestApplication() = default;
     ~TestApplication() override = default;
@@ -20,4 +20,4 @@ private:
     void Render() override;
 };
 
-};
+}

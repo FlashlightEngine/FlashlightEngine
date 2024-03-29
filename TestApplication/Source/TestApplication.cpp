@@ -1,6 +1,6 @@
 #include "TestApplication.hpp"
 
-namespace Flashlight {
+namespace TestApplication {
 
 void TestApplication::Render() {
 
