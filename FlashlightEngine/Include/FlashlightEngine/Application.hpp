@@ -22,8 +22,8 @@ public:
     virtual void Update() = 0;
     virtual void Render() = 0;
 
-    static Application& Get() noexcept;
-    Window GetWindow() const noexcept;
+    inline static Application& Get() noexcept;
+    inline Window GetWindow() const noexcept;
 
 protected:
     std::unique_ptr<Window> m_Window = Window::Create(WindowProperties{800, 600, "Flashlight Window <Vulkan 1.0>"});
@@ -34,6 +34,6 @@ private:
     static Application *s_Application;
 };
 
-std::unique_ptr<Application> CreateApp();
+#include "Application.inl"
 
 }

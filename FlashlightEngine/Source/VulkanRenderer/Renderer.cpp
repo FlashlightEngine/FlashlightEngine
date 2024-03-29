@@ -15,24 +15,9 @@ namespace Flashlight {
 /// @class Flashlight::Renderer
 /// @brief The class that manages the Vulkan rendering engine.
 
-/// @brief The constructor of the Renderer class. Initializes every object used by the renderer.
-///
-/// @param window the window of the application using the renderer.
-Renderer::Renderer(const Window &window) : m_Window(window) {
-    Init();
-}
-
 /// @brief Initializes every object in the Renderer.
 void Renderer::Init() {
     m_VulkanRenderer = VulkanBase::Create(m_Window);
 }
 
-/// @brief Creates a new Renderer object and returns a std::unique_pointer of it.
-///
-/// @param window The window of the application using the renderer.
-///
-/// @returns A std::unique_pointer to the newly created Renderer object.
-std::unique_ptr<Renderer> Renderer::Create(const Window& window) {
-    return std::make_unique<Renderer>(window);
-}
 }

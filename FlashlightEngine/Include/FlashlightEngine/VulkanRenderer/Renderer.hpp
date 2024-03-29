@@ -15,10 +15,10 @@ namespace Flashlight {
 
 class Renderer {
 public:
-    Renderer(const Window &window);
+    inline Renderer(const Window &window);
     ~Renderer() = default;
 
-    static std::unique_ptr<Renderer> Create(const Window& window);
+    inline static std::unique_ptr<Renderer> Create(const Window& window);
 
 private:
     Window m_Window;
@@ -26,5 +26,7 @@ private:
 
     void Init();
 };
+
+#include "Renderer.inl"
 
 }

@@ -35,17 +35,17 @@ struct WindowProperties {
 
 class Window {
 public:
-    explicit Window(WindowProperties properties);
-    ~Window();
+    inline explicit Window(WindowProperties properties);
+    inline ~Window();
 
-    bool ShouldClose() const noexcept;
-    WindowProperties GetProperties() const noexcept;
-    GLFWwindow *GetNativeWindow() const noexcept;
+    inline bool ShouldClose() const noexcept;
+    inline WindowProperties GetProperties() const noexcept;
+    inline GLFWwindow *GetNativeWindow() const noexcept;
 
-    void Update();
+    inline void Update();
 
-    static std::unique_ptr<Window> Create();
-    static std::unique_ptr<Window> Create(const WindowProperties &properties);
+    inline static std::unique_ptr<Window> Create();
+    inline static std::unique_ptr<Window> Create(const WindowProperties &properties);
 
 private:
     GLFWwindow *m_Window;
@@ -57,5 +57,7 @@ private:
     void Init();
     void Close() const noexcept;
 };
+
+#include "Window.inl"
 
 }

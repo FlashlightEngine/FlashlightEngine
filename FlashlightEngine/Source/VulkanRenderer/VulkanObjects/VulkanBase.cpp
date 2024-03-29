@@ -553,13 +553,7 @@ SwapChainSupportDetails VulkanBase::QuerySwapChainSupport(VkPhysicalDevice physi
         vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, m_Vulkan.Surface, &formatCount, details.Formats.data());
     }
 
-    u32 presentModeCount = 0;
-    vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, m_Vulkan.Surface, &presentModeCount, nullptr);
 
-    if (presentModeCount != 0) {
-        details.Formats.resize(presentModeCount);
-        vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, m_Vulkan.Surface, &presentModeCount, details.PresentModes.data());
-    }
 
     return details;
 }
