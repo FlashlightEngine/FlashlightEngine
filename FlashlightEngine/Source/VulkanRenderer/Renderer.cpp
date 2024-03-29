@@ -24,7 +24,7 @@ Renderer::Renderer(const Window &window) : m_Window(window) {
 
 /// @brief Initializes every object in the Renderer.
 void Renderer::Init() {
-    m_Vulkan = VulkanBase::Create(m_Window);
+    m_VulkanRenderer = VulkanBase::Create(m_Window);
 }
 
 /// @brief Creates a new Renderer object and returns a std::unique_pointer of it.

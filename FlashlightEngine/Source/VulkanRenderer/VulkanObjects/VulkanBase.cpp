@@ -75,27 +75,6 @@ void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT
 /// @class Flashlight::VulkanBase
 /// @brief VulkanRenderer wrapper class for base Vulkan objects.
 
-/// @brief Constructor for the VulkanBase class. Calls the function to initialize
-/// every Vulkan object.
-///
-/// @param window The window of the application using the renderer.
-VulkanBase::VulkanBase(const Window &window) : m_Window(window) {
-    Init();
-}
-
-/// @brief Destructor of the VulkanBase class. Destroys native Vulkan
-/// objects created in this class.
-VulkanBase::~VulkanBase() {
-    Cleanup();
-}
-
-/// @brief Creates an instance of this class and returns a std::unqiue_pointer of it.
-///
-/// @returns A std::unique_pointer to the created object.
-std::unique_ptr<VulkanBase> VulkanBase::Create(const Window &window) {
-    return std::make_unique<VulkanBase>(window);
-}
-
 /// @brief Initializes all of the Vulkan objects this class is a wrapper of.
 void VulkanBase::Init() {
     CreateInstance();
@@ -219,10 +198,10 @@ void VulkanBase::PickPhysicalDevice() {
     std::vector<VkPhysicalDevice> devices(deviceCount);
     vkEnumeratePhysicalDevices(m_Vulkan.Instance, &deviceCount, devices.data());
 
-    std::multimap<int, VkPhysicalDevice> candidates;
+    std::multimap<i32, VkPhysicalDevice> candidates;
 
     for (const auto &device : devices) {
-        int score = RateDeviceSuitability(device);
+        i32 score = RateDeviceSuitability(device);
         candidates.insert(std::make_pair(score, device));
     }
 
@@ -232,12 +211,13 @@ void VulkanBase::PickPhysicalDevice() {
         throw std::runtime_error("Failed to find a suitable GPU");
     }
 
-    auto deviceProperties = GetDeviceProperties(m_Vulkan.PhysicalDevice);
+    // Stores the properties for the chosen physical device.
+    DeviceProperties = GetDeviceProperties(m_Vulkan.PhysicalDevice);
 
     std::cout << "GPU Informations : " << '\n'
-    << '\t' << "GPU Name : " << deviceProperties.deviceName << '\n'
-    << '\t' <<"GPU Driver Version : " << deviceProperties.driverVersion << '\n'
-    << '\t' << "GPU Vulkan API Version : " << deviceProperties.apiVersion << '\n';
+    << '\t' << "GPU Name : " << DeviceProperties.deviceName << '\n'
+    << '\t' <<"GPU Driver Version : " << DeviceProperties.driverVersion << '\n'
+    << '\t' << "GPU Vulkan API Version : " << DeviceProperties.apiVersion << '\n' << std::endl;
 }
 
 /// @brief Creates the Vulkan logical device.
@@ -248,7 +228,7 @@ void VulkanBase::CreateLogicalDevice() {
     std::set<u32> uniqueQueueFamilies = {indices.GraphicsFamily, indices.PresentFamily};
 
     float queuePriority = 1.0f;
-    for (uint32_t queueFamily : uniqueQueueFamilies) {
+    for (u32 queueFamily : uniqueQueueFamilies) {
         VkDeviceQueueCreateInfo queueCreateInfo{};
         queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
         queueCreateInfo.queueFamilyIndex = queueFamily;
@@ -267,7 +247,23 @@ void VulkanBase::CreateLogicalDevice() {
 
     createInfo.pEnabledFeatures = &deviceFeatures;
 
-    createInfo.enabledExtensionCount = 0;
+    createInfo.enabledExtensionCount = static_cast<u32>(m_DeviceExtensions.size());
+    createInfo.ppEnabledExtensionNames = m_DeviceExtensions.data();
+
+    const auto availableDeviceExtensions = GetAvailableDeviceExtensions(m_Vulkan.PhysicalDevice);
+    std::cout << "Available device extensions : \n";
+    for (const auto &extension : availableDeviceExtensions) {
+        std::cout << '\t' << extension.extensionName << '\n';
+    }
+
+    std::cout << std::endl;
+
+    std::cout << "Required device extensions : \n";
+    for (const auto &extension : m_DeviceExtensions) {
+        std::cout << '\t' << extension << '\n';
+    }
+
+    std::cout << std::endl;
 
 #if FL_DEBUG
         createInfo.enabledLayerCount = static_cast<u32>(m_ValidationLayers.size());
@@ -328,7 +324,6 @@ std::vector<VkExtensionProperties> VulkanBase::GetAvailableInstanceExtensions() 
 ///
 /// @returns A boolean telling if all of the required instance extensions are available.
 void VulkanBase::CheckRequiredInstanceExtensionsSupport() const {
-
     auto availableInstanceExtensionsVector = GetAvailableInstanceExtensions();
 
     std::cout << "Available instance extensions : \n";
@@ -338,6 +333,8 @@ void VulkanBase::CheckRequiredInstanceExtensionsSupport() const {
         availableExtensions.insert(extension.extensionName);
     }
 
+    std::cout << std::endl;
+
     auto requiredInstanceExtensions = GetRequiredInstanceExtensions();
     std::cout << "Required instance extensions : \n";
     for (const auto &required : requiredInstanceExtensions) {
@@ -346,6 +343,8 @@ void VulkanBase::CheckRequiredInstanceExtensionsSupport() const {
             throw std::runtime_error("Missing required instance extension.");
         }
     }
+
+    std::cout << std::endl;
 }
 
 /// @brief Checks if validations layers are supported.
@@ -427,7 +426,48 @@ bool VulkanBase::IsDeviceSuitable(VkPhysicalDevice physicalDevice) const noexcep
 
     QueueFamilyIndices indices = FindQueueFamilies(physicalDevice);
 
-    return indices.IsComplete();
+    bool extensionsSupported = CheckDeviceExtensionSupport(physicalDevice);
+
+    bool swapChainAdequate = false;
+    if (extensionsSupported) {
+        SwapChainSupportDetails swapChainSupport = QuerySwapChainSupport(physicalDevice);
+        swapChainAdequate = !swapChainSupport.Formats.empty() && !swapChainSupport.PresentModes.empty();
+    }
+
+    return indices.IsComplete() && extensionsSupported && swapChainAdequate;
+}
+
+/// @brief Checks if required device extensions are supported by the provided device.
+///
+/// @param physicalDevice The physical device to check.
+///
+/// @returns A boolean telling if required device extensions are available.
+bool VulkanBase::CheckDeviceExtensionSupport(VkPhysicalDevice physicalDevice) const noexcept {
+
+    std::vector<VkExtensionProperties> availableExtensions = GetAvailableDeviceExtensions(physicalDevice);
+
+    std::set<std::string> requiredExtensions(m_DeviceExtensions.begin(), m_DeviceExtensions.end());
+
+    for (const auto &extension : availableExtensions) {
+        requiredExtensions.erase(extension.extensionName);
+    }
+
+    return requiredExtensions.empty();
+}
+
+/// @brief Returns available extensions for the provided device.
+///
+/// @param physicalDevice The physical device to check.
+///
+/// @returns A std::vector of the extensions supported by the device.
+std::vector<VkExtensionProperties> VulkanBase::GetAvailableDeviceExtensions(VkPhysicalDevice physicalDevice) const noexcept {
+    u32 extensionCount = 0;
+    vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &extensionCount, nullptr);
+
+    std::vector<VkExtensionProperties> availableExtensions(extensionCount);
+    vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &extensionCount, availableExtensions.data());
+
+    return availableExtensions;
 }
 
 /// @brief Rates devices with a score to help select it.
@@ -435,13 +475,13 @@ bool VulkanBase::IsDeviceSuitable(VkPhysicalDevice physicalDevice) const noexcep
 /// @param physicalDevice The physical device to rate.
 ///
 /// @returns The score of the provided device.
-int VulkanBase::RateDeviceSuitability(VkPhysicalDevice physicalDevice) const noexcept {
+i32 VulkanBase::RateDeviceSuitability(VkPhysicalDevice physicalDevice) const noexcept {
     if (!IsDeviceSuitable(physicalDevice)) {
         // Devices that aren't suitable are scored 0.
         return 0;
     }
 
-    int score = 0;
+    i32 score = 0;
 
     auto deviceProperties = GetDeviceProperties(physicalDevice);
 
@@ -451,7 +491,7 @@ int VulkanBase::RateDeviceSuitability(VkPhysicalDevice physicalDevice) const noe
     }
 
     // Maximum possible size of textures affects graphics quality.
-    score += static_cast<int>(deviceProperties.limits.maxImageDimension2D);
+    score += static_cast<i32>(deviceProperties.limits.maxImageDimension2D);
 
     return score;
 }
@@ -470,7 +510,7 @@ QueueFamilyIndices VulkanBase::FindQueueFamilies(VkPhysicalDevice physicalDevice
     std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
     vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, queueFamilies.data());
 
-    int i = 0;
+    i32 i = 0;
     for (const auto &queueFamily : queueFamilies) {
         if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
             indices.GraphicsFamily = i;
@@ -493,6 +533,35 @@ QueueFamilyIndices VulkanBase::FindQueueFamilies(VkPhysicalDevice physicalDevice
     }
 
     return indices;
+}
+
+/// @brief Retrieves the swap chain support details for the provided device.
+///
+/// @param physicalDevice The device to query the details from.
+///
+/// @returns A SwapChainSupportDetails struct containing the details.
+SwapChainSupportDetails VulkanBase::QuerySwapChainSupport(VkPhysicalDevice physicalDevice) const noexcept {
+    SwapChainSupportDetails details;
+
+    vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, m_Vulkan.Surface, &details.Capabilities);
+
+    u32 formatCount = 0;
+    vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, m_Vulkan.Surface, &formatCount, nullptr);
+
+    if (formatCount != 0) {
+        details.Formats.resize(formatCount);
+        vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, m_Vulkan.Surface, &formatCount, details.Formats.data());
+    }
+
+    u32 presentModeCount = 0;
+    vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, m_Vulkan.Surface, &presentModeCount, nullptr);
+
+    if (presentModeCount != 0) {
+        details.Formats.resize(presentModeCount);
+        vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, m_Vulkan.Surface, &presentModeCount, details.PresentModes.data());
+    }
+
+    return details;
 }
 
 }

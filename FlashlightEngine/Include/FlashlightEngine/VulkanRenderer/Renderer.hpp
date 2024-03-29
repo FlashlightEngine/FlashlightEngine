@@ -22,7 +22,7 @@ public:
 
 private:
     Window m_Window;
-    std::unique_ptr<VulkanBase> m_Vulkan;
+    std::unique_ptr<VulkanBase> m_VulkanRenderer;
 
     void Init();
 };

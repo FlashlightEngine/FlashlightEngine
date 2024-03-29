@@ -61,10 +61,19 @@ struct QueueFamilyIndices {
     }
 };
 
+/// @ingroup VulkanRenderer
+/// @struct Flashlight::SwapChainSupportDetails
+/// @brief Struct that stores properties for the swap chain.
+struct SwapChainSupportDetails {
+    VkSurfaceCapabilitiesKHR Capabilities;
+    std::vector<VkSurfaceFormatKHR> Formats;
+    std::vector<VkPresentModeKHR> PresentModes;
+};
+
 class VulkanBase {
 public:
-    explicit VulkanBase(const Window &window);
-    ~VulkanBase();
+    inline explicit VulkanBase(const Window &window);
+    inline ~VulkanBase();
 
     // We can't copy/move vulkan objects.
     VulkanBase(const VulkanBase &) = delete;
@@ -72,7 +81,18 @@ public:
     VulkanBase(VulkanBase &&) = delete;
     VulkanBase &operator=(VulkanBase &&) = delete;
 
-    static std::unique_ptr<VulkanBase> Create(const Window &window);
+    inline static std::unique_ptr<VulkanBase> Create(const Window &window);
+
+    // Getter functions.
+    inline VkDevice Device() noexcept;
+    inline VkSurfaceKHR Surface() noexcept;
+    inline VkQueue GraphicsQueue() noexcept;
+    inline VkQueue PresentQueue() noexcept;
+
+    inline SwapChainSupportDetails GetSwapChainSupportDetails() noexcept;
+    inline QueueFamilyIndices GetQueueFamilies() noexcept;
+
+    VkPhysicalDeviceProperties DeviceProperties;
 
 private:
     Window m_Window;
@@ -106,12 +126,21 @@ private:
     VkPhysicalDeviceProperties GetDeviceProperties(VkPhysicalDevice physicalDevice) const noexcept;
     VkPhysicalDeviceFeatures GetDeviceFeatures(VkPhysicalDevice physicalDevice) const noexcept;
     bool IsDeviceSuitable(VkPhysicalDevice physicalDevice) const noexcept;
+    bool CheckDeviceExtensionSupport(VkPhysicalDevice physicalDevice) const noexcept;
+    std::vector<VkExtensionProperties> GetAvailableDeviceExtensions(VkPhysicalDevice physicalDevice) const noexcept;
     int RateDeviceSuitability(VkPhysicalDevice physicalDevice) const noexcept;
     QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice physicalDevice) const noexcept;
+    SwapChainSupportDetails QuerySwapChainSupport(VkPhysicalDevice physicalDevice) const noexcept;
 
     const std::vector<const char*> m_ValidationLayers = {
         "VK_LAYER_KHRONOS_validation"
     };
+
+    const std::vector<const char*> m_DeviceExtensions = {
+        VK_KHR_SWAPCHAIN_EXTENSION_NAME
+    };
 };
+
+#include "VulkanBase.inl"
 
 }
