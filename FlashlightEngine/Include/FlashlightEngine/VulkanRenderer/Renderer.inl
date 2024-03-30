@@ -16,7 +16,7 @@
 /// every Vulkan object.
 ///
 /// @param window The window of the application using the renderer.
-inline Renderer::Renderer(const Window &window) : m_Window(window) {
+inline Renderer::Renderer(const Window &window) : m_Window(window), m_VulkanBase(m_Window) {
     Init();
 }
 

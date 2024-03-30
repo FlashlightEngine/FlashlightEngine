@@ -10,6 +10,7 @@
 
 #include "FlashlightEngine/Core/Window.hpp"
 #include "VulkanObjects/VulkanBase.hpp"
+#include "VulkanObjects/VulkanSwapChain.hpp"
 
 namespace Flashlight {
 
@@ -22,7 +23,8 @@ public:
 
 private:
     Window m_Window;
-    std::unique_ptr<VulkanBase> m_VulkanRenderer;
+    VulkanBase m_VulkanBase;
+    std::unique_ptr<VulkanSwapChain> m_SwapChain;
 
     void Init();
 };

@@ -3,12 +3,10 @@
  * For conditions of distribution and use, see copyright notice in FlashLightEngine.hpp
  *
  * VulkanBase.inl - Definitions of inline methods from the VulkanDevice class.
- * This class contains the definitions of inline methods from the Flashlight::VulkanBase class.
+ * This file contains the definitions of inline methods from the Flashlight::VulkanBase class.
  */
 
 #pragma once
-
-#include "VulkanBase.hpp"
 
 /// @ingroup VulkanRenderer
 /// @class Flashlight::VulkanBase
@@ -28,7 +26,7 @@ inline VulkanBase::~VulkanBase() {
     Cleanup();
 }
 
-/// @brief Creates an instance of this class and returns a std::unqiue_pointer of it.
+/// @brief Creates an instance of this class and returns a std::unique_pointer of it.
 ///
 /// @returns A std::unique_pointer to the created object.
 inline std::unique_ptr<VulkanBase> VulkanBase::Create(const Window &window) {
@@ -38,45 +36,41 @@ inline std::unique_ptr<VulkanBase> VulkanBase::Create(const Window &window) {
 /// @brief Returns the logical device.
 ///
 /// @returns The VkDevice handle of the logical device.
-inline VkDevice VulkanBase::Device() noexcept {
+inline VkDevice VulkanBase::Device() const noexcept {
     return m_Vulkan.LogicalDevice;
 }
 
 /// @brief Returns the window surface.
 ///
 /// @returns The VkSurfaceKHR handle of the window surface.
-inline VkSurfaceKHR VulkanBase::Surface() noexcept {
+inline VkSurfaceKHR VulkanBase::Surface() const noexcept {
     return m_Vulkan.Surface;
 }
 
 /// @brief Returns the graphics queue.
 ///
 /// @returns The VkQueue handle of the graphics queue.
-inline VkQueue VulkanBase::GraphicsQueue() noexcept {
+inline VkQueue VulkanBase::GraphicsQueue() const noexcept {
     return m_Vulkan.GraphicsQueue;
 }
 
 /// @brief Returns the present queue.
 ///
 /// @returns The VkQueue handle of the present queue.
-inline VkQueue VulkanBase::PresentQueue() noexcept {
+inline VkQueue VulkanBase::PresentQueue() const noexcept {
     return m_Vulkan.PresentQueue;
 }
 
 /// @brief Returns the swap chain support details.
 ///
 /// @returns A SwapChainSupportDetails struct of the support details for the swap chain.
-inline SwapChainSupportDetails VulkanBase::GetSwapChainSupportDetails() noexcept {
-    SwapChainSupportDetails supportDetails = QuerySwapChainSupport(m_Vulkan.PhysicalDevice);
-
-    return supportDetails;
+inline SwapChainSupportDetails VulkanBase::GetSwapChainSupportDetails() const noexcept {
+    return QuerySwapChainSupport(m_Vulkan.PhysicalDevice);
 }
 
 /// @brief Returns the queue families indices.
 ///
 /// @returns A QueueFamilyIndices struct of the queue families .
-inline QueueFamilyIndices VulkanBase::GetQueueFamilies() noexcept {
-    QueueFamilyIndices indices = FindQueueFamilies(m_Vulkan.PhysicalDevice);
-
-    return indices;
+inline QueueFamilyIndices VulkanBase::GetQueueFamilies() const noexcept {
+    return FindQueueFamilies(m_Vulkan.PhysicalDevice);
 }

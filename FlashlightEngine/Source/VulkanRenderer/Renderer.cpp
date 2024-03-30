@@ -17,7 +17,7 @@ namespace Flashlight {
 
 /// @brief Initializes every object in the Renderer.
 void Renderer::Init() {
-    m_VulkanRenderer = VulkanBase::Create(m_Window);
+    m_SwapChain = VulkanSwapChain::Create(m_Window, m_VulkanBase);
 }
 
 }

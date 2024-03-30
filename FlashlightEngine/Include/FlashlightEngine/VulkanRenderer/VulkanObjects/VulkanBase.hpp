@@ -84,13 +84,13 @@ public:
     inline static std::unique_ptr<VulkanBase> Create(const Window &window);
 
     // Getter functions.
-    inline VkDevice Device() noexcept;
-    inline VkSurfaceKHR Surface() noexcept;
-    inline VkQueue GraphicsQueue() noexcept;
-    inline VkQueue PresentQueue() noexcept;
+    inline VkDevice Device() const noexcept;
+    inline VkSurfaceKHR Surface() const noexcept;
+    inline VkQueue GraphicsQueue() const noexcept;
+    inline VkQueue PresentQueue() const noexcept;
 
-    inline SwapChainSupportDetails GetSwapChainSupportDetails() noexcept;
-    inline QueueFamilyIndices GetQueueFamilies() noexcept;
+    inline SwapChainSupportDetails GetSwapChainSupportDetails() const noexcept;
+    inline QueueFamilyIndices GetQueueFamilies() const noexcept;
 
     VkPhysicalDeviceProperties DeviceProperties;
 
