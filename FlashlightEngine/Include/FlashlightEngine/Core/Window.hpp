@@ -42,7 +42,7 @@ public:
     inline WindowProperties GetProperties() const noexcept;
     inline GLFWwindow *GetNativeWindow() const noexcept;
 
-    inline void Update();
+    inline void Update() const noexcept;
 
     inline static std::unique_ptr<Window> Create();
     inline static std::unique_ptr<Window> Create(const WindowProperties &properties);

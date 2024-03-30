@@ -1,3 +1,11 @@
+/* Copyright (C) 2024 Jean "Pixfri" Letessier (jean.letessier@protonmail.com)
+ * This file is part of "FlashLight Engine"
+ * For conditions of distribution and use, see copyright notice in FlashLightEngine.hpp
+ *
+ * Window.inl - Definitions of inline methods from the Window class.
+ * This file contains the definitions of inline methods from the Flashlight::Window class.
+ */
+
 #pragma once
 
 /// @ingroup Core
@@ -38,7 +46,7 @@ inline GLFWwindow* Window::GetNativeWindow() const noexcept {
 }
 
 /// @brief Update the window and poll the events.
-inline void Window::Update() {
+inline void Window::Update() const noexcept {
     if (m_GLFWInitialized) {
         glfwPollEvents();
     }

@@ -2,8 +2,8 @@
  * This file is part of "FlashLight Engine"
  * For conditions of distribution and use, see copyright notice in FlashLightEngine.hpp
  *
- * VulkanInstance.cpp - Definitions of methods from the VulkanDevice class.
- * This class contains the definitions of methods from the Flashlight::VulkanDevice class.
+ * VulkanBase.cpp - Definitions of methods from the VulkanDevice class.
+ * This file contains the definitions of methods from the Flashlight::VulkanDevice class.
  */
 
 #include "FlashlightEngine/VulkanRenderer/VulkanObjects/VulkanBase.hpp"

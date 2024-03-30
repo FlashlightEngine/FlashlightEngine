@@ -9,6 +9,8 @@ set_allowedarchs("windows|x64", "linux|x64", "linux|x86_64")
 add_rules("mode.debug", "mode.release")
 set_languages("cxx20")
 
+add_rules("plugin.vsxmake.autoupdate")
+
 if (is_mode("release")) then
   set_optimize("fastest")
 end

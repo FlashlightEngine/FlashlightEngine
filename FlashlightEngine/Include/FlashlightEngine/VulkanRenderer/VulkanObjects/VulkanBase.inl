@@ -1,3 +1,11 @@
+/* Copyright (C) 2024 Jean "Pixfri" Letessier (jean.letessier@protonmail.com)
+ * This file is part of "FlashLight Engine"
+ * For conditions of distribution and use, see copyright notice in FlashLightEngine.hpp
+ *
+ * VulkanBase.inl - Definitions of inline methods from the VulkanDevice class.
+ * This class contains the definitions of inline methods from the Flashlight::VulkanBase class.
+ */
+
 #pragma once
 
 #include "VulkanBase.hpp"
