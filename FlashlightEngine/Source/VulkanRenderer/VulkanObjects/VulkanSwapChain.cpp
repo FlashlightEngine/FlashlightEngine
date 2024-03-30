@@ -81,14 +81,18 @@ void VulkanSwapChain::CreateSwapChain() {
 
     createInfo.oldSwapchain = nullptr;
 
-    if (vkCreateSwapchainKHR(m_VulkanBase.Device(), &createInfo, nullptr, &m_SwapChain) != VK_SUCCESS) {
+    if (vkCreateSwapchainKHR(m_VulkanBase.Device(), &createInfo, nullptr, &m_Vulkan.SwapChain) != VK_SUCCESS) {
         throw std::runtime_error("Failed to create swap chain.");
     }
+
+    vkGetSwapchainImagesKHR(m_VulkanBase.Device(), m_Vulkan.SwapChain, &imageCount, nullptr);
+    m_Vulkan.SwapChainImages.resize(imageCount);
+    vkGetSwapchainImagesKHR(m_VulkanBase.Device(), m_Vulkan.SwapChain, &imageCount, m_Vulkan.SwapChainImages.data());
 }
 
 /// @brief Destroys the VkSwapchainKHR object.
 void VulkanSwapChain::DestroySwapChain() const {
-    vkDestroySwapchainKHR(m_VulkanBase.Device(), m_SwapChain, nullptr);    
+    vkDestroySwapchainKHR(m_VulkanBase.Device(), m_Vulkan.SwapChain, nullptr);    
 }
 
 /// @brief Chooses the best format to use for the swap chain.

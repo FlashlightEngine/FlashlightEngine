@@ -33,7 +33,7 @@ struct VulkanBaseObjects {
     VkSurfaceKHR Surface;
 
     /// @brief Constructor for the VulkanBaseObjects struct.
-    /// Initalizes every object to VK_NULL_HANDLE by default.
+    /// Initializes every object to VK_NULL_HANDLE by default.
     VulkanBaseObjects() :
         Instance(VK_NULL_HANDLE),
         DebugMessenger(VK_NULL_HANDLE),

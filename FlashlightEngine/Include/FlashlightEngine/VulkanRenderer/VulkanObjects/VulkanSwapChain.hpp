@@ -16,6 +16,19 @@
 namespace Flashlight
 {
 
+/// @ingroup VulkanRenderer
+/// @struct Flashlight::VulkanSwapChainObjects
+/// @brief Structures that stores Vulkan swap chain objects.
+struct VulkanSwapChainObjects {
+    VkSwapchainKHR SwapChain;
+    std::vector<VkImage> SwapChainImages;
+
+    /// @brief Constructor for the VulkanSwapChainObjects struct.
+    /// Initializes every object to VK_NULL_HANDLE by default.
+    VulkanSwapChainObjects() :
+    SwapChain(VK_NULL_HANDLE) {}
+};
+
 class VulkanSwapChain {
 public:
     inline VulkanSwapChain(Window &window, VulkanBase &base);
@@ -30,7 +43,7 @@ public:
     inline static std::unique_ptr<VulkanSwapChain> Create(Window &window, VulkanBase &base);
 
 private:
-    VkSwapchainKHR m_SwapChain;
+    VulkanSwapChainObjects m_Vulkan;
     
     Window &m_Window;
     VulkanBase &m_VulkanBase;
