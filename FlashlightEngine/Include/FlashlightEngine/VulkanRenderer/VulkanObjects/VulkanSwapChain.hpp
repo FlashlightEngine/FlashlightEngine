@@ -22,6 +22,7 @@ namespace Flashlight
 struct VulkanSwapChainObjects {
     VkSwapchainKHR SwapChain;
     std::vector<VkImage> SwapChainImages;
+    std::vector<VkImageView> SwapChainImageViews;
     VkFormat SwapChainImageFormat{};
     VkExtent2D SwapChainExtent{};
 
@@ -56,6 +57,9 @@ private:
     // Functions to create/destroy vulkan objects.
     void CreateSwapChain();
     void DestroySwapChain() const;
+
+    void CreateImageViews();
+    void DestroyImageViews() const;
 
     // Util functions.
     VkSurfaceFormatKHR ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR> &availableFormats) const noexcept;
