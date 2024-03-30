@@ -22,6 +22,8 @@ namespace Flashlight
 struct VulkanSwapChainObjects {
     VkSwapchainKHR SwapChain;
     std::vector<VkImage> SwapChainImages;
+    VkFormat SwapChainImageFormat{};
+    VkExtent2D SwapChainExtent{};
 
     /// @brief Constructor for the VulkanSwapChainObjects struct.
     /// Initializes every object to VK_NULL_HANDLE by default.

@@ -88,6 +88,9 @@ void VulkanSwapChain::CreateSwapChain() {
     vkGetSwapchainImagesKHR(m_VulkanBase.Device(), m_Vulkan.SwapChain, &imageCount, nullptr);
     m_Vulkan.SwapChainImages.resize(imageCount);
     vkGetSwapchainImagesKHR(m_VulkanBase.Device(), m_Vulkan.SwapChain, &imageCount, m_Vulkan.SwapChainImages.data());
+
+    m_Vulkan.SwapChainImageFormat = surfaceFormat.format;
+    m_Vulkan.SwapChainExtent = extent;
 }
 
 /// @brief Destroys the VkSwapchainKHR object.
