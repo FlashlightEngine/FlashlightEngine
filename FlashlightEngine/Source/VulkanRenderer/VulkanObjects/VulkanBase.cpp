@@ -37,40 +37,6 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(
     return VK_FALSE;
 }
 
-/// @brief Loads the function to create a debug messenger and calls it.
-///
-/// @param instance The Vulkan instance.
-/// @param pCreateInfo A pointer to the VkDebugUtilsMessengerCreateInfoEXT struct.
-/// @param pAllocator Optional. A pointer to the custom allocator.
-/// @param pDebugMessenger A pointer to the debug messenger to create.
-///
-/// @returns Returns the result of the loaded function. VK_SUCCESS if the function succeeded, VK_ERROR_EXTENSION_NOT_PRESENT
-/// if the function couldn't be loaded, or any other error the loaded extension might produce.
-VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT *pCreateInfo,
-                                      const VkAllocationCallbacks *pAllocator, VkDebugUtilsMessengerEXT *pDebugMessenger) {
-
-    auto func = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT"));
-
-    if (func != nullptr) {
-        return func(instance, pCreateInfo, pAllocator, pDebugMessenger);
-    } else {
-        return VK_ERROR_EXTENSION_NOT_PRESENT;
-    }
-}
-
-/// @brief Loads the function to destroy a debug messenger and calls it.
-///
-/// @param instance The Vulkan instance.
-/// @param debugMessenger The debug messenger to destroy.
-/// @param pAllocator Optional. A pointer to the custom allocator.
-void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks *pAllocator) {
-    auto func = reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT"));
-
-    if (func != nullptr) {
-        func(instance, debugMessenger, pAllocator);
-    }
-}
-
 /// @ingroup VulkanRenderer
 /// @class Flashlight::VulkanBase
 /// @brief VulkanRenderer wrapper class for base Vulkan objects.
@@ -161,7 +127,7 @@ void VulkanBase::CreateDebugMessenger() {
     PopulateDebugMessengerCreateInfo(createInfo);
 
 
-    if (CreateDebugUtilsMessengerEXT(m_Vulkan.Instance, &createInfo, nullptr, &m_Vulkan.DebugMessenger) != VK_SUCCESS) {
+    if (vkCreateDebugUtilsMessengerEXT(m_Vulkan.Instance, &createInfo, nullptr, &m_Vulkan.DebugMessenger) != VK_SUCCESS) {
         throw std::runtime_error("Failed to create debug messenger.");
     }
 #endif
@@ -170,7 +136,7 @@ void VulkanBase::CreateDebugMessenger() {
 /// @brief Destroys the debug messenger.
 void VulkanBase::DestroyDebugMessenger() const {
 #if defined(FL_DEBUG)
-        DestroyDebugUtilsMessengerEXT(m_Vulkan.Instance, m_Vulkan.DebugMessenger, nullptr);
+        vkDestroyDebugUtilsMessengerEXT(m_Vulkan.Instance, m_Vulkan.DebugMessenger, nullptr);
 #endif
 }
 
