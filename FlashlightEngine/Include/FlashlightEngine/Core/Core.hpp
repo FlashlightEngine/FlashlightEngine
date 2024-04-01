@@ -2,8 +2,8 @@
  * This file is part of "FlashLight Engine"
  * For conditions of distribution and use, see copyright notice in FlashLightEngine.hpp
  *
- * Core.hpp - Core module include file
- * This header file includes the header files contained in the "Core" module the user may want to use.
+ * File : Core.hpp
+ * Description : This header file includes the header files contained in the "Core" module the user may want to use.
  */
 
 #pragma once

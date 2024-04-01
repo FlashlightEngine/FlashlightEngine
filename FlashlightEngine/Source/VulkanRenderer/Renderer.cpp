@@ -2,12 +2,14 @@
  * This file is part of "FlashLight Engine"
  * For conditions of distribution and use, see copyright notice in FlashLightEngine.hpp
  *
- * Renderer.cpp - Definitions of methods from the Renderer class.
- * This file contains definitions of the methods from the Flashlight::Renderer class.
+ * File : Renderer.cpp
+ * Description : This file contains definitions of the methods from the Flashlight::Renderer class.
  */
 
+#include "FlashlightEngine/VulkanRenderer/VulkanRenderer.hpp"
+
 #include "FlashlightEngine/VulkanRenderer/Renderer.hpp"
-#include "FlashlightEngine/VulkanRenderer/VulkanObjects/VulkanBase.hpp"
+#include "FlashlightEngine/VulkanRenderer/VulkanWrapper/VulkanBase.hpp"
 
 namespace Flashlight {
 

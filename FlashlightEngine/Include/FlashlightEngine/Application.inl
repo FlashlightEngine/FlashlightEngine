@@ -2,8 +2,8 @@
  * This file is part of "FlashLight Engine"
  * For conditions of distribution and use, see copyright notice in FlashLightEngine.hpp
  *
- * Application.inl - Definitions of inline methods from the Application class.
- * This file contains the definitions of methods from the Flashlight::Application class.
+ * File : Application.inl
+ * Description : This file contains the definitions of methods from the Application class.
  */
 
 #pragma once

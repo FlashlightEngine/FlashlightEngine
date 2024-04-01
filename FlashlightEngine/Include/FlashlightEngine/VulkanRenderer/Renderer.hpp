@@ -2,15 +2,15 @@
  * This file is part of "FlashLight Engine"
  * For conditions of distribution and use, see copyright notice in FlashLightEngine.hpp
  *
- * Renderer.hpp - The definition of the Render class.
- * This header file contains the definition of the Renderer class, which handles every object concerning rendering with Vulkan.
+ * File : Renderer.hpp
+ * Description : This header file contains the definition of the Renderer class, which handles every object concerning rendering with Vulkan.
  */
 
 #pragma once
 
 #include "FlashlightEngine/Core/Window.hpp"
-#include "VulkanObjects/VulkanBase.hpp"
-#include "VulkanObjects/VulkanSwapChain.hpp"
+
+#include "VulkanWrapper/VulkanSwapChain.hpp"
 
 namespace Flashlight {
 

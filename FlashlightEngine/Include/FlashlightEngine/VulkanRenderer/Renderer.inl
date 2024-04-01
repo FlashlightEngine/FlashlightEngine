@@ -2,14 +2,14 @@
  * This file is part of "FlashLight Engine"
  * For conditions of distribution and use, see copyright notice in FlashLightEngine.hpp
  *
- * Renderer.inl - Definitions of inline methods from the Renderer class.
- * This file contains the definitions of inline methods from the Flashlight::Renderer class.
+ * File : Renderer.inl
+ * Description : This file contains the definitions of inline methods from the Renderer class.
  */
 
 #pragma once
 
 /// @ingroup VulkanRenderer
-/// @class Flashlight::Renderer
+/// @class Flashlight::VulkanRenderer::Renderer
 /// @brief VulkanRenderer wrapper class for base Vulkan objects.
 
 /// @brief Constructor for the VulkanBase class. Calls the function to initialize

@@ -2,19 +2,20 @@
  * This file is part of "FlashLight Engine"
  * For conditions of distribution and use, see copyright notice in FlashLightEngine.hpp
  *
- * VulkanSwapChain.hpp - The definition of the VulkanSwapChain class.
- * This header file contains the definition of the VulkanSwapChain class, which is a wrapper for the Vulkan swap chain object.
+ * File : VulkanSwapChain.hpp
+ * Description : This header file contains the definition of the VulkanSwapChain class, which is a wrapper for the Vulkan
+ *               swap chain object.
  */
 
 #pragma once
 
-#include "VulkanBase.hpp"
 #include "FlashlightEngine/Core/Window.hpp"
+
+#include "VulkanBase.hpp"
 
 #include <volk.h>
 
-namespace Flashlight
-{
+namespace Flashlight {
 
 /// @ingroup VulkanRenderer
 /// @struct Flashlight::VulkanSwapChainObjects

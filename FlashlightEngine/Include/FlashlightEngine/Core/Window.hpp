@@ -2,16 +2,18 @@
  * This file is part of "FlashLight Engine"
  * For conditions of distribution and use, see copyright notice in FlashLightEngine.hpp
  *
- * Window.hpp - Window class and WindowProperties struct definition.
- * This header file contains the definition of the Window class and the WindowProperties struct.
+ * File : Window.hpp
+ * Description : This header file contains the definition of the Window class and the WindowProperties struct.
  */
 
 #pragma once
 
-#include "FlashlightEngine/pch.hpp"
+#include "Core.hpp"
 
 #include <vulkan/vulkan.h>
 #include <GLFW/glfw3.h>
+
+#include "FlashlightEngine/pch.hpp"
 
 namespace Flashlight {
 

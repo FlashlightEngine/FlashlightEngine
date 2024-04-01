@@ -2,21 +2,20 @@
  * This file is part of "FlashLight Engine"
  * For conditions of distribution and use, see copyright notice in FlashLightEngine.hpp
  *
- * VulkanBase.cpp - Definitions of methods from the VulkanDevice class.
- * This file contains the definitions of methods from the Flashlight::VulkanDevice class.
+ * File : VulkanBase.cpp
+ * Description : This file contains the definitions of methods from the Flashlight::VulkanDevice class.
  */
 
-#include "FlashlightEngine/VulkanRenderer/VulkanObjects/VulkanBase.hpp"
-
-#include "FlashlightEngine/defines.hpp"
-#include "FlashlightEngine/pch.hpp"
+#include "FlashlightEngine/VulkanRenderer/VulkanWrapper/VulkanBase.hpp"
 
 #include <volk.h>
 #include <GLFW/glfw3.h>
 
+#include "FlashlightEngine/pch.hpp"
+
 namespace Flashlight {
 
-// Local functions for debug callback and debug messenger creation.
+// Local functions for debug callback.
 
 /// @brief Debug callback for the debug messenger.
 ///
@@ -38,7 +37,7 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(
 }
 
 /// @ingroup VulkanRenderer
-/// @class Flashlight::VulkanBase
+/// @class Flashlight::VulkanRenderer::VulkanBase
 /// @brief VulkanRenderer wrapper class for base Vulkan objects.
 
 /// @brief Initializes all of the Vulkan objects this class is a wrapper of.

@@ -2,8 +2,8 @@
  * This file is part of "FlashLight Engine"
  * For conditions of distribution and use, see copyright notice in FlashLightEngine.hpp
  *
- * Window.inl - Definitions of inline methods from the Window class.
- * This file contains the definitions of inline methods from the Flashlight::Window class.
+ * File : Window.inl
+ * Description : This file contains the definitions of inline methods from the Window class.
  */
 
 #pragma once

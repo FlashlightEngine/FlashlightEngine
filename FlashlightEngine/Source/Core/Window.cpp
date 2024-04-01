@@ -2,8 +2,8 @@
  * This file is part of "FlashLight Engine"
  * For conditions of distribution and use, see copyright notice in FlashLightEngine.hpp
  *
- * Window.cpp - Definitions of the Window class methods.
- * This file contains the definitions of methods from the Flashlight::Window class.
+ * File : Window.cpp
+ * Description This file contains the definitions of methods from the Flashlight::Window class.
  */
 
 #include "FlashlightEngine/Core/Window.hpp"

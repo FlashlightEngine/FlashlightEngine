@@ -21,8 +21,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  *
- * FlashLightEngine.hpp - The FlashLightEngine main header file.
- * This file includes all the modules of the engine.
+ * File : FlashLightEngine.hpp
+ * Description : This file includes all the modules of the engine.
  */
 
 #pragma once

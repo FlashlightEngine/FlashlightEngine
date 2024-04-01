@@ -2,8 +2,8 @@
  * This file is part of "FlashLight Engine"
  * For conditions of distribution and use, see copyright notice in FlashLightEngine.hpp
  *
- * Application.cpp - Definitions of methods from the Application class.
- * This file contains definitions of methods from the Flashlight::Application class.
+ * File : Application.cpp
+ * Description : This file contains definitions of methods from the Flashlight::Application class.
  */
 
 #include "FlashlightEngine/Application.hpp"

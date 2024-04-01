@@ -2,11 +2,11 @@
  * This file is part of "FlashLight Engine"
  * For conditions of distribution and use, see copyright notice in FlashLightEngine.hpp
  *
- * VulkanSwapChain.cpp - Definitions of methods from the VulkanSwapChain class.
- * This file contains the definitions of methods from the Flashlight::VulkanSwapChain class.
+ * File : VulkanSwapChain.cpp
+ * Description : This file contains the definitions of methods from the Flashlight::VulkanSwapChain class.
  */
 
-#include "FlashlightEngine/VulkanRenderer/VulkanObjects/VulkanSwapChain.hpp"
+#include "FlashlightEngine/VulkanRenderer/VulkanWrapper/VulkanSwapChain.hpp"
 
 #include "FlashlightEngine/defines.hpp"
 
@@ -21,8 +21,7 @@
 /// @class Flashlight::VulkanSwapChain
 /// @brief VulkanRenderer wrapper class for the Vulkan swap chain.
 
-namespace Flashlight
-{
+namespace Flashlight {
 
 /// @brief Initializes every Vulkan object this class is a wrapper of.
 void VulkanSwapChain::Init() {

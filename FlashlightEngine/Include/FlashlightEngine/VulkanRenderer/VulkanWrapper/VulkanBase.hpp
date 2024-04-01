@@ -2,21 +2,22 @@
  * This file is part of "FlashLight Engine"
  * For conditions of distribution and use, see copyright notice in FlashLightEngine.hpp
  *
- * VulkanBase.hpp - The definition of the VulkanBase class.
- * This header file contains the definition of the VulkanBase class, which is a wrapper for Vulkan base objects (instance, device, etc.).
+ * File : VulkanBase.hpp
+ * Description : This header file contains the definition of the VulkanBase class, which is a wrapper for Vulkan base objects (instance, device, etc.).
  */
 
 #pragma once
 
-#include "FlashlightEngine/pch.hpp"
 #include "FlashlightEngine/Core/Window.hpp"
+
+#include "FlashlightEngine/pch.hpp"
 
 #include <volk.h>
 
 namespace Flashlight {
 
 /// @ingroup VulkanRenderer
-/// @struct Flashlight::VulkanBaseObjects
+/// @struct Flashlight::VulkanRenderer::VulkanBaseObjects
 /// @brief Structure that stores base Vulkan objects.
 struct VulkanBaseObjects {
     VkInstance Instance;
@@ -45,7 +46,7 @@ struct VulkanBaseObjects {
 };
 
 /// @ingroup VulkanRenderer
-/// @struct Flashlight::QueueFamilyIndices
+/// @struct Flashlight::VulkanRenderer::QueueFamilyIndices
 /// @brief Structure that stores queue family indicies and a utility function to check if they are both present.
 struct QueueFamilyIndices {
     u32 GraphicsFamily = 0;

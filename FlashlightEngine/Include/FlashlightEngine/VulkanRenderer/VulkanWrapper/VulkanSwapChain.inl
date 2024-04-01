@@ -2,8 +2,8 @@
  * This file is part of "FlashLight Engine"
  * For conditions of distribution and use, see copyright notice in FlashLightEngine.hpp
  *
- * VulkanSwapChain.inl - Definitions of inline methods from the VulkanSwapChain class.
- * This header file contains the definition of inline methods from the Flashlight::VulkanSwapChain class.
+ * File : VulkanSwapChain.inl
+ * Description : This file contains the definition of inline methods from the VulkanSwapChain class.
  */
 
 #pragma once
@@ -11,7 +11,7 @@
 #include "FlashlightEngine/pch.hpp"
 
 /// @ingroup VulkanRenderer
-/// @class Flashlight::VulkanSwapChain
+/// @class Flashlight::VulkanRenderer::VulkanSwapChain
 /// @brief VulkanRenderer wrapper class for the Vulkan Swap Chain.
 
 /// @brief Constructor for the VulkanSwapChain class. Calls the function to initialize required objects.

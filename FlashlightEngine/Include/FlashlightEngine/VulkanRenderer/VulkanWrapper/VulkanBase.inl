@@ -2,14 +2,14 @@
  * This file is part of "FlashLight Engine"
  * For conditions of distribution and use, see copyright notice in FlashLightEngine.hpp
  *
- * VulkanBase.inl - Definitions of inline methods from the VulkanDevice class.
- * This file contains the definitions of inline methods from the Flashlight::VulkanBase class.
+ * File : VulkanBase.inl
+ * Description : This file contains the definitions of inline methods from the VulkanBase class.
  */
 
 #pragma once
 
 /// @ingroup VulkanRenderer
-/// @class Flashlight::VulkanBase
+/// @class Flashlight::VulkanRenderer::VulkanBase
 /// @brief VulkanRenderer wrapper class for base Vulkan objects.
 
 /// @brief Constructor for the VulkanBase class. Calls the function to initialize

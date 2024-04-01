@@ -2,7 +2,8 @@
  * This file is part of "FlashLight Engine"
  * For conditions of distribution and use, see copyright notice in FlashLightEngine.hpp
  *
- * VulkanRenderer.hpp -  This file includes the header files contained in the "VulkanRenderer" module the user may want to use.
+ * File : VulkanRenderer.hpp
+ * Description : This file includes the header files contained in the "VulkanRenderer" module the user may want to use.
  */
 
 #pragma once
