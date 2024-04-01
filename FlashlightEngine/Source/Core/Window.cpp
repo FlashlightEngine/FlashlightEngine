@@ -22,8 +22,8 @@ void Window::Init() {
         glfwInit();
         m_GLFWInitialized = true;
 
-        // glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-        // glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+        glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+        glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
         m_Window = glfwCreateWindow(m_Properties.Width, m_Properties.Height, m_Properties.Title.c_str(), nullptr, nullptr);
 

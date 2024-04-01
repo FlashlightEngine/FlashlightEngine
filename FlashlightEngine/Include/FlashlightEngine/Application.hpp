@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Core/Window.hpp"
+
 #include "VulkanRenderer/VulkanRenderer.hpp"
 
 namespace Flashlight {
@@ -27,7 +28,7 @@ public:
 
 protected:
     std::unique_ptr<Window> m_Window = Window::Create(WindowProperties{800, 600, "Flashlight Window <Vulkan 1.0>"});
-    // Renderer m_Renderer{*m_Window};
+    Renderer m_Renderer{*m_Window};
 
 private:
     bool m_Running = true;

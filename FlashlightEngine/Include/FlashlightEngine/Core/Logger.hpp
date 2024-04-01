@@ -33,45 +33,55 @@ private:
 
 namespace Log {
     // Engine log
+
+    /// @brief Sends an engine trace.
     template<typename... Args>
     constexpr void EngineTrace(Args&&... args) {
-        Logger::GetEngineLogger()->trace(std::forward<Args>(args));
+        Logger::GetEngineLogger()->trace(std::forward<Args>(args)...);
     }
-    
+
+    /// @brief Sends an engine info.
     template<typename... Args>
     constexpr void EngineInfo(Args&&... args) {
-        Logger::GetEngineLogger()->info(std::forward<Args>(args));
+        Logger::GetEngineLogger()->info(std::forward<Args>(args)...);
     }
-    
+
+    /// @brief Sends an engine warning.
     template<typename... Args>
     constexpr void EngineWarning(Args&&... args) {
-        Logger::GetEngineLogger()->warn(std::forward<Args>(args));
+        Logger::GetEngineLogger()->warn(std::forward<Args>(args)...);
     }
-    
+
+    /// @brief Sends an engine error.
     template<typename... Args>
     constexpr void EngineError(Args&&... args) {
-        Logger::GetEngineLogger()->error(std::forward<Args>(args));
+        Logger::GetEngineLogger()->error(std::forward<Args>(args)...);
     }
     
     // Application log
+    
+    /// @brief Sends an application trace.
     template<typename... Args>
     constexpr void Trace(Args&&... args) {
-        Logger::GetApplicationLogger()->trace(std::forward<Args>(args));
+        Logger::GetApplicationLogger()->trace(std::forward<Args>(args)...);
     }
-    
+
+    /// @brief Sends an application info.
     template<typename... Args>
     constexpr void Info(Args&&... args) {
-        Logger::GetApplicationLogger()->info(std::forward<Args>(args));
+        Logger::GetApplicationLogger()->info(std::forward<Args>(args)...);
     }
-    
+
+    /// @brief Sends an application warning.
     template<typename... Args>
     constexpr void Warning(Args&&... args) {
-        Logger::GetApplicationLogger()->warn(std::forward<Args>(args));
+        Logger::GetApplicationLogger()->warn(std::forward<Args>(args)...);
     }
-    
+
+    /// @brief Sends an application error.
     template<typename... Args>
     constexpr void Error(Args&&... args) {
-        Logger::GetApplicationLogger()->error(std::forward<Args>(args));
+        Logger::GetApplicationLogger()->error(std::forward<Args>(args)...);
     }
 }
 

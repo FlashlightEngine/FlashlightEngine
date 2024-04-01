@@ -18,6 +18,11 @@ namespace Flashlight {
 std::shared_ptr<spdlog::logger> Logger::s_EngineLogger;
 std::shared_ptr<spdlog::logger> Logger::s_ApplicationLogger;
 
+/// @ingroup Core
+/// @class Flashlight::Logger
+/// @brief Class that handles logging.
+
+/// @brief Initializes loggers and the default logger pattern.
 void Logger::Init() {
     spdlog::set_pattern("%^[%T](%l) %n : %v%$");
 
@@ -28,13 +33,18 @@ void Logger::Init() {
     s_ApplicationLogger->set_level(spdlog::level::trace);
 }
 
+/// @ingroup Core
+/// @class Flashlight::CallbackSink
+/// @brief Lets the user define a custom callback for the logger.
 template<typename Mutex>
 class CallbackSink final : public spdlog::sinks::base_sink<Mutex> {
 public:
+    /// @brief The constructor for the CallbackSink class.
     explicit CallbackSink(LogCallback callback)
         : m_Callback{std::move(callback)} {}
 
 protected:
+    /// @brief Formats the message then calls the callback.
     void sink_it_(const spdlog::details::log_msg &msg) override {
         spdlog::memory_buf_t formatted;
         m_Formatter.format(msg, formatted);
@@ -43,16 +53,23 @@ protected:
         m_Callback(msg.level, str_msg + '\n');
     }
 
+    /// @brief Does nothing.
     void flush_() override {}    
 private:
     LogCallback m_Callback;
     spdlog::pattern_formatter m_Formatter;
 };
 
+/// @brief Adds a custom callback to the engine logger.
+///
+/// @param callback The custom callback, of type LogCallback.
 void Logger::AddEngineLogCallback(const LogCallback &callback) {
     s_EngineLogger->sinks().push_back(std::make_shared<CallbackSink<std::mutex>>(callback));
 }
 
+/// @brief Adds a custom callback to the application logger.
+/// 
+/// @param callback The custom callback, of type LogCallback.
 void Logger::AddApplicationLogCallback(const LogCallback &callback) {
     s_ApplicationLogger->sinks().push_back(std::make_shared<CallbackSink<std::mutex>>(callback));
 }

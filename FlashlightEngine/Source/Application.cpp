@@ -17,8 +17,9 @@ namespace Flashlight {
 Application *Application::s_Application = nullptr;
 
 /// @brief Constructor for the Application class.
-Application::Application() {
+Application::Application() {    
     if (s_Application) {
+        Log::EngineError("Application already running.");
         throw std::runtime_error("You can only run this application once.");
     }
 }
