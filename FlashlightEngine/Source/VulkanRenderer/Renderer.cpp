@@ -6,10 +6,7 @@
  * Description : This file contains definitions of the methods from the Flashlight::Renderer class.
  */
 
-#include "FlashlightEngine/VulkanRenderer/VulkanRenderer.hpp"
-
 #include "FlashlightEngine/VulkanRenderer/Renderer.hpp"
-#include "FlashlightEngine/VulkanRenderer/VulkanWrapper/VulkanBase.hpp"
 
 namespace Flashlight {
 

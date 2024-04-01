@@ -37,7 +37,7 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(
 }
 
 /// @ingroup VulkanRenderer
-/// @class Flashlight::VulkanRenderer::VulkanBase
+/// @class Flashlight::VulkanBase
 /// @brief VulkanRenderer wrapper class for base Vulkan objects.
 
 /// @brief Initializes all of the Vulkan objects this class is a wrapper of.

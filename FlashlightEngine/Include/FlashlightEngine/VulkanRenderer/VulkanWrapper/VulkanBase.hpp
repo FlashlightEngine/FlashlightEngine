@@ -17,7 +17,7 @@
 namespace Flashlight {
 
 /// @ingroup VulkanRenderer
-/// @struct Flashlight::VulkanRenderer::VulkanBaseObjects
+/// @struct Flashlight::VulkanBaseObjects
 /// @brief Structure that stores base Vulkan objects.
 struct VulkanBaseObjects {
     VkInstance Instance;
@@ -46,7 +46,7 @@ struct VulkanBaseObjects {
 };
 
 /// @ingroup VulkanRenderer
-/// @struct Flashlight::VulkanRenderer::QueueFamilyIndices
+/// @struct Flashlight::QueueFamilyIndices
 /// @brief Structure that stores queue family indicies and a utility function to check if they are both present.
 struct QueueFamilyIndices {
     u32 GraphicsFamily = 0;
