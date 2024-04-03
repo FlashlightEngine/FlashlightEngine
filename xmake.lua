@@ -39,7 +39,7 @@ target("FlashlightEngine")
   add_includedirs("FlashlightEngine/Include", {public = true})
   set_pcxxheader("FlashlightEngine/Include/FlashlightEngine/pch.hpp")
 
-  add_packages("glfw", "volk", "glm")
+  add_packages("glfw", "glm")
 
   add_defines("VK_NO_PROTOTYPES", {public = true})
 
