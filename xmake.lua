@@ -19,7 +19,7 @@ if (is_mode("debug")) then
     add_defines("FL_DEBUG")
 end
 
-add_requires("glfw 3.3.8", "glm", "volk")
+add_requires("glfw", "glm")
 
 local outputdir = "$(mode)-$(os)-$(arch)"
 
@@ -53,6 +53,6 @@ target("TestApplication")
     add_headerfiles("TestApplication/Include/**.hpp", "TestApplication/Include/**.h", "TestApplication/Include/**.inl")
     add_includedirs("TestApplication/Include")
 
-    add_packages("glfw", "glm", "volk")
+    add_packages("glfw", "glm")
 
     add_deps("FlashlightEngine")
