@@ -19,7 +19,7 @@ if (is_mode("debug")) then
     add_defines("FL_DEBUG")
 end
 
-add_requires("glfw 3.3.8", "glm", "volk")
+add_requires("glfw", "glm", "volk")
 
 local outputdir = "$(mode)-$(os)-$(arch)"
 
