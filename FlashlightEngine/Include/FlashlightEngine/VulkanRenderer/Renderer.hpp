@@ -23,8 +23,8 @@ public:
 
 private:
     Window m_Window;
-    VulkanBase m_VulkanBase;
-    std::unique_ptr<VulkanSwapChain> m_SwapChain;
+    VulkanWrapper::VulkanBase m_VulkanBase;
+    std::unique_ptr<VulkanWrapper::VulkanSwapChain> m_SwapChain;
 
     void Init();
 };

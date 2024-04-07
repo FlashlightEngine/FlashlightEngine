@@ -9,7 +9,7 @@
 #pragma once
 
 /// @ingroup VulkanRenderer
-/// @class Flashlight::VulkanRenderer::Renderer
+/// @class Flashlight::Renderer
 /// @brief VulkanRenderer wrapper class for base Vulkan objects.
 
 /// @brief Constructor for the VulkanBase class. Calls the function to initialize

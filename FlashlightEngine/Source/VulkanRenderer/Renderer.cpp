@@ -10,6 +10,8 @@
 
 namespace Flashlight {
 
+using namespace VulkanWrapper;
+
 /// @ingroup VulkanRenderer
 /// @class Flashlight::Renderer
 /// @brief The class that manages the Vulkan rendering engine.

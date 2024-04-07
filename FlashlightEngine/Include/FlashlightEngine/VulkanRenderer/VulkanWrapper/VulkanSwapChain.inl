@@ -11,7 +11,7 @@
 #include "FlashlightEngine/pch.hpp"
 
 /// @ingroup VulkanRenderer
-/// @class Flashlight::VulkanRenderer::VulkanSwapChain
+/// @class Flashlight::VulkanWrapper::VulkanSwapChain
 /// @brief VulkanRenderer wrapper class for the Vulkan Swap Chain.
 
 /// @brief Constructor for the VulkanSwapChain class. Calls the function to initialize required objects.

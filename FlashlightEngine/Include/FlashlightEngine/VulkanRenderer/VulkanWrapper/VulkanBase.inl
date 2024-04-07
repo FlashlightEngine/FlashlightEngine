@@ -9,7 +9,7 @@
 #pragma once
 
 /// @ingroup VulkanRenderer
-/// @class Flashlight::VulkanBase
+/// @class Flashlight::VulkanWrapper::VulkanBase
 /// @brief VulkanRenderer wrapper class for base Vulkan objects.
 
 /// @brief Constructor for the VulkanBase class. Calls the function to initialize
@@ -64,13 +64,13 @@ inline VkQueue VulkanBase::PresentQueue() const noexcept {
 /// @brief Returns the swap chain support details.
 ///
 /// @returns A SwapChainSupportDetails struct of the support details for the swap chain.
-inline SwapChainSupportDetails VulkanBase::GetSwapChainSupportDetails() const noexcept {
+inline VulkanBase::SwapChainSupportDetails VulkanBase::GetSwapChainSupportDetails() const noexcept {
     return QuerySwapChainSupport(m_Vulkan.PhysicalDevice);
 }
 
 /// @brief Returns the queue families indices.
 ///
 /// @returns A QueueFamilyIndices struct of the queue families .
-inline QueueFamilyIndices VulkanBase::GetQueueFamilies() const noexcept {
+inline VulkanBase::QueueFamilyIndices VulkanBase::GetQueueFamilies() const noexcept {
     return FindQueueFamilies(m_Vulkan.PhysicalDevice);
 }
