@@ -8,4 +8,5 @@
 
 #pragma once
 
+#include "Logger.hpp"
 #include "Window.hpp"

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <FlashlightEngine/FlashLightEngine.hpp>
+#include <FlashlightEngine/FlashlightEngine.hpp>
 
 namespace TestApplication {
 
