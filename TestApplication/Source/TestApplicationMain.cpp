@@ -9,6 +9,7 @@ int main() {
         std::cerr << e.what() << std::endl;
         return EXIT_FAILURE;
     }
+    std::cout << "\\033[2J\\033[1;1H";
 
     return EXIT_SUCCESS;
 }
