@@ -8,7 +8,6 @@
 
 #include "FlashlightEngine/VulkanRenderer/VulkanWrapper/VulkanBase.hpp"
 
-#include <volk.h>
 #include <GLFW/glfw3.h>
 
 #include "FlashlightEngine/pch.hpp"
@@ -23,7 +22,6 @@ namespace VulkanWrapper {
 
     /// @brief Initializes all of the Vulkan objects this class is a wrapper of.
     void VulkanBase::Init() {
-        CreateDebugMessenger();
         CreateSurface();
         PickPhysicalDevice();
         CreateLogicalDevice();
@@ -32,28 +30,7 @@ namespace VulkanWrapper {
     /// @brief Destroys all the Vulkan objects this class is a wrapper of.
     void VulkanBase::Cleanup() {
         DestroyLogicalDevice();
-        DestroyDebugMessenger();
         DestroySurface();
-    }
-
-    /// @brief Creates and setup the debug messenger.
-    void VulkanBase::CreateDebugMessenger() {
-#if defined(FL_DEBUG)
-        VkDebugUtilsMessengerCreateInfoEXT createInfo;
-        PopulateDebugMessengerCreateInfo(createInfo);
-
-
-        if (vkCreateDebugUtilsMessengerEXT(m_Vulkan.Instance, &createInfo, nullptr, &m_Vulkan.DebugMessenger) != VK_SUCCESS) {
-            Log::EngineError("Failed to create Vulkan debug messenger.");
-        }
-#endif
-    }
-
-    /// @brief Destroys the debug messenger.
-    void VulkanBase::DestroyDebugMessenger() const {
-#if defined(FL_DEBUG)
-        vkDestroyDebugUtilsMessengerEXT(m_Vulkan.Instance, m_Vulkan.DebugMessenger, nullptr);
-#endif
     }
 
     /// @brief Creates the window surface.

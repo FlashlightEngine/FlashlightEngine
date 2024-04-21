@@ -12,9 +12,14 @@
 
 #include <GLFW/glfw3.h>
 
+#include "FlashlightEngine/VulkanRenderer/VulkanWrapper/VulkanLoader.hpp"
+
 namespace Flashlight {
 
 namespace VulkanWrapper {
+#define VK_INSTANCE_FUNCTION( fun ) PFN_##fun fun;
+#include "FlashlightEngine/VulkanRenderer/VulkanWrapper/InstanceFunctions.hpp"
+
     // Local functions for debug callback.
 
     /// @brief Debug callback for the debug messenger.
@@ -45,7 +50,6 @@ namespace VulkanWrapper {
     /// @param appInfo The application information structure.
     /// @param createInfo The instance creation information structure.
     void VulkanInstance::Create(VkApplicationInfo appInfo, VkInstanceCreateInfo createInfo) {
-        volkInitialize();
 
 #if defined(FL_DEBUG)
         if (!CheckValidationLayerSupport()) {
@@ -100,13 +104,13 @@ namespace VulkanWrapper {
             .ppEnabledExtensionNames = requiredExtensions.data(),
         };
 
-        if (vkCreateInstance(&createInfo, nullptr, &m_Handle) != VK_SUCCESS) {
-            Log::EngineError("Failed to create Vulkan instance.");
+        if (VulkanLoader::vkCreateInstance(&createInfo, nullptr, &m_Handle) != VK_SUCCESS) {
+            Log::EngineError("Failed to create instance.");
         }
 
-        volkLoadInstance(m_Handle);
-
         CheckRequiredInstanceExtensionsSupport();
+
+        LoadInstanceFunctions();
     }
 
     /// @brief Destroys the Vulkan instance if it is a valid handle.
@@ -121,10 +125,10 @@ namespace VulkanWrapper {
     /// @returns A boolean telling if validation layers are supported.
     bool VulkanInstance::CheckValidationLayerSupport() const noexcept {
         u32 layerCount;
-        vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
+        VulkanLoader::vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
 
         std::vector<VkLayerProperties> availableLayers(layerCount);
-        vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
+        VulkanLoader::vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
 
         for (const char *layerName : m_ValidationLayers) {
             bool layerFound = false;
@@ -216,13 +220,20 @@ namespace VulkanWrapper {
     /// @returns A std::vector of the instance extensions properties.
     std::vector<VkExtensionProperties> VulkanInstance::GetAvailableInstanceExtensions() const noexcept {
         u32 extensionCount = 0;
-        vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
+        VulkanLoader::vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
 
         std::vector<VkExtensionProperties> extensions(extensionCount);
-        vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, extensions.data());
+        VulkanLoader::vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, extensions.data());
 
         return extensions;
     }
-}
 
+    void VulkanInstance::LoadInstanceFunctions() {
+#define VK_INSTANCE_FUNCTION( fun ) \
+        if (! (fun = reinterpret_cast<PFN_##fun>(VulkanLoader::vkGetInstanceProcAddr(m_Handle, #fun)) ) \
+            Log::EngineError("Failed to load instance function : {}", #fun);
+        }
+
+#include "FlashlightEngine/VulkanRenderer/VulkanWrapper/InstanceFunctions.hpp"
+    }
 }

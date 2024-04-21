@@ -36,3 +36,7 @@ inline std::vector<const char*> VulkanInstance::GetEnabledValidationLayers() con
 inline bool VulkanInstance::IsValid() const noexcept {
     return m_Handle != nullptr;
 }
+
+inline VkInstance VulkanInstance::GetHandle() const noexcept {
+    return m_Handle;
+}

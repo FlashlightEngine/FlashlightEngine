@@ -8,17 +8,23 @@
 
 #pragma once
 
-template<typename VkType>
-inline VulkanInstanceObject<VkType>::VulkanInstanceObject(const VulkanBase &base) : m_Instance{()} {
-    Init();
+template<typename ClassName, typename VkType, typename VkCreateInfo>
+VulkanInstanceObject<ClassName, VkType, VkCreateInfo>::VulkanInstanceObject() : m_Handle(VK_NULL_HANDLE) {
 }
 
-template<typename VkType>
-inline VulkanInstanceObject<VkType>::~VulkanInstanceObject() {
-    Cleanup();
+template<typename ClassName, typename VkType, typename VkCreateInfo>
+VulkanInstanceObject<ClassName, VkType, VkCreateInfo>::~VulkanInstanceObject() {
+    Destroy();
 }
 
-template<typename VkType>
-inline bool VulkanInstanceObject<VkType>::IsValid() const noexcept {
-    return m_Handle != nullptr;
+template<typename ClassName, typename VkType, typename VkCreateInfo>
+bool VulkanInstanceObject<ClassName, VkType, VkCreateInfo>::IsValid() const noexcept {
+    return m_Handle != VK_NULL_HANDLE;
+}
+
+template <typename ClassName, typename VkType, typename VkCreateInfoType>
+void VulkanInstanceObject<ClassName, VkType, VkCreateInfoType>::Destroy() {
+    if (IsValid()) {
+        ClassName::DestroyHandle(m_Instance.get(), m_Handle);
+    }
 }

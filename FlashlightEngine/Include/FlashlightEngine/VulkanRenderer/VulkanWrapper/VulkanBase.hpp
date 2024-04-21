@@ -12,8 +12,6 @@
 
 #include "FlashlightEngine/pch.hpp"
 
-#include <volk.h>
-
 namespace Flashlight {
 
 namespace VulkanWrapper {
@@ -21,9 +19,6 @@ namespace VulkanWrapper {
     /// @struct Flashlight::VulkanWrapper::VulkanBaseObjects
     /// @brief Structure that stores base Vulkan objects.
     struct VulkanBaseObjects {
-        VkInstance Instance;
-
-        VkDebugUtilsMessengerEXT DebugMessenger;
 
         VkPhysicalDevice PhysicalDevice;
 
@@ -37,8 +32,6 @@ namespace VulkanWrapper {
         /// @brief Constructor for the VulkanBaseObjects struct.
         /// Initializes every object to VK_NULL_HANDLE by default.
         VulkanBaseObjects() :
-            Instance(VK_NULL_HANDLE),
-            DebugMessenger(VK_NULL_HANDLE),
             PhysicalDevice(VK_NULL_HANDLE),
             LogicalDevice(VK_NULL_HANDLE),
             GraphicsQueue(VK_NULL_HANDLE),
@@ -103,13 +96,6 @@ namespace VulkanWrapper {
         void Init();
         void Cleanup();
 
-        // Functions to create/destroy Vulkan objects.
-        void CreateInstance();
-        void DestroyInstance() const;
-
-        void CreateDebugMessenger();
-        void DestroyDebugMessenger() const;
-
         void CreateSurface();
         void DestroySurface() const;
 
@@ -118,13 +104,7 @@ namespace VulkanWrapper {
 
         void CreateLogicalDevice();
         void DestroyLogicalDevice() const;
-
-        // Utility functions.
-        std::vector<const char*> GetRequiredInstanceExtensions() const noexcept;
-        std::vector<VkExtensionProperties> GetAvailableInstanceExtensions() const noexcept;
-        void CheckRequiredInstanceExtensionsSupport() const;
-        bool CheckValidationLayerSupport() const noexcept;
-        void PopulateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT &createInfo) noexcept;
+        
         VkPhysicalDeviceProperties GetDeviceProperties(VkPhysicalDevice physicalDevice) const noexcept;
         VkPhysicalDeviceFeatures GetDeviceFeatures(VkPhysicalDevice physicalDevice) const noexcept;
         bool IsDeviceSuitable(VkPhysicalDevice physicalDevice) const noexcept;

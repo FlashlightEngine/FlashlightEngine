@@ -8,34 +8,32 @@
 
 #pragma once
 
-#include "VulkanBase.hpp"
+#include "VulkanInstance.hpp"
 
 namespace Flashlight {
 
 namespace VulkanWrapper {
 
-    template<typename VkType, typename VkCreateInfoType>
+    template<typename ClassName, typename VkType, typename VkCreateInfoType>
     class VulkanInstanceObject {
     public:
-        explicit VulkanInstanceObject(const VulkanBase &base);
+        explicit VulkanInstanceObject();
         VulkanInstanceObject(const VulkanInstanceObject &) = delete;
         VulkanInstanceObject(VulkanInstanceObject &&) = delete;
-        ~VulkanInstanceObject();
+        virtual ~VulkanInstanceObject();
 
-        inline bool IsValid() const noexcept;
+        bool IsValid() const noexcept;
 
-        void Create(VkCreateInfoType createInfo);
+        virtual void Create(VulkanInstance &instance, VkCreateInfoType &createInfo) = 0;
+        void Destroy();
    
     protected:
-        VkInstance m_Instance;
+        std::shared_ptr<VulkanInstance> m_Instance;
         VkType m_Handle;
-        
-        virtual void Init(VkCreateInfoType createInfo) = 0;
-        virtual void Cleanup() const = 0;
     };
+    
 
 #include "VulkanInstanceObject.inl"
-    
 }
 
 }

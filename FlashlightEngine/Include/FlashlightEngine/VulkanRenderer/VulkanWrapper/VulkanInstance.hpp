@@ -1,12 +1,15 @@
 ﻿#pragma once
 
-#include <volk.h>
+#include "FlashlightEngine/pch.hpp"
+
+#include <vulkan/vulkan.h>
 
 namespace Flashlight {
 
 namespace VulkanWrapper {
 
     class VulkanInstance {
+    public:
         inline VulkanInstance();
         VulkanInstance(const VulkanInstance &) = delete;
         VulkanInstance(VulkanInstance &&) = delete;
@@ -19,6 +22,12 @@ namespace VulkanWrapper {
 #endif
         
         inline bool IsValid() const noexcept;
+        inline VkInstance GetHandle() const noexcept;
+        
+        void PopulateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT &createInfo) noexcept;
+
+#define VK_INSTANCE_FUNCTION( fun ) static extern PFN_##fun fun;
+#include "InstanceFunctions.hpp"
         
     private:
         VkInstance m_Handle;
@@ -27,10 +36,10 @@ namespace VulkanWrapper {
 
         // Helper functions.
         bool CheckValidationLayerSupport() const noexcept;
-        void PopulateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT &createInfo) noexcept;
         std::vector<const char*> GetRequiredInstanceExtensions() const noexcept;
         void CheckRequiredInstanceExtensionsSupport() const;
         std::vector<VkExtensionProperties> GetAvailableInstanceExtensions() const noexcept;
+        void LoadInstanceFunctions();
 
 #if defined(FL_DEBUG)
         const std::vector<const char*> m_ValidationLayers = {
