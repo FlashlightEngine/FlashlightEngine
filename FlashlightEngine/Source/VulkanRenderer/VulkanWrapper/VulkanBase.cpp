@@ -22,7 +22,6 @@ namespace VulkanWrapper {
 
     /// @brief Initializes all of the Vulkan objects this class is a wrapper of.
     void VulkanBase::Init() {
-        CreateSurface();
         PickPhysicalDevice();
         CreateLogicalDevice();
     }
@@ -30,19 +29,6 @@ namespace VulkanWrapper {
     /// @brief Destroys all the Vulkan objects this class is a wrapper of.
     void VulkanBase::Cleanup() {
         DestroyLogicalDevice();
-        DestroySurface();
-    }
-
-    /// @brief Creates the window surface.
-    void VulkanBase::CreateSurface() {
-        if (glfwCreateWindowSurface(m_Vulkan.Instance, m_Window.GetNativeWindow(), nullptr, &m_Vulkan.Surface) != VK_SUCCESS) {
-            Log::EngineError("Failed to create window surface.");
-        }
-    }
-
-    /// @brief Destroys the window surface.
-    void VulkanBase::DestroySurface() const {
-        vkDestroySurfaceKHR(m_Vulkan.Instance, m_Vulkan.Surface, nullptr);
     }
 
     /// @brief Picks a Vulkan physical device.

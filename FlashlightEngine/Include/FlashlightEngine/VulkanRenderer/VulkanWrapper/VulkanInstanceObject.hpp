@@ -17,18 +17,19 @@ namespace VulkanWrapper {
     template<typename ClassName, typename VkType, typename VkCreateInfoType>
     class VulkanInstanceObject {
     public:
-        explicit VulkanInstanceObject();
+        VulkanInstanceObject();
         VulkanInstanceObject(const VulkanInstanceObject &) = delete;
         VulkanInstanceObject(VulkanInstanceObject &&) = delete;
         virtual ~VulkanInstanceObject();
-
+        
         bool IsValid() const noexcept;
+        VkType GetHandle() const noexcept;
 
-        virtual void Create(VulkanInstance &instance, VkCreateInfoType &createInfo) = 0;
+        void Create(VulkanInstance &instance, VkCreateInfoType &createInfo);
         void Destroy();
    
     protected:
-        std::shared_ptr<VulkanInstance> m_Instance;
+        VulkanInstance m_Instance;
         VkType m_Handle;
     };
     

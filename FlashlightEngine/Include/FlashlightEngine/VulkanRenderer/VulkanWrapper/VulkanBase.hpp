@@ -96,9 +96,6 @@ namespace VulkanWrapper {
         void Init();
         void Cleanup();
 
-        void CreateSurface();
-        void DestroySurface() const;
-
         // The physical device doesn't need a destroy function since it's destroyed implicitly when the instance is destroyed.
         void PickPhysicalDevice();
 

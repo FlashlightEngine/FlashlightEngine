@@ -14,9 +14,9 @@ namespace VulkanWrapper {
         : public VulkanInstanceObject<VulkanDebugMessenger, VkDebugUtilsMessengerEXT, VkDebugUtilsMessengerCreateInfoEXT> {
         VulkanDebugMessenger() = default;
 
-        void Create(VulkanInstance &instance, VkDebugUtilsMessengerCreateInfoEXT &createInfo) override;
-
-        static void DestroyHandle(const VulkanInstance &instance, VkDebugUtilsMessengerEXT debugMessenger);
+        static inline void CreateHandle(VulkanInstance& instance, VkDebugUtilsMessengerCreateInfoEXT &createInfo,
+                                        VkDebugUtilsMessengerEXT &debugMessenger);
+        static inline void DestroyHandle(const VulkanInstance &instance, VkDebugUtilsMessengerEXT &debugMessenger);
     };
 
 #include "VulkanDebugMessenger.inl"
