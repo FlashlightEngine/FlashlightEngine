@@ -1,47 +1,28 @@
-/* Copyright (C) 2024 Jean "Pixfri" Letessier (jean.letessier@protonmail.com)
- * This file is part of "FlashLight Engine"
- * For conditions of distribution and use, see copyright notice in FlashLightEngine.hpp
- *
- * File : VulkanBase.cpp
- * Description : This file contains the definitions of methods from the Flashlight::VulkanDevice class.
- */
-
-#include "FlashlightEngine/VulkanRenderer/VulkanWrapper/VulkanBase.hpp"
-
-#include <GLFW/glfw3.h>
-
-#include "FlashlightEngine/pch.hpp"
+﻿#include "FlashlightEngine/VulkanRenderer/VulkanWrapper/VulkanDevice.hpp"
 
 namespace Flashlight {
 
 namespace VulkanWrapper {
-    
-    /// @ingroup VulkanRenderer
-    /// @class Flashlight::VulkanWrapper::VulkanBase
-    /// @brief VulkanRenderer wrapper class for base Vulkan objects.
 
-    /// @brief Initializes all of the Vulkan objects this class is a wrapper of.
-    void VulkanBase::Init() {
+    void VulkanDevice::Create(VulkanInstance &instance, const VulkanWindowSurface &surface) {
+        m_Instance = instance.GetHandle();
+        m_Surface = surface.GetHandle();
+
         PickPhysicalDevice();
-        CreateLogicalDevice();
+        CreateLogicalDevice(instance);
     }
-
-    /// @brief Destroys all the Vulkan objects this class is a wrapper of.
-    void VulkanBase::Cleanup() {
-        DestroyLogicalDevice();
-    }
-
+    
     /// @brief Picks a Vulkan physical device.
-    void VulkanBase::PickPhysicalDevice() {
+    void VulkanDevice::PickPhysicalDevice() {
         u32 deviceCount = 0;
-        vkEnumeratePhysicalDevices(m_Vulkan.Instance, &deviceCount, nullptr);
+        vkEnumeratePhysicalDevices(m_Instance, &deviceCount, nullptr);
 
         if (deviceCount == 0) {
             Log::EngineError("Failed to find GPUs with Vulkan support.");
         }
 
         std::vector<VkPhysicalDevice> devices(deviceCount);
-        vkEnumeratePhysicalDevices(m_Vulkan.Instance, &deviceCount, devices.data());
+        vkEnumeratePhysicalDevices(m_Instance, &deviceCount, devices.data());
 
         std::multimap<i32, VkPhysicalDevice> candidates;
 
@@ -51,23 +32,21 @@ namespace VulkanWrapper {
         }
 
         if (candidates.rbegin()->first > 0) {
-            m_Vulkan.PhysicalDevice = candidates.rbegin()->second;
+            m_PhysicalDevice = candidates.rbegin()->second;
         } else {
             Log::EngineError("Failed to find a suitable GPU.");
         }
 
         // Stores the properties for the chosen physical device.
-        DeviceProperties = GetDeviceProperties(m_Vulkan.PhysicalDevice);
+        m_DeviceProperties = GetDeviceProperties(m_PhysicalDevice);
 
-        std::cout << "GPU Informations : " << '\n'
-        << '\t' << "GPU Name : " << DeviceProperties.deviceName << '\n'
-        << '\t' <<"GPU Driver Version : " << DeviceProperties.driverVersion << '\n'
-        << '\t' << "GPU Vulkan API Version : " << DeviceProperties.apiVersion << '\n' << std::endl;
+        std::cout << std::format("GPU Information : \n GPU Name : {} \n GPU Driver Version : {} \n GPU Vulkan API Version : {}\n",
+            m_DeviceProperties.deviceName, m_DeviceProperties.driverVersion, m_DeviceProperties.apiVersion);
     }
-
+    
     /// @brief Creates the Vulkan logical device.
-    void VulkanBase::CreateLogicalDevice() {
-        QueueFamilyIndices indices = FindQueueFamilies(m_Vulkan.PhysicalDevice);
+    void VulkanDevice::CreateLogicalDevice(VulkanInstance &instance) {
+        QueueFamilyIndices indices = FindQueueFamilies(m_PhysicalDevice);
 
         std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
         std::set<u32> uniqueQueueFamilies = {indices.GraphicsFamily, indices.PresentFamily};
@@ -82,9 +61,9 @@ namespace VulkanWrapper {
             queueCreateInfos.push_back(queueCreateInfo);
         }
 
-        VkPhysicalDeviceFeatures deviceFeatures{};
+        VkPhysicalDeviceFeatures deviceFeatures {};
 
-        VkDeviceCreateInfo createInfo{};
+        VkDeviceCreateInfo createInfo {};
         createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 
         createInfo.queueCreateInfoCount = static_cast<u32>(queueCreateInfos.size());
@@ -95,71 +74,46 @@ namespace VulkanWrapper {
         createInfo.enabledExtensionCount = static_cast<u32>(m_DeviceExtensions.size());
         createInfo.ppEnabledExtensionNames = m_DeviceExtensions.data();
 
-        const auto availableDeviceExtensions = GetAvailableDeviceExtensions(m_Vulkan.PhysicalDevice);
-        std::cout << "Available device extensions : \n";
+        const auto availableDeviceExtensions = GetAvailableDeviceExtensions(m_PhysicalDevice);
+        std::cout << "Available device extensions :\n";
         for (const auto &extension : availableDeviceExtensions) {
-            std::cout << '\t' << extension.extensionName << '\n';
+            std::cout << std::format("\t {} \n", extension.extensionName);
         }
 
-        std::cout << std::endl;
-
-        std::cout << "Required device extensions : \n";
+        Log::EngineInfo("Required device extensions :");
         for (const auto &extension : m_DeviceExtensions) {
-            std::cout << '\t' << extension << '\n';
+            std::cout << std::format("\t {} \n", extension);
         }
-
-        std::cout << std::endl;
-
+        
 #if FL_DEBUG
-        createInfo.enabledLayerCount = static_cast<u32>(m_ValidationLayers.size());
-        createInfo.ppEnabledLayerNames = m_ValidationLayers.data();
+        auto enabledValidationLayers = instance.GetEnabledValidationLayers();
+        
+        createInfo.enabledLayerCount = static_cast<u32>(enabledValidationLayers.size());
+        createInfo.ppEnabledLayerNames = enabledValidationLayers.data();
 #else
         createInfo.enabledLayerCount = 0;
 #endif
 
-        if (vkCreateDevice(m_Vulkan.PhysicalDevice, &createInfo, nullptr, &m_Vulkan.LogicalDevice) != VK_SUCCESS) {
-            Log::EngineError("Failed to create logical device.");
+        if (vkCreateDevice(m_PhysicalDevice, &createInfo, nullptr, &m_Device) != VK_SUCCESS) {
+            std::cout << "Failed to create logical device.";
         }
 
-        vkGetDeviceQueue(m_Vulkan.LogicalDevice, indices.GraphicsFamily, 0, &m_Vulkan.GraphicsQueue);
-        vkGetDeviceQueue(m_Vulkan.LogicalDevice, indices.PresentFamily, 0, &m_Vulkan.PresentQueue);
+        volkLoadDevice(m_Device);
     }
 
     /// @brief Destroys the Vulkan logical device.
-    void VulkanBase::DestroyLogicalDevice() const {
-        vkDestroyDevice(m_Vulkan.LogicalDevice, nullptr);
+    void VulkanDevice::DestroyLogicalDevice() const {
+        if (IsValid()) {
+            vkDestroyDevice(m_Device, nullptr);
+        }
     }
-
-    /// @brief Gets a physical device properties.
-    ///
-    /// @param physicalDevice The physical device to get the properties of.
-    ///
-    /// @returns The physical device properties.
-    VkPhysicalDeviceProperties VulkanBase::GetDeviceProperties(VkPhysicalDevice physicalDevice) const noexcept {
-        VkPhysicalDeviceProperties deviceProperties;
-        vkGetPhysicalDeviceProperties(physicalDevice, &deviceProperties);
-
-        return deviceProperties;
-    }
-
-    /// @brief Gets a physical device features.
-    ///
-    /// @param physicalDevice The physical device to get the properties of.
-    ///
-    /// @returns The physical device features.
-    VkPhysicalDeviceFeatures VulkanBase::GetDeviceFeatures(VkPhysicalDevice physicalDevice) const noexcept {
-        VkPhysicalDeviceFeatures deviceFeatures;
-        vkGetPhysicalDeviceFeatures(physicalDevice, &deviceFeatures);
-
-        return deviceFeatures;
-    }
-
+    
     /// @brief Checks if the provided device suits the requirements.
     ///
     /// @param physicalDevice The physical device to check.
     ///
     /// @returns A boolean telling if the provided device suits the requirements.
-    bool VulkanBase::IsDeviceSuitable(VkPhysicalDevice physicalDevice) const noexcept {
+    bool VulkanDevice::IsDeviceSuitable(VkPhysicalDevice physicalDevice) const noexcept {
         auto deviceProperties = GetDeviceProperties(physicalDevice);
         auto deviceFeatures = GetDeviceFeatures(physicalDevice);
 
@@ -181,7 +135,7 @@ namespace VulkanWrapper {
     /// @param physicalDevice The physical device to check.
     ///
     /// @returns A boolean telling if required device extensions are available.
-    bool VulkanBase::CheckDeviceExtensionSupport(VkPhysicalDevice physicalDevice) const noexcept {
+    bool VulkanDevice::CheckDeviceExtensionSupport(VkPhysicalDevice physicalDevice) const noexcept {
 
         std::vector<VkExtensionProperties> availableExtensions = GetAvailableDeviceExtensions(physicalDevice);
 
@@ -194,27 +148,12 @@ namespace VulkanWrapper {
         return requiredExtensions.empty();
     }
 
-    /// @brief Returns available extensions for the provided device.
-    ///
-    /// @param physicalDevice The physical device to check.
-    ///
-    /// @returns A std::vector of the extensions supported by the device.
-    std::vector<VkExtensionProperties> VulkanBase::GetAvailableDeviceExtensions(VkPhysicalDevice physicalDevice) const noexcept {
-        u32 extensionCount = 0;
-        vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &extensionCount, nullptr);
-
-        std::vector<VkExtensionProperties> availableExtensions(extensionCount);
-        vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &extensionCount, availableExtensions.data());
-
-        return availableExtensions;
-    }
-
     /// @brief Rates devices with a score to help select it.
     ///
     /// @param physicalDevice The physical device to rate.
     ///
     /// @returns The score of the provided device.
-    i32 VulkanBase::RateDeviceSuitability(VkPhysicalDevice physicalDevice) const noexcept {
+    i32 VulkanDevice::RateDeviceSuitability(VkPhysicalDevice physicalDevice) const noexcept {
         if (!IsDeviceSuitable(physicalDevice)) {
             // Devices that aren't suitable are scored 0.
             return 0;
@@ -240,7 +179,7 @@ namespace VulkanWrapper {
     /// @param physicalDevice The physical device to retrieve the queue families from.
     ///
     /// @returns A QueueFamilyIndices struct.
-    QueueFamilyIndices VulkanBase::FindQueueFamilies(VkPhysicalDevice physicalDevice) const noexcept {
+    QueueFamilyIndices VulkanDevice::FindQueueFamilies(VkPhysicalDevice physicalDevice) const noexcept {
         QueueFamilyIndices indices;
 
         u32 queueFamilyCount = 0;
@@ -257,7 +196,7 @@ namespace VulkanWrapper {
             }
 
             VkBool32 presentSupport = false;
-            vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, i, m_Vulkan.Surface, &presentSupport);
+            vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, i, m_Surface, &presentSupport);
 
             if (presentSupport) {
                 indices.PresentFamily = i;
@@ -279,25 +218,25 @@ namespace VulkanWrapper {
     /// @param physicalDevice The device to query the details from.
     ///
     /// @returns A SwapChainSupportDetails struct containing the details.
-    SwapChainSupportDetails VulkanBase::QuerySwapChainSupport(VkPhysicalDevice physicalDevice) const noexcept {
+    SwapChainSupportDetails VulkanDevice::QuerySwapChainSupport(VkPhysicalDevice physicalDevice) const noexcept {
         SwapChainSupportDetails details;
 
-        vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, m_Vulkan.Surface, &details.Capabilities);
+        vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, m_Surface, &details.Capabilities);
 
         u32 formatCount = 0;
-        vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, m_Vulkan.Surface, &formatCount, nullptr);
+        vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, m_Surface, &formatCount, nullptr);
 
         if (formatCount != 0) {
             details.Formats.resize(formatCount);
-            vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, m_Vulkan.Surface, &formatCount, details.Formats.data());
+            vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, m_Surface, &formatCount, details.Formats.data());
         }
 
         u32 presentModeCount = 0;
-        vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, m_Vulkan.Surface, &presentModeCount, nullptr);
+        vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, m_Surface, &presentModeCount, nullptr);
 
         if (presentModeCount != 0) {
             details.PresentModes.resize(presentModeCount);
-            vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, m_Vulkan.Surface, &presentModeCount, details.PresentModes.data());
+            vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, m_Surface, &presentModeCount, details.PresentModes.data());
         }
 
         return details;

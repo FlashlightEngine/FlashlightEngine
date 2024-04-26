@@ -8,9 +8,14 @@
 
 #pragma once
 
+#include "VulkanWrapper/VulkanInstance.hpp"
+#include "VulkanWrapper/VulkanDebugMessenger.hpp"
+#include "VulkanWrapper/VulkanWindowSurface.hpp"
+#include "VulkanWrapper/VulkanDevice.hpp"
+#include "VulkanWrapper/VulkanSwapChain.hpp"
+
 #include "FlashlightEngine/Core/Window.hpp"
 
-#include "VulkanWrapper/VulkanSwapChain.hpp"
 
 namespace Flashlight {
 
@@ -23,8 +28,11 @@ public:
 
 private:
     Window m_Window;
-    VulkanWrapper::VulkanBase m_VulkanBase;
-    std::unique_ptr<VulkanWrapper::VulkanSwapChain> m_SwapChain;
+    VulkanWrapper::VulkanInstance m_Instance;
+    VulkanWrapper::VulkanDebugMessenger m_DebugMessenger;
+    VulkanWrapper::VulkanWindowSurface m_WindowSurface;
+    VulkanWrapper::VulkanDevice m_Device;
+    VulkanWrapper::VulkanSwapChain m_SwapChain;
 
     void Init();
 };

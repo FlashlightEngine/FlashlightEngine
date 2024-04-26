@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include <volk.h>
+
 /// @ingroup VulkanRenderer
 /// @class Flashlight::VulkanWrapper::VulkanInstance
 /// @brief Vulkan wrapper class that handles the Vulkan instance.
@@ -21,14 +23,12 @@ inline VulkanInstance::~VulkanInstance() {
     Cleanup();
 }
 
-#if defined(FL_DEBUG)
 /// @brief Returns the enabled validations layers.
 ///
 /// @returns A vector containing the names of enabled validation layers.
 inline std::vector<const char*> VulkanInstance::GetEnabledValidationLayers() const noexcept {
     return m_ValidationLayers;
 }
-#endif
 
 /// @brief Checks if the VkInstance handle is valid.
 ///

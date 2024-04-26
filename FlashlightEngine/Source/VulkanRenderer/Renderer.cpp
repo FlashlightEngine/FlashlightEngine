@@ -16,7 +16,15 @@ namespace Flashlight {
 
 /// @brief Initializes every object in the Renderer.
 void Renderer::Init() {
-    m_SwapChain = VulkanWrapper::VulkanSwapChain::Create(m_Window, m_VulkanBase);
+    m_Instance.Create();
+
+    m_DebugMessenger.Create(m_Instance);
+
+    m_WindowSurface.Create(m_Instance, m_Window);
+    
+    m_Device.Create(m_Instance, m_WindowSurface);
+
+    m_SwapChain.Create(m_Device, m_Window, m_WindowSurface);
 }
 
 }

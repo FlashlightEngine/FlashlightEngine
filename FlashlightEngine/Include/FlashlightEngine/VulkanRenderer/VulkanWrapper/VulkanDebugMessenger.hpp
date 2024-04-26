@@ -1,22 +1,31 @@
 ﻿#pragma once
 
-#include "VulkanInstanceObject.hpp"
+#include "VulkanInstance.hpp"
 
-#include <vulkan/vulkan.h>
+#include "FlashlightEngine/Core/Logger.hpp"
+
+#include <volk.h>
 
 namespace Flashlight {
 
 namespace VulkanWrapper {
 
-    class VulkanInstance;
+    class VulkanDebugMessenger {
+    public:
+        inline VulkanDebugMessenger();
+        VulkanDebugMessenger(const VulkanDebugMessenger &) = delete;
+        VulkanDebugMessenger(VulkanDebugMessenger &&) = delete;
+        inline ~VulkanDebugMessenger();
 
-    class VulkanDebugMessenger
-        : public VulkanInstanceObject<VulkanDebugMessenger, VkDebugUtilsMessengerEXT, VkDebugUtilsMessengerCreateInfoEXT> {
-        VulkanDebugMessenger() = default;
+        inline bool IsValid() const noexcept;
+        inline VkDebugUtilsMessengerEXT GetHandle() const noexcept;
+        
+        void Create(VulkanInstance& instance);
+        void Destroy() const;
 
-        static inline void CreateHandle(VulkanInstance& instance, VkDebugUtilsMessengerCreateInfoEXT &createInfo,
-                                        VkDebugUtilsMessengerEXT &debugMessenger);
-        static inline void DestroyHandle(const VulkanInstance &instance, VkDebugUtilsMessengerEXT &debugMessenger);
+    private:
+        VkDebugUtilsMessengerEXT m_Handle;
+        VkInstance m_Instance;
     };
 
 #include "VulkanDebugMessenger.inl"

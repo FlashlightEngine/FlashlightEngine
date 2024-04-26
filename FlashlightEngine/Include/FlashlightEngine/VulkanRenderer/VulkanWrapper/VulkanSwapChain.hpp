@@ -1,74 +1,41 @@
-/* Copyright (C) 2024 Jean "Pixfri" Letessier (jean.letessier@protonmail.com)
- * This file is part of "FlashLight Engine"
- * For conditions of distribution and use, see copyright notice in FlashLightEngine.hpp
- *
- * File : VulkanSwapChain.hpp
- * Description : This header file contains the definition of the VulkanSwapChain class, which is a wrapper for the Vulkan
- *               swap chain object.
- */
+﻿#pragma once
 
-#pragma once
+#include "VulkanDevice.hpp"
+#include "VulkanWindowSurface.hpp"
 
 #include "FlashlightEngine/Core/Window.hpp"
 
-#include "VulkanBase.hpp"
-#include "VulkanDeviceObject.hpp"
-
-#include <vulkan/vulkan.h>
+#include <volk.h>
 
 namespace Flashlight {
+
 namespace VulkanWrapper {
-    /// @ingroup VulkanRenderer
-    /// @struct Flashlight::VulkanWrapper::VulkanSwapChainObjects
-    /// @brief Structures that stores Vulkan swap chain objects.
-    struct VulkanSwapChainObjects {
-        std::vector<VkImage> SwapChainImages;
-        std::vector<VkImageView> SwapChainImageViews;
-        VkFormat SwapChainImageFormat{};
-        VkExtent2D SwapChainExtent{};
 
-        /// @brief Constructor for the VulkanSwapChainObjects struct.
-        /// Initializes every object to VK_NULL_HANDLE by default.
-        VulkanSwapChainObjects() {}
-    };
-
-    
-    class VulkanSwapChain final : public VulkanDeviceObject<VkSwapchainKHR> {
+    class VulkanSwapChain {
     public:
-        inline VulkanSwapChain(Window &window, VulkanBase &base);
+        inline VulkanSwapChain();
+        VulkanSwapChain(const VulkanSwapChain &swapChain) = delete;
+        VulkanSwapChain(VulkanSwapChain &&swapChain) = delete;
+        inline ~VulkanSwapChain();
 
-        // We can't copy/move vulkan objects.
-        VulkanSwapChain(VulkanSwapChain &) = delete;
-        VulkanSwapChain &operator=(VulkanSwapChain &) = delete;
-        VulkanSwapChain(VulkanSwapChain &&) = delete;
-        VulkanSwapChain &&operator=(VulkanSwapChain &&) = delete;
+        inline bool IsValid() const noexcept;
+        inline VkSwapchainKHR GetHandle() const noexcept;
 
-        inline static std::unique_ptr<VulkanSwapChain> Create(Window &window, VulkanBase &base);
+        void Create(const VulkanDevice &device, const Window &window, const VulkanWindowSurface &windowSurface);
+        inline void Destroy() const;
 
-    private:   
-        VulkanSwapChainObjects m_SwapChainData;
-    
-        Window &m_Window;
-        VulkanBase &m_VulkanBase;
-        
-        void Init() override;
-        void Cleanup() const override;     
+    private:
+        VkDevice m_Device;
+        VkSwapchainKHR m_Handle;
 
-        // Functions to create/destroy vulkan objects.
-        void CreateSwapChain();
-        void DestroySwapChain() const;
-
-        void CreateImageViews();
-        void DestroyImageViews() const;
-
-        // Util functions.
-        VkSurfaceFormatKHR ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR> &availableFormats) const noexcept;
-        VkPresentModeKHR ChooseSwapPresentMode(const std::vector<VkPresentModeKHR> &availablePresentModes) const noexcept;
-        VkExtent2D ChooseSwapExtent(const VkSurfaceCapabilitiesKHR &capabilities) const noexcept;
+        // Helper methods
+        VkSurfaceFormatKHR ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR> &availableFormats);
+        VkPresentModeKHR ChooseSwapPresentMode(const std::vector<VkPresentModeKHR> &availablePresentModes);
+        VkExtent2D ChooseSwapExtent(const VkSurfaceCapabilitiesKHR &capabilities, const Window &window);
     };
 
 #include "VulkanSwapChain.inl"
-
+    
 }
-
+    
 }

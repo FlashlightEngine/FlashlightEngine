@@ -19,7 +19,7 @@ if (is_mode("debug")) then
     add_defines("FL_DEBUG")
 end
 
-add_requires("glfw", "glm", "spdlog", "vulkan-headers")
+add_requires("glfw", "glm", "spdlog", "vulkan-headers", "volk")
 
 local outputdir = "$(mode)-$(os)-$(arch)"
 
@@ -39,17 +39,9 @@ target("FlashlightEngine")
   add_includedirs("FlashlightEngine/Include", {public = true})
   set_pcxxheader("FlashlightEngine/Include/FlashlightEngine/pch.hpp")
 
-  add_packages("glfw", "glm", "spdlog", "vulkan-headers", {public = true})
-
+  add_packages("glfw", "glm", "spdlog", "vulkan-headers", "volk", {public = true})
+  
   add_defines("VK_NO_PROTOTYPES", {public = true})
-  
-  if (is_plat("windows", "mingw")) then
-      add_defines("VK_USE_PLATFORM_WIN32")
-  end
-  
-  if (is_plat("linux")) then
-      add_defines("VK_USE_PLATFORM_LINUX")
-  end
   
 target("TestApplication")
     set_kind("binary")

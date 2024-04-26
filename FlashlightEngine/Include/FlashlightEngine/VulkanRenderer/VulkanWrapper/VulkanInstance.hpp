@@ -2,7 +2,7 @@
 
 #include "FlashlightEngine/pch.hpp"
 
-#include <vulkan/vulkan.h>
+#include <volk.h>
 
 namespace Flashlight {
 
@@ -15,19 +15,14 @@ namespace VulkanWrapper {
         VulkanInstance(VulkanInstance &&) = delete;
         inline ~VulkanInstance();
 
-        void Create(VkApplicationInfo appInfo, VkInstanceCreateInfo createInfo);
+        void Create();
 
-#if defined(FL_DEBUG)
         inline std::vector<const char*> GetEnabledValidationLayers() const noexcept;
-#endif
         
         inline bool IsValid() const noexcept;
         inline VkInstance GetHandle() const noexcept;
         
         void PopulateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT &createInfo) noexcept;
-
-#define VK_INSTANCE_FUNCTION( fun ) static extern PFN_##fun fun;
-#include "InstanceFunctions.hpp"
         
     private:
         VkInstance m_Handle;
@@ -39,13 +34,10 @@ namespace VulkanWrapper {
         std::vector<const char*> GetRequiredInstanceExtensions() const noexcept;
         void CheckRequiredInstanceExtensionsSupport() const;
         std::vector<VkExtensionProperties> GetAvailableInstanceExtensions() const noexcept;
-        void LoadInstanceFunctions();
 
-#if defined(FL_DEBUG)
         const std::vector<const char*> m_ValidationLayers = {
             "VK_LAYER_KHRONOS_validation"
         };
-#endif
     };
 
 #include "VulkanInstance.inl"

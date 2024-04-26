@@ -10,15 +10,13 @@
 
 #include "FlashlightEngine/Core/Logger.hpp"
 
-#include <GLFW/glfw3.h>
 
-#include "FlashlightEngine/VulkanRenderer/VulkanWrapper/VulkanLoader.hpp"
+#include <volk.h>
+#include <GLFW/glfw3.h>
 
 namespace Flashlight {
 
 namespace VulkanWrapper {
-#define VK_INSTANCE_FUNCTION( fun ) PFN_##fun fun;
-#include "FlashlightEngine/VulkanRenderer/VulkanWrapper/InstanceFunctions.hpp"
 
     // Local functions for debug callback.
 
@@ -49,15 +47,19 @@ namespace VulkanWrapper {
     /// 
     /// @param appInfo The application information structure.
     /// @param createInfo The instance creation information structure.
-    void VulkanInstance::Create(VkApplicationInfo appInfo, VkInstanceCreateInfo createInfo) {
+    void VulkanInstance::Create() {
 
+        if (volkInitialize() != VK_SUCCESS) {
+            Log::EngineError("Failed to initialize Vulkan loader.");
+        }
+        
 #if defined(FL_DEBUG)
         if (!CheckValidationLayerSupport()) {
             Log::EngineError("Validation layers requested, but not available.");
         }
 #endif
 
-        appInfo = {
+        VkApplicationInfo appInfo = {
             .sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
             .pNext = nullptr,
             .pApplicationName = "Flashlight Engine Application",
@@ -75,7 +77,7 @@ namespace VulkanWrapper {
 
         auto requiredExtensions = GetRequiredInstanceExtensions();
         
-        createInfo = {
+        VkInstanceCreateInfo createInfo = {
             .sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
             
 #if defined(FL_DEBUG)
@@ -103,14 +105,14 @@ namespace VulkanWrapper {
             .enabledExtensionCount = static_cast<u32>(requiredExtensions.size()),
             .ppEnabledExtensionNames = requiredExtensions.data(),
         };
-
-        if (VulkanLoader::vkCreateInstance(&createInfo, nullptr, &m_Handle) != VK_SUCCESS) {
+        
+        if (vkCreateInstance(&createInfo, nullptr, &m_Handle) != VK_SUCCESS) {
             Log::EngineError("Failed to create instance.");
         }
 
+        volkLoadInstance(m_Handle);
+        
         CheckRequiredInstanceExtensionsSupport();
-
-        LoadInstanceFunctions();
     }
 
     /// @brief Destroys the Vulkan instance if it is a valid handle.
@@ -124,11 +126,11 @@ namespace VulkanWrapper {
     ///
     /// @returns A boolean telling if validation layers are supported.
     bool VulkanInstance::CheckValidationLayerSupport() const noexcept {
-        u32 layerCount;
-        VulkanLoader::vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
+        u32 layerCount = 0;
+        vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
 
         std::vector<VkLayerProperties> availableLayers(layerCount);
-        VulkanLoader::vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
+        vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
 
         for (const char *layerName : m_ValidationLayers) {
             bool layerFound = false;
@@ -220,20 +222,13 @@ namespace VulkanWrapper {
     /// @returns A std::vector of the instance extensions properties.
     std::vector<VkExtensionProperties> VulkanInstance::GetAvailableInstanceExtensions() const noexcept {
         u32 extensionCount = 0;
-        VulkanLoader::vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
+        vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
 
         std::vector<VkExtensionProperties> extensions(extensionCount);
-        VulkanLoader::vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, extensions.data());
+        vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, extensions.data());
 
         return extensions;
     }
+}
 
-    void VulkanInstance::LoadInstanceFunctions() {
-#define VK_INSTANCE_FUNCTION( fun ) \
-        if (! (fun = reinterpret_cast<PFN_##fun>(VulkanLoader::vkGetInstanceProcAddr(m_Handle, #fun)) ) \
-            Log::EngineError("Failed to load instance function : {}", #fun);
-        }
-
-#include "FlashlightEngine/VulkanRenderer/VulkanWrapper/InstanceFunctions.hpp"
-    }
 }

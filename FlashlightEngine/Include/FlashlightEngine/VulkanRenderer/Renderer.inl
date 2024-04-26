@@ -9,14 +9,14 @@
 #pragma once
 
 /// @ingroup VulkanRenderer
-/// @class Flashlight::VulkanRenderer::Renderer
+/// @class Flashlight::Renderer
 /// @brief VulkanRenderer wrapper class for base Vulkan objects.
 
 /// @brief Constructor for the VulkanBase class. Calls the function to initialize
 /// every Vulkan object.
 ///
 /// @param window The window of the application using the renderer.
-inline Renderer::Renderer(const Window &window) : m_Window(window), m_VulkanBase(m_Window) {
+inline Renderer::Renderer(const Window &window) : m_Window(window)  {
     Init();
 }
 
