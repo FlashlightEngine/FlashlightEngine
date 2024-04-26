@@ -18,10 +18,12 @@ namespace Flashlight {
 void Renderer::Init() {
     m_Instance.Create();
 
+#if defined(FL_DEBUG)
     m_DebugMessenger.Create(m_Instance);
-
-    m_WindowSurface.Create(m_Instance, m_Window);
+#endif
     
+    m_WindowSurface.Create(m_Instance, m_Window);
+
     m_Device.Create(m_Instance, m_WindowSurface);
 
     m_SwapChain.Create(m_Device, m_Window, m_WindowSurface);
