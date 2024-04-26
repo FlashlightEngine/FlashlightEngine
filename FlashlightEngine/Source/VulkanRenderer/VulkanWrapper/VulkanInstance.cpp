@@ -59,52 +59,39 @@ namespace VulkanWrapper {
         }
 #endif
 
-        VkApplicationInfo appInfo = {
-            .sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
-            .pNext = nullptr,
-            .pApplicationName = "Flashlight Engine Application",
-            .applicationVersion = VK_MAKE_API_VERSION(1, 0, 0, 0),
-            .pEngineName = "Flashlight Engine | Vulkan Renderer",
-            .engineVersion = VK_MAKE_API_VERSION(1, 0, 0, 0),
-            .apiVersion = VK_API_VERSION_1_0
-        };
+        VkApplicationInfo appInfo {};
+        appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+        appInfo.pApplicationName = "Flashlight Engine Application";
+        appInfo.applicationVersion = VK_MAKE_API_VERSION(1, 0, 0, 0);
+        appInfo.pEngineName = "Flashlight Engine | Vulkan Renderer";
+        appInfo.engineVersion = VK_MAKE_API_VERSION(1, 0, 0, 0);
+        appInfo.apiVersion = VK_API_VERSION_1_0;
+        
+        VkInstanceCreateInfo createInfo{};
+        createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+            
+        createInfo.pApplicationInfo = &appInfo;
+        
+        auto requiredExtensions = GetRequiredInstanceExtensions();
 
-
+        createInfo.enabledExtensionCount = static_cast<u32>(requiredExtensions.size());
+        createInfo.ppEnabledExtensionNames = requiredExtensions.data();
+        
 #if defined(FL_DEBUG)
+        createInfo.enabledLayerCount = static_cast<u32>(m_ValidationLayers.size());
+        createInfo.ppEnabledLayerNames = m_ValidationLayers.data();
+        
         VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
         PopulateDebugMessengerCreateInfo(debugCreateInfo);
+        createInfo.pNext = &debugCreateInfo;
+#else
+        createInfo.enabledLayerCount = 0;
+        createInfo.ppEnabledLayerNames = nullptr;
 #endif
 
-        auto requiredExtensions = GetRequiredInstanceExtensions();
-        
-        VkInstanceCreateInfo createInfo = {
-            .sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
-            
-#if defined(FL_DEBUG)
-            .pNext = &debugCreateInfo,
-#else
-            .pNext = nullptr,
-#endif
-            
 #if defined(__APPLE__)
-            .flags |= VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR,
-#else
-            .flags = 0,
+        createInfo.flags |= VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
 #endif
-
-            .pApplicationInfo = &appInfo,
-
-#if defined(FL_DEBUG)
-            .enabledLayerCount = static_cast<u32>(m_ValidationLayers.size()),
-            .ppEnabledLayerNames = m_ValidationLayers.data(),
-#else
-            .enabledLayerCount = 0,
-            .ppEnabledLayerNames = nullptr,
-#endif
-
-            .enabledExtensionCount = static_cast<u32>(requiredExtensions.size()),
-            .ppEnabledExtensionNames = requiredExtensions.data(),
-        };
         
         if (vkCreateInstance(&createInfo, nullptr, &m_Handle) != VK_SUCCESS) {
             Log::EngineError("Failed to create instance.");
