@@ -61,6 +61,18 @@ namespace VulkanWrapper {
         }
 
         m_Device = device.GetHandle();
+
+        vkGetSwapchainImagesKHR(m_Device, m_Handle, &imageCount, nullptr);
+        m_SwapChainImages.resize(imageCount);
+        vkGetSwapchainImagesKHR(m_Device, m_Handle, &imageCount, m_SwapChainImages.data());
+
+        m_SwapChainImageFormat = surfaceFormat.format;
+        m_SwapChainExtent = extent;
+
+        m_SwapChainImageViews.resize(m_SwapChainImages.size());
+        for (size_t i = 0; i < m_SwapChainImages.size(); i++) {
+            m_SwapChainImageViews[i].Create(device, m_SwapChainImages[i], m_SwapChainImageFormat, ImageAspect::Color);
+        }
     }
 
     VkSurfaceFormatKHR VulkanSwapChain::ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats) {

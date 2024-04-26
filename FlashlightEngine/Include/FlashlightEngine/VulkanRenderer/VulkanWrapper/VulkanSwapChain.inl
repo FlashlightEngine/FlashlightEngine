@@ -25,3 +25,19 @@ inline VkSwapchainKHR VulkanSwapChain::GetHandle() const noexcept {
 
     return m_Handle;
 }
+
+inline std::vector<VkImage> VulkanSwapChain::GetSwapChainImages() const noexcept {
+    return m_SwapChainImages;
+}
+
+inline std::vector<VulkanImageView> VulkanSwapChain::GetSwapChainImageViews() const noexcept {
+    return m_SwapChainImageViews;
+}
+
+inline VkFormat VulkanSwapChain::GetSwapChainImageFormat() const noexcept {
+    return m_SwapChainImageFormat;
+}
+
+inline VkExtent2D VulkanSwapChain::GetSwapChainExtent() const noexcept {
+    return m_SwapChainExtent;
+}
