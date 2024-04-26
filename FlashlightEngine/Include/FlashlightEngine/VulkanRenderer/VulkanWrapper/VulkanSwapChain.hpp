@@ -23,7 +23,7 @@ namespace VulkanWrapper {
         inline VkSwapchainKHR GetHandle() const noexcept;
 
         inline std::vector<VkImage> GetSwapChainImages() const noexcept;
-        inline std::vector<VulkanImageView> GetSwapChainImageViews() const noexcept;
+        inline VkImageView GetNativeImageViewAtIndex(i32 index) const noexcept;
         inline VkFormat GetSwapChainImageFormat() const noexcept;
         inline VkExtent2D GetSwapChainExtent() const noexcept;
 

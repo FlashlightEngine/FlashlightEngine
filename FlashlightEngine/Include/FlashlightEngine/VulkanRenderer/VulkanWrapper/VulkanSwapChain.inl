@@ -30,8 +30,8 @@ inline std::vector<VkImage> VulkanSwapChain::GetSwapChainImages() const noexcept
     return m_SwapChainImages;
 }
 
-inline std::vector<VulkanImageView> VulkanSwapChain::GetSwapChainImageViews() const noexcept {
-    return m_SwapChainImageViews;
+inline VkImageView VulkanSwapChain::GetNativeImageViewAtIndex(const i32 index) const noexcept {
+    return m_SwapChainImageViews[index].GetHandle();
 }
 
 inline VkFormat VulkanSwapChain::GetSwapChainImageFormat() const noexcept {
