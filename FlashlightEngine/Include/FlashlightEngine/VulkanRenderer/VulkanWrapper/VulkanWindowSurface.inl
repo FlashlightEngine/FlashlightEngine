@@ -11,7 +11,8 @@ inline VulkanWindowSurface::~VulkanWindowSurface() {
 inline void VulkanWindowSurface::Create(const VulkanInstance &instance, Window &window) {
     if (glfwCreateWindowSurface(instance.GetHandle(), window.GetNativeWindow(), nullptr, &m_Handle)
         != VK_SUCCESS) {
-        Log::EngineError("Failed to create window surface.");
+        std::cerr << "Failed to create window surface.";
+        throw std::runtime_error("");
     }
 
     m_Instance = instance.GetHandle();

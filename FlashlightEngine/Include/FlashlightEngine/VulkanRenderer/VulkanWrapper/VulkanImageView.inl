@@ -29,7 +29,8 @@ inline void VulkanImageView::Create(const VulkanDevice& device, const VkImage& i
     createInfo.subresourceRange.layerCount = 1;
 
     if (vkCreateImageView(device.GetHandle(), &createInfo, nullptr, &m_Handle) != VK_SUCCESS) {
-        Log::EngineError("Failed to create image view.");
+        std::cerr << "Failed to create image view.";
+        throw std::runtime_error("");
     }
 
     m_Device = device.GetHandle();

@@ -2,16 +2,14 @@
 
 #include <FlashlightEngine/FlashlightEngine.hpp>
 
-int main() {
-    Flashlight::Logger::Init();
-    
+int main() {    
     std::unique_ptr<TestApplication::TestApplication> application = std::make_unique<TestApplication::TestApplication>();
 
     try {
-        Flashlight::Log::Info("Starting application.");
+        std::cout << "Starting application.";
         application->Run();
     } catch (const std::exception &e) {
-        Flashlight::Log::Error(e.what());
+        std::cerr << e.what() << std::endl;
         return EXIT_FAILURE;
     }
 

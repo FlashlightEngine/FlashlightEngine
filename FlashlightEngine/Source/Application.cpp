@@ -19,8 +19,8 @@ Application *Application::s_Application = nullptr;
 /// @brief Constructor for the Application class.
 Application::Application() {    
     if (s_Application) {
-        Log::EngineError("Application already running.");
-        throw std::runtime_error("You can only run this application once.");
+        std::cerr << "Application already running.";
+        throw std::runtime_error("");
     }
 }
 

@@ -18,7 +18,8 @@ namespace VulkanWrapper {
         vkEnumeratePhysicalDevices(m_Instance, &deviceCount, nullptr);
 
         if (deviceCount == 0) {
-            Log::EngineError("Failed to find GPUs with Vulkan support.");
+            std::cerr << "Failed to find GPUs with Vulkan support.";
+            throw std::runtime_error("");
         }
 
         std::vector<VkPhysicalDevice> devices(deviceCount);
@@ -34,14 +35,15 @@ namespace VulkanWrapper {
         if (candidates.rbegin()->first > 0) {
             m_PhysicalDevice = candidates.rbegin()->second;
         } else {
-            Log::EngineError("Failed to find a suitable GPU.");
+            std::cerr << "Failed to find a suitable GPU.";
+            throw std::runtime_error("");
         }
 
         // Stores the properties for the chosen physical device.
         m_DeviceProperties = GetDeviceProperties(m_PhysicalDevice);
 
-        std::cout << std::format("GPU Information : \n GPU Name : {} \n GPU Driver Version : {} \n GPU Vulkan API Version : {}\n",
-            m_DeviceProperties.deviceName, m_DeviceProperties.driverVersion, m_DeviceProperties.apiVersion);
+#if defined(FL_DEBUG)
+#endif
     }
     
     /// @brief Creates the Vulkan logical device.
@@ -80,7 +82,7 @@ namespace VulkanWrapper {
             std::cout << std::format("\t {} \n", extension.extensionName);
         }
 
-        Log::EngineInfo("Required device extensions :");
+        std::cout << "Required device extensions :\n";
         for (const auto &extension : m_DeviceExtensions) {
             std::cout << std::format("\t {} \n", extension);
         }
@@ -95,7 +97,7 @@ namespace VulkanWrapper {
 #endif
 
         if (vkCreateDevice(m_PhysicalDevice, &createInfo, nullptr, &m_Device) != VK_SUCCESS) {
-            std::cout << "Failed to create logical device.";
+            std::cerr << "Failed to create logical device.";
         }
 
         volkLoadDevice(m_Device);

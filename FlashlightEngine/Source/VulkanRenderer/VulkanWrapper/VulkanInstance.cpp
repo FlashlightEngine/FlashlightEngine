@@ -50,12 +50,13 @@ namespace VulkanWrapper {
     void VulkanInstance::Create() {
 
         if (volkInitialize() != VK_SUCCESS) {
-            Log::EngineError("Failed to initialize Vulkan loader.");
+            std::cerr << "Failed to initialize Vulkan loader.";
+            throw std::runtime_error("");
         }
         
 #if defined(FL_DEBUG)
         if (!CheckValidationLayerSupport()) {
-            Log::EngineError("Validation layers requested, but not available.");
+            std::cerr << "Validation layers requested, but not available.";
         }
 #endif
 
@@ -94,7 +95,7 @@ namespace VulkanWrapper {
 #endif
         
         if (vkCreateInstance(&createInfo, nullptr, &m_Handle) != VK_SUCCESS) {
-            Log::EngineError("Failed to create instance.");
+            std::cerr << "Failed to create instance.";
         }
 
         volkLoadInstance(m_Handle);
@@ -197,7 +198,7 @@ namespace VulkanWrapper {
         for (const auto &required : requiredInstanceExtensions) {
             std::cout << '\t' << required << '\n';
             if (availableExtensions.find(required) == availableExtensions.end()) {
-                Log::EngineError("Missing required instance extension.");
+                std::cerr << "Missing required instance extension.";
             }
         }
 

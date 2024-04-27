@@ -25,7 +25,8 @@ inline void VulkanDebugMessenger::Create(VulkanInstance& instance) {
     instance.PopulateDebugMessengerCreateInfo(createInfo);
 
     if (vkCreateDebugUtilsMessengerEXT(instance.GetHandle(), &createInfo, nullptr, &m_Handle) != VK_SUCCESS) {
-        Log::EngineError("Failed to create debug messenger.");
+        std::cerr << "(Vulkan Renderer) Failed to create debug messenger.";
+        throw std::runtime_error("");
     }
 
     m_Instance = instance.GetHandle();

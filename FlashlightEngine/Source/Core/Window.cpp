@@ -28,7 +28,8 @@ void Window::Init() {
         m_Window = glfwCreateWindow(m_Properties.Width, m_Properties.Height, m_Properties.Title.c_str(), nullptr, nullptr);
 
         if (!m_Window) {
-            throw std::runtime_error("Failed to create window.");
+            std::cerr << "Failed to create window.";
+            throw std::runtime_error("");
         }
     }
 }

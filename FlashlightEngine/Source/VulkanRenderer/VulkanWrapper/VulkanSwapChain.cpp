@@ -57,7 +57,7 @@ namespace VulkanWrapper {
         createInfo.oldSwapchain = nullptr;
 
         if (vkCreateSwapchainKHR(device.GetHandle(), &createInfo, nullptr, &m_Handle) != VK_SUCCESS) {
-            std::cout << "Failed to create swap chain.";
+            std::cerr << "Failed to create swap chain.";
         }
 
         m_Device = device.GetHandle();
