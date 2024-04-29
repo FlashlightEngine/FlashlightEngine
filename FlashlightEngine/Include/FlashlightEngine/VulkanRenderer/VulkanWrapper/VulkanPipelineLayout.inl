@@ -1,22 +1,22 @@
 ﻿#pragma once
 
-inline VulkanGraphicsPipelineLayout::VulkanGraphicsPipelineLayout() : m_Device(VK_NULL_HANDLE), m_PipelineLayout(VK_NULL_HANDLE) {}
+inline VulkanPipelineLayout::VulkanPipelineLayout() : m_Device(VK_NULL_HANDLE), m_PipelineLayout(VK_NULL_HANDLE) {}
 
-inline VulkanGraphicsPipelineLayout::~VulkanGraphicsPipelineLayout() {
+inline VulkanPipelineLayout::~VulkanPipelineLayout() {
     if (IsValid()) {
         Destroy();
     }
 }
 
-inline bool VulkanGraphicsPipelineLayout::IsValid() const noexcept {
+inline bool VulkanPipelineLayout::IsValid() const noexcept {
     return m_PipelineLayout != nullptr;
 }
 
-inline VkPipelineLayout VulkanGraphicsPipelineLayout::GetPipelineLayout() const noexcept {
+inline VkPipelineLayout VulkanPipelineLayout::GetPipelineLayout() const noexcept {
     return m_PipelineLayout;
 }
 
-inline void VulkanGraphicsPipelineLayout::Create(const VulkanDevice& device, const VulkanPipelineLayoutInfo &layoutInfo) {
+inline void VulkanPipelineLayout::Create(const VulkanDevice& device, const VulkanPipelineLayoutInfo &layoutInfo) {
     VkPipelineLayoutCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     createInfo.setLayoutCount = static_cast<u32>(layoutInfo.SetLayouts.size());
@@ -32,7 +32,7 @@ inline void VulkanGraphicsPipelineLayout::Create(const VulkanDevice& device, con
     m_Device = device.GetHandle();
 }
 
-inline void VulkanGraphicsPipelineLayout::Destroy() {
+inline void VulkanPipelineLayout::Destroy() {
     if (IsValid()) {
         vkDestroyPipelineLayout(m_Device, m_PipelineLayout, nullptr);
     }

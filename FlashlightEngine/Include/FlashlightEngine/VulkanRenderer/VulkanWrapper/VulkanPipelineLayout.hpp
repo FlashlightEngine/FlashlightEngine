@@ -13,12 +13,12 @@ namespace VulkanWrapper {
         std::vector<VkPushConstantRange> PushConstantRanges;
     };
     
-    class VulkanGraphicsPipelineLayout {
+    class VulkanPipelineLayout {
     public:
-        inline VulkanGraphicsPipelineLayout();
-        VulkanGraphicsPipelineLayout(const VulkanGraphicsPipelineLayout &) = delete;
-        VulkanGraphicsPipelineLayout(VulkanGraphicsPipelineLayout &&) = delete;
-        inline ~VulkanGraphicsPipelineLayout();
+        inline VulkanPipelineLayout();
+        VulkanPipelineLayout(const VulkanPipelineLayout &) = delete;
+        VulkanPipelineLayout(VulkanPipelineLayout &&) = delete;
+        inline ~VulkanPipelineLayout();
  
         inline bool IsValid() const noexcept;
         inline VkPipelineLayout GetPipelineLayout() const noexcept;
@@ -31,7 +31,7 @@ namespace VulkanWrapper {
         VkPipelineLayout m_PipelineLayout;
     };
 
-#include "VulkanGraphicsPipelineLayout.inl"
+#include "VulkanPipelineLayout.inl"
     
 }
 
