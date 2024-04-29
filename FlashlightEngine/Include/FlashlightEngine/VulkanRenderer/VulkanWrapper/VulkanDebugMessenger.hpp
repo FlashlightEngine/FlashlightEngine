@@ -2,8 +2,6 @@
 
 #include "VulkanInstance.hpp"
 
-#include "FlashlightEngine/Core/Logger.hpp"
-
 #include <volk.h>
 
 namespace Flashlight {
