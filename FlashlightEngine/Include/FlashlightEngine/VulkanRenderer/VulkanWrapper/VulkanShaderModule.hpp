@@ -15,12 +15,12 @@ namespace VulkanWrapper {
         Fragment = VK_SHADER_STAGE_FRAGMENT_BIT
     };
 
-    class VulkanGraphicsShader {
+    class VulkanShaderModule {
     public:
-        inline VulkanGraphicsShader();
-        VulkanGraphicsShader(const VulkanGraphicsShader &) = delete;
-        VulkanGraphicsShader(VulkanGraphicsShader &&) = delete;
-        inline ~VulkanGraphicsShader();
+        inline VulkanShaderModule();
+        VulkanShaderModule(const VulkanShaderModule &) = delete;
+        VulkanShaderModule(VulkanShaderModule &&) = delete;
+        inline ~VulkanShaderModule();
 
         inline bool IsValid() const noexcept;
         inline VkShaderModule GetHandle() const noexcept;

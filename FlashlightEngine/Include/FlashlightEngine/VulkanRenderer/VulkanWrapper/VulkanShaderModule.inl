@@ -4,23 +4,23 @@
 
 #include <volk.h>
 
-inline VulkanGraphicsShader::VulkanGraphicsShader() : m_Device(VK_NULL_HANDLE), m_Handle(VK_NULL_HANDLE) {}
+inline VulkanShaderModule::VulkanShaderModule() : m_Device(VK_NULL_HANDLE), m_Handle(VK_NULL_HANDLE) {}
 
-inline VulkanGraphicsShader::~VulkanGraphicsShader() {
+inline VulkanShaderModule::~VulkanShaderModule() {
     if (IsValid()) {
         Destroy();
     }
 }
 
-inline bool VulkanGraphicsShader::IsValid() const noexcept {
+inline bool VulkanShaderModule::IsValid() const noexcept {
     return m_Handle != nullptr;
 }
 
-inline VkShaderModule VulkanGraphicsShader::GetHandle() const noexcept {
+inline VkShaderModule VulkanShaderModule::GetHandle() const noexcept {
     return m_Handle;
 }
 
-inline void VulkanGraphicsShader::Create(const VulkanDevice& device, const std::filesystem::path &shaderPath) {
+inline void VulkanShaderModule::Create(const VulkanDevice& device, const std::filesystem::path &shaderPath) {
     auto shaderCode = Flashlight::ReadBinary(shaderPath);
 
     VkShaderModuleCreateInfo createInfo{};
@@ -36,7 +36,7 @@ inline void VulkanGraphicsShader::Create(const VulkanDevice& device, const std::
     m_Device = device.GetHandle();
 }
 
-inline void VulkanGraphicsShader::Destroy() const {
+inline void VulkanShaderModule::Destroy() const {
     if (IsValid()) {
         vkDestroyShaderModule(m_Device, m_Handle, nullptr);
     }
