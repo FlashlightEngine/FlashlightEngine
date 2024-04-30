@@ -13,6 +13,8 @@ namespace VulkanWrapper {
         VkAttachmentReference ColorAttachmentReference;
         // VkAttachmentDescription DepthAttachmentDescription;
         // VkAttachmentReference DepthAttachmentReference;
+
+        inline void UseDefaultAttachments(const VkFormat &format);
     };
 
     class VulkanRenderPass {
