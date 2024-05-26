@@ -28,4 +28,3 @@
 #pragma once
 
 #include "Application.hpp"
-#include "Core/Core.hpp"

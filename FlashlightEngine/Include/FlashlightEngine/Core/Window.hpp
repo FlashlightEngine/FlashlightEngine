@@ -8,8 +8,6 @@
 
 #pragma once
 
-#include "Core.hpp"
-
 #include <vulkan/vulkan.h>
 #include <GLFW/glfw3.h>
 
