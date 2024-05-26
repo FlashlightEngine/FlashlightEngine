@@ -47,11 +47,11 @@ inline void VulkanRenderPass::Create(const VulkanDevice& device, const VulkanRen
     renderPassInfo.subpassCount = 1;
     renderPassInfo.pSubpasses = &subpass;
 
-    if (vkCreateRenderPass(device.GetHandle(), &renderPassInfo, nullptr, &m_Handle) != VK_SUCCESS) {
+    if (vkCreateRenderPass(device.GetDevice(), &renderPassInfo, nullptr, &m_Handle) != VK_SUCCESS) {
         FL_ERROR("Failed to create render pass")
     }
 
-    m_Device = device.GetHandle();
+    m_Device = device.GetDevice();
 }
 
 inline void VulkanRenderPass::Destroy() const {

@@ -27,7 +27,8 @@ namespace VulkanWrapper {
         inline VkFormat GetSwapChainImageFormat() const noexcept;
         inline VkExtent2D GetSwapChainExtent() const noexcept;
 
-        void Create(const VulkanDevice &device, const Window &window, const VulkanWindowSurface &windowSurface);
+        void Create(const VulkanPhysicalDevice &physicalDevice, const VulkanDevice &device,
+            const Window &window, const VulkanWindowSurface &windowSurface);
 
     private:
         VkDevice m_Device;

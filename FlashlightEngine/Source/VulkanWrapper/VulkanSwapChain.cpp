@@ -9,8 +9,9 @@ namespace Flashlight {
 
 namespace VulkanWrapper {
 
-    void VulkanSwapChain::Create(const VulkanDevice& device, const Window &window, const VulkanWindowSurface &windowSurface) {
-        SwapChainSupportDetails swapChainSupport = device.QuerySwapChainSupport();
+    void VulkanSwapChain::Create(const VulkanPhysicalDevice &physicalDevice, const VulkanDevice &device,
+        const Window &window, const VulkanWindowSurface &windowSurface) {
+        SwapChainSupportDetails swapChainSupport = physicalDevice.GetSwapChainSupport();
 
         VkSurfaceFormatKHR surfaceFormat = ChooseSwapSurfaceFormat(swapChainSupport.Formats);
         VkPresentModeKHR presentMode = ChooseSwapPresentMode(swapChainSupport.PresentModes);
@@ -34,7 +35,7 @@ namespace VulkanWrapper {
         createInfo.imageArrayLayers = 1;
         createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-        QueueFamilyIndices indices = device.FindQueueFamilies();
+        QueueFamilyIndices indices = physicalDevice.FindQueueFamilies();
         u32 queueFamilyIndices[] = {indices.GraphicsFamily, indices.PresentFamily};
 
         if (indices.GraphicsFamily != indices.PresentFamily) {
@@ -56,11 +57,11 @@ namespace VulkanWrapper {
 
         createInfo.oldSwapchain = nullptr;
 
-        if (vkCreateSwapchainKHR(device.GetHandle(), &createInfo, nullptr, &m_Handle) != VK_SUCCESS) {
+        if (vkCreateSwapchainKHR(device.GetDevice(), &createInfo, nullptr, &m_Handle) != VK_SUCCESS) {
             std::cerr << "Failed to create swap chain.";
         }
 
-        m_Device = device.GetHandle();
+        m_Device = device.GetDevice();
 
         vkGetSwapchainImagesKHR(m_Device, m_Handle, &imageCount, nullptr);
         m_SwapChainImages.resize(imageCount);

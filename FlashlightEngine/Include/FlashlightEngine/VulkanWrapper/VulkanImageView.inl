@@ -28,11 +28,11 @@ inline void VulkanImageView::Create(const VulkanDevice& device, const VkImage& i
     createInfo.subresourceRange.baseArrayLayer = 0;
     createInfo.subresourceRange.layerCount = 1;
 
-    if (vkCreateImageView(device.GetHandle(), &createInfo, nullptr, &m_Handle) != VK_SUCCESS) {
+    if (vkCreateImageView(device.GetDevice(), &createInfo, nullptr, &m_Handle) != VK_SUCCESS) {
         FL_ERROR("Failed to create image view.")
     }
 
-    m_Device = device.GetHandle();
+    m_Device = device.GetDevice();
 }
 
 inline void VulkanImageView::Destroy() const {

@@ -28,11 +28,11 @@ inline void VulkanShaderModule::Create(const VulkanDevice& device, const std::fi
     createInfo.codeSize = shaderCode.size();
     createInfo.pCode = reinterpret_cast<const u32 *>(shaderCode.data());
 
-    if (vkCreateShaderModule(device.GetHandle(), &createInfo, nullptr, &m_Handle) != VK_SUCCESS) {
+    if (vkCreateShaderModule(device.GetDevice(), &createInfo, nullptr, &m_Handle) != VK_SUCCESS) {
         FL_ERROR("Failed to create shader module.")
     }
 
-    m_Device = device.GetHandle();
+    m_Device = device.GetDevice();
 }
 
 inline void VulkanShaderModule::Destroy() const {

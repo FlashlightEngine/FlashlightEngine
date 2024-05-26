@@ -26,11 +26,11 @@ inline void VulkanPipelineLayout::Create(const VulkanDevice& device, const Vulka
     createInfo.pushConstantRangeCount = static_cast<u32>(layoutInfo.PushConstantRanges.size());
     createInfo.pPushConstantRanges = layoutInfo.PushConstantRanges.data();
 
-    if (vkCreatePipelineLayout(device.GetHandle(), &createInfo, nullptr, &m_PipelineLayout) != VK_SUCCESS) {
+    if (vkCreatePipelineLayout(device.GetDevice(), &createInfo, nullptr, &m_PipelineLayout) != VK_SUCCESS) {
         FL_ERROR("Failed to create pipeline layout.")
     }
 
-    m_Device = device.GetHandle();
+    m_Device = device.GetDevice();
 }
 
 inline void VulkanPipelineLayout::Destroy() {
