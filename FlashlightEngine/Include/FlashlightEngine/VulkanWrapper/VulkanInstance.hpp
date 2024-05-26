@@ -20,7 +20,7 @@ namespace VulkanWrapper {
         inline std::vector<const char*> GetEnabledValidationLayers() const noexcept;
         
         inline bool IsValid() const noexcept;
-        inline VkInstance GetHandle() const noexcept;
+        inline VkInstance GetInstance() const noexcept;
         
         void PopulateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT &createInfo) noexcept;
         

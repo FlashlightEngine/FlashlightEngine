@@ -29,8 +29,7 @@ inline void VulkanShaderModule::Create(const VulkanDevice& device, const std::fi
     createInfo.pCode = reinterpret_cast<const u32 *>(shaderCode.data());
 
     if (vkCreateShaderModule(device.GetHandle(), &createInfo, nullptr, &m_Handle) != VK_SUCCESS) {
-        std::cerr << "Failed to create vertex shader module." << std::endl;
-        throw std::runtime_error("");
+        FL_ERROR("Failed to create shader module.")
     }
 
     m_Device = device.GetHandle();

@@ -28,7 +28,6 @@ namespace VulkanWrapper {
         inline VkExtent2D GetSwapChainExtent() const noexcept;
 
         void Create(const VulkanDevice &device, const Window &window, const VulkanWindowSurface &windowSurface);
-        inline void Destroy() const;
 
     private:
         VkDevice m_Device;
@@ -37,6 +36,8 @@ namespace VulkanWrapper {
         std::vector<VulkanImageView> m_SwapChainImageViews;
         VkFormat m_SwapChainImageFormat;
         VkExtent2D m_SwapChainExtent;
+        
+        inline void Destroy() const;
 
         // Helper methods
         VkSurfaceFormatKHR ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR> &availableFormats);

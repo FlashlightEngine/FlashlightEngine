@@ -1,20 +1,20 @@
 ﻿#pragma once
 
-inline void VulkanRenderPassAttachments::UseDefaultAttachments(const VkFormat &format) {
-    ColorAttachmentDescription.format = format;
-    ColorAttachmentDescription.samples = VK_SAMPLE_COUNT_1_BIT;
+inline void VulkanRenderPassAttachments::UseDefaultAttachments(VulkanRenderPassAttachments &attachments, const VkFormat &format) {
+    attachments.ColorAttachmentDescription.format = format;
+    attachments.ColorAttachmentDescription.samples = VK_SAMPLE_COUNT_1_BIT;
 
-    ColorAttachmentDescription.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-    ColorAttachmentDescription.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+    attachments.ColorAttachmentDescription.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+    attachments.ColorAttachmentDescription.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
 
-    ColorAttachmentDescription.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-    ColorAttachmentDescription.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+    attachments.ColorAttachmentDescription.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+    attachments.ColorAttachmentDescription.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
 
-    ColorAttachmentDescription.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    ColorAttachmentDescription.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+    attachments.ColorAttachmentDescription.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    attachments.ColorAttachmentDescription.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
-    ColorAttachmentReference.attachment = 0;
-    ColorAttachmentReference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+    attachments.ColorAttachmentReference.attachment = 0;
+    attachments.ColorAttachmentReference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 }
 
 
@@ -48,8 +48,7 @@ inline void VulkanRenderPass::Create(const VulkanDevice& device, const VulkanRen
     renderPassInfo.pSubpasses = &subpass;
 
     if (vkCreateRenderPass(device.GetHandle(), &renderPassInfo, nullptr, &m_Handle) != VK_SUCCESS) {
-        std::cerr << "Failed to create render pass.";
-        throw std::runtime_error("");
+        FL_ERROR("Failed to create render pass")
     }
 
     m_Device = device.GetHandle();

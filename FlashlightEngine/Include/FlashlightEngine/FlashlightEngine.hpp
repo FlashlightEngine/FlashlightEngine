@@ -29,4 +29,3 @@
 
 #include "Application.hpp"
 #include "Core/Core.hpp"
-#include "VulkanRenderer/VulkanRenderer.hpp"

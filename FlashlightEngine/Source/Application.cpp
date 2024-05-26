@@ -8,24 +8,23 @@
 
 #include "FlashlightEngine/Application.hpp"
 
+#include "FlashlightEngine/Core/Log.hpp"
+
 namespace Flashlight {
 
 /// @ingroup Flashlight
 /// @class Flashlight::Application
 /// @brief The boilerplate class for any application using Flashlight Engine.
 
-Application *Application::s_Application = nullptr;
-
 /// @brief Constructor for the Application class.
-Application::Application() {    
-    if (s_Application) {
-        std::cerr << "Application already running.";
-        throw std::runtime_error("");
-    }
+Application::Application() {
 }
 
 /// @brief The first method called at the beginning of the Application.
 void Application::Run() {
+    FL_LOG("Starting application")
+    Start();
+    
     while (m_Running) {
         m_Window->Update();
 

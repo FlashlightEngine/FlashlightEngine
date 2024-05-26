@@ -9,12 +9,7 @@
 namespace Flashlight {
 
 namespace VulkanWrapper {
-
-    enum class ShaderType : VkShaderStageFlags {
-        Vertex = VK_SHADER_STAGE_VERTEX_BIT,
-        Fragment = VK_SHADER_STAGE_FRAGMENT_BIT
-    };
-
+    
     class VulkanShaderModule {
     public:
         inline VulkanShaderModule();
@@ -33,7 +28,7 @@ namespace VulkanWrapper {
         VkShaderModule m_Handle;
     };
 
-#include "FlashlightEngine/VulkanRenderer/VulkanWrapper/VulkanShaderModule.inl"
+#include "VulkanShaderModule.inl"
     
 }
 

@@ -8,6 +8,8 @@
 
 #include "FlashlightEngine/Core/Window.hpp"
 
+#include "FlashlightEngine/Core/Log.hpp"
+
 #include "FlashlightEngine/pch.hpp"
 
 namespace Flashlight {
@@ -28,8 +30,7 @@ void Window::Init() {
         m_Window = glfwCreateWindow(m_Properties.Width, m_Properties.Height, m_Properties.Title.c_str(), nullptr, nullptr);
 
         if (!m_Window) {
-            std::cerr << "Failed to create window.";
-            throw std::runtime_error("");
+            FL_THROW("Failex to create window")
         }
     }
 }

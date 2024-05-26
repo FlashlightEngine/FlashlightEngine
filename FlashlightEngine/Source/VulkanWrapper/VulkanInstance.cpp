@@ -6,10 +6,7 @@
  * Description : This file contains the definitions of methods from the VulkanInstance class.
  */
 
-#include "FlashlightEngine/VulkanRenderer/VulkanWrapper/VulkanInstance.hpp"
-
-#include "FlashlightEngine/Core/Logger.hpp"
-
+#include "FlashlightEngine/VulkanWrapper/VulkanInstance.hpp"
 
 #include <volk.h>
 #include <GLFW/glfw3.h>
@@ -34,7 +31,44 @@ namespace VulkanWrapper {
         const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData,
         void *pUserData) {
 
-        std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
+        std::stringstream message;
+
+        message << "Validation layer ";
+
+        // Severity
+        if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT) {
+            message << "[VERBOSE] ";
+        }
+
+        if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT) {
+            message << "[WARNING] ";
+        }
+
+        if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT) {
+            message << "[ERROR] ";
+        }
+
+        // Type
+        if (messageType & VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT) {
+            message << "[GENERAL] ";
+        }
+
+        if (messageType & VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT) {
+            message << "[VALIDATION] ";
+        }
+
+        if (messageType & VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT) {
+            message << "[PERFORMANCE] ";
+        }
+
+        message << ": " << pCallbackData->pMessage << '\n';
+
+        if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT ||
+            messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT) {
+            std::cout << message.str();
+            } else {
+                std::cerr << message.str();
+            }
 
         return VK_FALSE;
     }
@@ -44,9 +78,6 @@ namespace VulkanWrapper {
     /// @brief Vulkan wrapper class that handles the Vulkan instance.
 
     /// @brief Initializes the instance with the passed application info and instance create info.
-    /// 
-    /// @param appInfo The application information structure.
-    /// @param createInfo The instance creation information structure.
     void VulkanInstance::Create() {
 
         if (volkInitialize() != VK_SUCCESS) {

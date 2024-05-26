@@ -1,29 +1,24 @@
-﻿#include "FlashlightEngine/VulkanRenderer/VulkanWrapper/VulkanDevice.hpp"
+#include "FlashlightEngine/VulkanWrapper/VulkanPhysicalDevice.hpp"
+
+#include "FlashlightEngine/Core/Log.hpp"
 
 namespace Flashlight {
 
 namespace VulkanWrapper {
 
-    void VulkanDevice::Create(VulkanInstance &instance, const VulkanWindowSurface &surface) {
-        m_Instance = instance.GetHandle();
-        m_Surface = surface.GetHandle();
-
-        PickPhysicalDevice();
-        CreateLogicalDevice(instance);
-    }
-    
     /// @brief Picks a Vulkan physical device.
-    void VulkanDevice::PickPhysicalDevice() {
+    void VulkanPhysicalDevice::PickPhysicalDevice(const VulkanInstance &instance, const VulkanWindowSurface &surface) {
+        m_Surface = surface.GetSurface();
+
         u32 deviceCount = 0;
-        vkEnumeratePhysicalDevices(m_Instance, &deviceCount, nullptr);
+        vkEnumeratePhysicalDevices(instance.GetInstance(), &deviceCount, nullptr);
 
         if (deviceCount == 0) {
-            std::cerr << "Failed to find GPUs with Vulkan support.";
-            throw std::runtime_error("");
+            FL_THROW("Failed to find a GPU with Vulkan support.")
         }
 
         std::vector<VkPhysicalDevice> devices(deviceCount);
-        vkEnumeratePhysicalDevices(m_Instance, &deviceCount, devices.data());
+        vkEnumeratePhysicalDevices(instance.GetInstance(), &deviceCount, devices.data());
 
         std::multimap<i32, VkPhysicalDevice> candidates;
 
@@ -35,89 +30,18 @@ namespace VulkanWrapper {
         if (candidates.rbegin()->first > 0) {
             m_PhysicalDevice = candidates.rbegin()->second;
         } else {
-            std::cerr << "Failed to find a suitable GPU.";
-            throw std::runtime_error("");
-        }
-
-        // Stores the properties for the chosen physical device.
-        m_DeviceProperties = GetDeviceProperties(m_PhysicalDevice);
-
-#if defined(FL_DEBUG)
-#endif
-    }
-    
-    /// @brief Creates the Vulkan logical device.
-    void VulkanDevice::CreateLogicalDevice(VulkanInstance &instance) {
-        QueueFamilyIndices indices = FindQueueFamilies(m_PhysicalDevice);
-
-        std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
-        std::set<u32> uniqueQueueFamilies = {indices.GraphicsFamily, indices.PresentFamily};
-
-        float queuePriority = 1.0f;
-        for (u32 queueFamily : uniqueQueueFamilies) {
-            VkDeviceQueueCreateInfo queueCreateInfo{};
-            queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-            queueCreateInfo.queueFamilyIndex = queueFamily;
-            queueCreateInfo.queueCount = 1;
-            queueCreateInfo.pQueuePriorities = &queuePriority;
-            queueCreateInfos.push_back(queueCreateInfo);
-        }
-
-        VkPhysicalDeviceFeatures deviceFeatures {};
-
-        VkDeviceCreateInfo createInfo {};
-        createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-
-        createInfo.queueCreateInfoCount = static_cast<u32>(queueCreateInfos.size());
-        createInfo.pQueueCreateInfos = queueCreateInfos.data();
-
-        createInfo.pEnabledFeatures = &deviceFeatures;
-
-        createInfo.enabledExtensionCount = static_cast<u32>(m_DeviceExtensions.size());
-        createInfo.ppEnabledExtensionNames = m_DeviceExtensions.data();
-
-        const auto availableDeviceExtensions = GetAvailableDeviceExtensions(m_PhysicalDevice);
-        std::cout << "Available device extensions :\n";
-        for (const auto &extension : availableDeviceExtensions) {
-            std::cout << std::format("\t {} \n", extension.extensionName);
-        }
-
-        std::cout << "Required device extensions :\n";
-        for (const auto &extension : m_DeviceExtensions) {
-            std::cout << std::format("\t {} \n", extension);
-        }
-        
-#if FL_DEBUG
-        auto enabledValidationLayers = instance.GetEnabledValidationLayers();
-        
-        createInfo.enabledLayerCount = static_cast<u32>(enabledValidationLayers.size());
-        createInfo.ppEnabledLayerNames = enabledValidationLayers.data();
-#else
-        createInfo.enabledLayerCount = 0;
-#endif
-
-        if (vkCreateDevice(m_PhysicalDevice, &createInfo, nullptr, &m_Device) != VK_SUCCESS) {
-            std::cerr << "Failed to create logical device.";
-        }
-
-        volkLoadDevice(m_Device);
-    }
-
-    /// @brief Destroys the Vulkan logical device.
-    void VulkanDevice::DestroyLogicalDevice() const {
-        if (IsValid()) {
-            vkDestroyDevice(m_Device, nullptr);
+            FL_THROW("Failed to find a suitable GPU.")
         }
     }
-    
+
     /// @brief Checks if the provided device suits the requirements.
     ///
     /// @param physicalDevice The physical device to check.
     ///
     /// @returns A boolean telling if the provided device suits the requirements.
-    bool VulkanDevice::IsDeviceSuitable(VkPhysicalDevice physicalDevice) const noexcept {
-        auto deviceProperties = GetDeviceProperties(physicalDevice);
-        auto deviceFeatures = GetDeviceFeatures(physicalDevice);
+    bool VulkanPhysicalDevice::IsDeviceSuitable(VkPhysicalDevice physicalDevice) const noexcept {
+        auto deviceProperties = GetPhysicalDeviceProperties(physicalDevice);
+        auto deviceFeatures = GetPhysicalDeviceFeatures(physicalDevice);
 
         QueueFamilyIndices indices = FindQueueFamilies(physicalDevice);
 
@@ -137,9 +61,9 @@ namespace VulkanWrapper {
     /// @param physicalDevice The physical device to check.
     ///
     /// @returns A boolean telling if required device extensions are available.
-    bool VulkanDevice::CheckDeviceExtensionSupport(VkPhysicalDevice physicalDevice) const noexcept {
+    bool VulkanPhysicalDevice::CheckDeviceExtensionSupport(VkPhysicalDevice physicalDevice) const noexcept {
 
-        std::vector<VkExtensionProperties> availableExtensions = GetAvailableDeviceExtensions(physicalDevice);
+        std::vector<VkExtensionProperties> availableExtensions = GetAvailableExtensions(physicalDevice);
 
         std::set<std::string> requiredExtensions(m_DeviceExtensions.begin(), m_DeviceExtensions.end());
 
@@ -155,7 +79,7 @@ namespace VulkanWrapper {
     /// @param physicalDevice The physical device to rate.
     ///
     /// @returns The score of the provided device.
-    i32 VulkanDevice::RateDeviceSuitability(VkPhysicalDevice physicalDevice) const noexcept {
+    i32 VulkanPhysicalDevice::RateDeviceSuitability(VkPhysicalDevice physicalDevice) const noexcept {
         if (!IsDeviceSuitable(physicalDevice)) {
             // Devices that aren't suitable are scored 0.
             return 0;
@@ -163,7 +87,7 @@ namespace VulkanWrapper {
 
         i32 score = 0;
 
-        auto deviceProperties = GetDeviceProperties(physicalDevice);
+        auto deviceProperties = GetPhysicalDeviceProperties(physicalDevice);
 
         // Discrete GPUs have a significant performance advantage.
         if (deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
@@ -181,7 +105,7 @@ namespace VulkanWrapper {
     /// @param physicalDevice The physical device to retrieve the queue families from.
     ///
     /// @returns A QueueFamilyIndices struct.
-    QueueFamilyIndices VulkanDevice::FindQueueFamilies(VkPhysicalDevice physicalDevice) const noexcept {
+    QueueFamilyIndices VulkanPhysicalDevice::FindQueueFamilies(VkPhysicalDevice physicalDevice) const noexcept {
         QueueFamilyIndices indices;
 
         u32 queueFamilyCount = 0;
@@ -220,7 +144,7 @@ namespace VulkanWrapper {
     /// @param physicalDevice The device to query the details from.
     ///
     /// @returns A SwapChainSupportDetails struct containing the details.
-    SwapChainSupportDetails VulkanDevice::QuerySwapChainSupport(VkPhysicalDevice physicalDevice) const noexcept {
+    SwapChainSupportDetails VulkanPhysicalDevice::QuerySwapChainSupport(VkPhysicalDevice physicalDevice) const noexcept {
         SwapChainSupportDetails details;
 
         vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, m_Surface, &details.Capabilities);
@@ -243,7 +167,7 @@ namespace VulkanWrapper {
 
         return details;
     }
-    
+
 }
 
 }

@@ -37,6 +37,6 @@ inline bool VulkanInstance::IsValid() const noexcept {
     return m_Handle != nullptr;
 }
 
-inline VkInstance VulkanInstance::GetHandle() const noexcept {
+inline VkInstance VulkanInstance::GetInstance() const noexcept {
     return m_Handle;
 }

@@ -20,6 +20,7 @@ if (is_mode("debug")) then
 end
 
 add_requires("glfw", "glm", "vulkan-headers", "volk")
+add_requires("fmt")
 add_requires("glslang", {configs = {binaryonly = true}})
 
 local outputdir = "$(mode)-$(os)-$(arch)"
@@ -40,7 +41,7 @@ target("FlashlightEngine")
   add_includedirs("FlashlightEngine/Include", {public = true})
   set_pcxxheader("FlashlightEngine/Include/FlashlightEngine/pch.hpp")
 
-  add_packages("glfw", "glm", "vulkan-headers", "volk", {public = true})
+  add_packages("glfw", "glm", "vulkan-headers", "volk", "fmt", {public = true})
   
   add_defines("VK_NO_PROTOTYPES", {public = true})
   

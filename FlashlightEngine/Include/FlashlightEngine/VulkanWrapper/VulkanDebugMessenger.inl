@@ -1,5 +1,7 @@
 ﻿#pragma once
 
+#include "FlashlightEngine/Core/Log.hpp"
+
 /// @ingroup VulkanRenderer
 /// @class Flashlight::VulkanWrapper::VulkanDebugMessenger
 /// @brief Wrapper class for the debug messenger in Vulkan.
@@ -24,12 +26,12 @@ inline void VulkanDebugMessenger::Create(VulkanInstance& instance) {
     
     instance.PopulateDebugMessengerCreateInfo(createInfo);
 
-    if (vkCreateDebugUtilsMessengerEXT(instance.GetHandle(), &createInfo, nullptr, &m_Handle) != VK_SUCCESS) {
-        std::cerr << "(Vulkan Renderer) Failed to create debug messenger.";
+    if (vkCreateDebugUtilsMessengerEXT(instance.GetInstance(), &createInfo, nullptr, &m_Handle) != VK_SUCCESS) {
+        FL_ERROR("Failed to create the debug messenger.")
         throw std::runtime_error("");
     }
 
-    m_Instance = instance.GetHandle();
+    m_Instance = instance.GetInstance();
 }
 
 /// @brief Destroys the VkDebugUtilsMessengerEXT handle if it is valid.

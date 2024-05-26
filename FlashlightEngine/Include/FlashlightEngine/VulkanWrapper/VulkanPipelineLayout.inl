@@ -1,5 +1,7 @@
 ﻿#pragma once
 
+#include "FlashlightEngine/Core/Log.hpp"
+
 inline VulkanPipelineLayout::VulkanPipelineLayout() : m_Device(VK_NULL_HANDLE), m_PipelineLayout(VK_NULL_HANDLE) {}
 
 inline VulkanPipelineLayout::~VulkanPipelineLayout() {
@@ -25,8 +27,7 @@ inline void VulkanPipelineLayout::Create(const VulkanDevice& device, const Vulka
     createInfo.pPushConstantRanges = layoutInfo.PushConstantRanges.data();
 
     if (vkCreatePipelineLayout(device.GetHandle(), &createInfo, nullptr, &m_PipelineLayout) != VK_SUCCESS) {
-        std::cerr << "Failed to create pipeline layout.";
-        throw std::runtime_error("");
+        FL_ERROR("Failed to create pipeline layout.")
     }
 
     m_Device = device.GetHandle();

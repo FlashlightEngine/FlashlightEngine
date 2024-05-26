@@ -14,6 +14,8 @@
 #include "defines.hpp"
 
 #include <cstring>
+#include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <map>
 #include <memory>

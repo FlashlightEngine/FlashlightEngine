@@ -2,6 +2,9 @@
 
 namespace TestApplication {
 
+void TestApplication::Start() {
+}
+
 void TestApplication::Render() {
 
 }

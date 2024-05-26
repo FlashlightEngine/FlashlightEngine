@@ -1,4 +1,4 @@
-﻿#include "FlashlightEngine/VulkanRenderer/VulkanWrapper/VulkanSwapChain.hpp"
+﻿#include "FlashlightEngine/VulkanWrapper/VulkanSwapChain.hpp"
 
 #include "FlashlightEngine/pch.hpp"
 
@@ -25,7 +25,7 @@ namespace VulkanWrapper {
         VkSwapchainCreateInfoKHR createInfo{};
 
         createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-        createInfo.surface = windowSurface.GetHandle();
+        createInfo.surface = windowSurface.GetSurface();
 
         createInfo.minImageCount = imageCount;
         createInfo.imageFormat = surfaceFormat.format;

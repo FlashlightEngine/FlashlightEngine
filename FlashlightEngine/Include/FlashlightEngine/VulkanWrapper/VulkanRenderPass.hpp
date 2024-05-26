@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-#include "FlashlightEngine/VulkanRenderer/VulkanWrapper/VulkanDevice.hpp"
+#include "FlashlightEngine/VulkanWrapper/VulkanDevice.hpp"
 
 #include <volk.h>
 
@@ -14,7 +14,7 @@ namespace VulkanWrapper {
         // VkAttachmentDescription DepthAttachmentDescription;
         // VkAttachmentReference DepthAttachmentReference;
 
-        inline void UseDefaultAttachments(const VkFormat &format);
+        inline static void UseDefaultAttachments(VulkanRenderPassAttachments &attachments, const VkFormat &format);
     };
 
     class VulkanRenderPass {

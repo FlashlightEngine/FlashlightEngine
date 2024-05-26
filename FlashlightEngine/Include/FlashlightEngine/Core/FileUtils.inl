@@ -1,8 +1,5 @@
 ﻿#pragma once
 
-#include <fstream>
-#include <vector>
-
 inline std::vector<char> ReadBinary(const std::filesystem::path &filename) {
     std::ifstream file(filename, std::ios::ate | std::ios::binary);
 

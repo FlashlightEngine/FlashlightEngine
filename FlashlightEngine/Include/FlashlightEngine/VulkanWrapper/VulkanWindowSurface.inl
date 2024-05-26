@@ -1,5 +1,7 @@
 ﻿#pragma once
 
+#include "FlashlightEngine/Core/Log.hpp"
+
 inline VulkanWindowSurface::VulkanWindowSurface() : m_Instance(VK_NULL_HANDLE), m_Handle(VK_NULL_HANDLE) {}
 
 inline VulkanWindowSurface::~VulkanWindowSurface() {
@@ -9,13 +11,12 @@ inline VulkanWindowSurface::~VulkanWindowSurface() {
 }
 
 inline void VulkanWindowSurface::Create(const VulkanInstance &instance, Window &window) {
-    if (glfwCreateWindowSurface(instance.GetHandle(), window.GetNativeWindow(), nullptr, &m_Handle)
+    if (glfwCreateWindowSurface(instance.GetInstance(), window.GetNativeWindow(), nullptr, &m_Handle)
         != VK_SUCCESS) {
-        std::cerr << "Failed to create window surface.";
-        throw std::runtime_error("");
+        FL_THROW("Failed to create window surface.")
     }
 
-    m_Instance = instance.GetHandle();
+    m_Instance = instance.GetInstance();
 }
 
 inline void VulkanWindowSurface::Destroy() const {
@@ -28,7 +29,7 @@ inline bool VulkanWindowSurface::IsValid() const noexcept {
     return m_Handle != nullptr;
 }
 
-inline VkSurfaceKHR VulkanWindowSurface::GetHandle() const noexcept {
+inline VkSurfaceKHR VulkanWindowSurface::GetSurface() const noexcept {
     if (!IsValid()) {
         return nullptr;
     }

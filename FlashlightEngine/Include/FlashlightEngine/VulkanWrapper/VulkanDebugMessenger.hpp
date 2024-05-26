@@ -19,11 +19,11 @@ namespace VulkanWrapper {
         inline VkDebugUtilsMessengerEXT GetHandle() const noexcept;
         
         void Create(VulkanInstance& instance);
-        void Destroy() const;
-
     private:
         VkDebugUtilsMessengerEXT m_Handle;
         VkInstance m_Instance;
+        
+        void Destroy() const;
     };
 
 #include "VulkanDebugMessenger.inl"
