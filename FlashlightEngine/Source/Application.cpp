@@ -16,10 +16,6 @@ namespace Flashlight {
 /// @class Flashlight::Application
 /// @brief The boilerplate class for any application using Flashlight Engine.
 
-/// @brief Constructor for the Application class.
-Application::Application() {
-}
-
 /// @brief The first method called at the beginning of the Application.
 void Application::Run() {
     FL_LOG("Starting application")

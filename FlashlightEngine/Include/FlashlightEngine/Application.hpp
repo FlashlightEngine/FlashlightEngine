@@ -14,7 +14,7 @@ namespace Flashlight {
 
 class Application {
 public:
-    Application();
+    Application() = default;
     virtual ~Application() = default;
 
     void Run();
