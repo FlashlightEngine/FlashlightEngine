@@ -24,8 +24,7 @@ namespace VulkanWrapper {
         VkDevice m_Device {};
         
         VkInstance m_Instance {};
-        VkSurfaceKHR m_Surface {};
-        
+
         inline void Destroy() const;
     };
 

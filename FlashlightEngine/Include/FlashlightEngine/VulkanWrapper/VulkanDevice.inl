@@ -8,7 +8,7 @@ inline VulkanDevice::~VulkanDevice() {
 
 inline void VulkanDevice::Destroy() const {
     if (IsValid()) {
-        DestroyLogicalDevice();
+        vkDestroyDevice(m_Device, nullptr);
     }
 }
 
