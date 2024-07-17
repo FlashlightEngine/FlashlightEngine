@@ -54,6 +54,9 @@ public:
         template<typename... Args>
         constexpr void EngineCritical(Args&&... args);
 
+        template<typename... Args>
+        constexpr void EngineFatal(ErrorCode errorCode, Args&&... args);
+
 
         template<typename... Args>
         constexpr void AppTrace(Args&&... args);

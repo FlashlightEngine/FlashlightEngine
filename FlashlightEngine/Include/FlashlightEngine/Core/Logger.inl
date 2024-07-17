@@ -35,6 +35,12 @@ constexpr void EngineCritical(Args&&... args) {
     Logger::GetEngineLogger()->critical(std::forward<Args>(args)...);
 }
 
+template<typename... Args>
+constexpr void AppFatal(const ErrorCode errorCode, Args&&... args) {
+    Logger::GetEngineLogger()->critical(std::forward<Args>(args)...);
+    exit(errorCode.GetFormattedErrorCode());
+}
+
 
 template<typename... Args>
 constexpr void AppTrace(Args&&... args) {
