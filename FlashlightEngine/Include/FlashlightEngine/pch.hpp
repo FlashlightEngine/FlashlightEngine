@@ -13,6 +13,8 @@
 
 #include "defines.hpp"
 
+#include <webgpu/webgpu.h>
+
 #include <cassert>
 #include <cstring>
 #include <filesystem>

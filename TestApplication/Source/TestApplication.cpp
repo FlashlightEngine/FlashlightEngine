@@ -3,6 +3,8 @@
 #include "FlashlightEngine/Core/Logger.hpp"
 
 bool TestApplication::Init() {
+    m_Renderer = std::make_unique<Flashlight::Renderer>();
+
     m_IsRunning = true;
 
     return true;

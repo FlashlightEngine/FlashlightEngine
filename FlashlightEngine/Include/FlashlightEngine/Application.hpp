@@ -1,5 +1,7 @@
 #pragma once
 
+#include "FlashlightEngine/Renderer/Renderer.hpp"
+
 #include "FlashlightEngine/pch.hpp"
 
 namespace Flashlight {
@@ -20,6 +22,7 @@ namespace Flashlight {
 
     protected:
         bool m_IsRunning = false;
+        std::unique_ptr<Renderer> m_Renderer;
     };
 
     std::unique_ptr<Application> CreateApp();
