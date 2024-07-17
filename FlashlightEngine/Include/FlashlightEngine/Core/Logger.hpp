@@ -12,12 +12,12 @@ namespace Flashlight {
  * The last byte in the error code represents the error number in that module.
  */
 struct ErrorCode {
-    uint16_t ModuleId;
-    uint16_t ErrorNumber;
+    u8 ModuleId;
+    u8 ErrorNumber;
 
     [[nodiscard]]
-    uint32_t GetFormattedErrorCode() const {
-        return (ModuleId << 16) + ErrorNumber;
+    u16 GetFormattedErrorCode() const {
+        return (ModuleId << 8) + ErrorNumber;
     }
 };
 
@@ -60,7 +60,7 @@ public:
         }
 
         template<typename... Args>
-        constexpr void EngineFatal(Args&&... args) {
+        constexpr void EngineCritical(Args&&... args) {
             Logger::GetEngineLogger()->critical(std::forward<Args>(args)...);
         }
 
@@ -86,8 +86,14 @@ public:
         }
 
         template<typename... Args>
-        constexpr void AppFatal(Args&&... args) {
+        constexpr void AppCritical(Args&&... args) {
             Logger::GetApplicationLogger()->critical(std::forward<Args>(args)...);
+        }
+
+        template<typename... Args>
+        constexpr void AppFatal(const ErrorCode errorCode, Args&&... args) {
+            Logger::GetApplicationLogger()->critical(std::forward<Args>(args)...);
+            exit(errorCode.GetFormattedErrorCode());
         }
 }
 
