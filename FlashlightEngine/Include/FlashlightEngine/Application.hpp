@@ -5,7 +5,6 @@
 #include "FlashlightEngine/pch.hpp"
 
 namespace Flashlight {
-
     class Application {
     public:
         virtual ~Application() = default;
@@ -28,5 +27,4 @@ namespace Flashlight {
     std::unique_ptr<Application> CreateApp();
 
 #include "Application.inl"
-
 }

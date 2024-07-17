@@ -3,7 +3,6 @@
 #include "FlashlightEngine/Core/Logger.hpp"
 
 namespace Flashlight {
-
     void Application::Run() {
         Logger::Init();
 
@@ -19,5 +18,4 @@ namespace Flashlight {
 
         Cleanup();
     }
-
 }

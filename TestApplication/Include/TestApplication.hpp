@@ -3,7 +3,6 @@
 #include "FlashlightEngine/Application.hpp"
 
 class TestApplication final : public Flashlight::Application {
-
 public:
     ~TestApplication() override = default;
 

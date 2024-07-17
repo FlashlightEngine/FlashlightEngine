@@ -5,7 +5,6 @@
 #include "FlashlightEngine/pch.hpp"
 
 namespace Flashlight {
-
     class Renderer {
         std::unique_ptr<WGPUWrapper::Instance> m_Instance;
 
@@ -17,5 +16,4 @@ namespace Flashlight {
     };
 
 #include "Renderer.inl"
-
 }

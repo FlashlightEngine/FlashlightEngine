@@ -1,7 +1,6 @@
 ﻿#include "TestApplication.hpp"
 
 int main() {
-
     TestApplication app{};
 
     app.Run();

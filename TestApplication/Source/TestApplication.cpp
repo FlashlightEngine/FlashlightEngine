@@ -15,7 +15,6 @@ void TestApplication::Update() {
 }
 
 void TestApplication::Render() {
-
 }
 
 void TestApplication::Cleanup() {

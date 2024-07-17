@@ -3,7 +3,6 @@
 #include "FlashlightEngine/Core/Logger.hpp"
 
 namespace Flashlight::WGPUWrapper {
-
     void Instance::Create() {
         WGPUInstanceDescriptor instanceDescriptor{};
         instanceDescriptor.nextInChain = nullptr;
@@ -22,5 +21,4 @@ namespace Flashlight::WGPUWrapper {
             wgpuInstanceRelease(m_Instance);
         }
     }
-
 }

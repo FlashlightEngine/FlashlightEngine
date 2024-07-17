@@ -19,17 +19,17 @@ namespace Flashlight {
         m_ApplicationLogger->set_level(spdlog::level::trace);
     }
 
-    template<typename Mutex>
+    template <typename Mutex>
     class CallbackSink final : public spdlog::sinks::base_sink<Mutex> {
-
         customLogCallback m_Callback;
         spdlog::pattern_formatter m_Formatter;
 
     public:
-        explicit CallbackSink(customLogCallback callback) : m_Callback{std::move(callback)} {}
+        explicit CallbackSink(customLogCallback callback) : m_Callback{std::move(callback)} {
+        }
 
     protected:
-        void sink_it_(const spdlog::details::log_msg &msg) override {
+        void sink_it_(const spdlog::details::log_msg& msg) override {
             spdlog::memory_buf_t formatted;
             m_Formatter.format(msg, formatted);
             const auto eol_len = strlen(spdlog::details::os::default_eol);
@@ -37,7 +37,8 @@ namespace Flashlight {
             m_Callback(msg.level, message + '\n');
         }
 
-        void flush_() override {}
+        void flush_() override {
+        }
     };
 
     void Logger::AddEngineCallback(const customLogCallback& callback) {

@@ -3,7 +3,6 @@
 #include "FlashlightEngine/pch.hpp"
 
 namespace Flashlight::WGPUWrapper {
-
     class Instance {
         WGPUInstance m_Instance = nullptr;
 
@@ -11,11 +10,11 @@ namespace Flashlight::WGPUWrapper {
         inline Instance();
         inline ~Instance();
 
-        Instance(const Instance &) = delete;
-        Instance(Instance &&) = delete;
+        Instance(const Instance&) = delete;
+        Instance(Instance&&) = delete;
 
-        Instance &operator=(const Instance &) = delete;
-        Instance &operator=(Instance&&) = delete;
+        Instance& operator=(const Instance&) = delete;
+        Instance& operator=(Instance&&) = delete;
 
         [[nodiscard]] inline WGPUInstance GetNativeInstance() const;
 
@@ -25,5 +24,4 @@ namespace Flashlight::WGPUWrapper {
     };
 
 #include "Instance.inl"
-
 }
