@@ -19,9 +19,7 @@ if (is_mode("debug")) then
     add_defines("FL_DEBUG")
 end
 
-add_requires("glfw", "glm", "vulkan-headers", "volk")
-add_requires("fmt")
-add_requires("glslang", {configs = {binaryonly = true}})
+add_requires("glfw", "glm", "spdlog")
 
 local outputdir = "$(mode)-$(os)-$(arch)"
 
@@ -41,25 +39,19 @@ target("FlashlightEngine")
   add_includedirs("FlashlightEngine/Include", {public = true})
   set_pcxxheader("FlashlightEngine/Include/FlashlightEngine/pch.hpp")
 
-  add_packages("glfw", "glm", "vulkan-headers", "volk", "fmt", {public = true})
+  add_packages("glfw", "glm", "spdlog", {public = true})
   
   add_defines("VK_NO_PROTOTYPES", {public = true})
   
 target("TestApplication")
     set_kind("binary")
-    
-    add_rules("utils.glsl2spv", {outputdir = "build/" .. outputdir .. "/TestApplication/bin/Resources/Shaders"})
 
     set_targetdir("build/" .. outputdir .. "/TestApplication/bin")
     set_objectdir("build/" .. outputdir .. "/TestApplication/obj")
 
     add_files("TestApplication/Source/**.cpp")
-    add_files("TestApplication/Shaders/**")
     add_headerfiles("TestApplication/Shaders/**") -- A little trick to make them show in VS solutions.
     add_headerfiles("TestApplication/Include/**.hpp", "TestApplication/Include/**.h", "TestApplication/Include/**.inl")
     add_includedirs("TestApplication/Include")
-
-    add_packages("glfw", "glm")
-    add_packages("glslang")
 
     add_deps("FlashlightEngine")
