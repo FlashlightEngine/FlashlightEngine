@@ -35,8 +35,13 @@ target("FlashlightEngine")
   set_objectdir("build/" .. outputdir .. "/FlashlightEngine/obj")
 
   add_files("FlashlightEngine/Source/**.cpp")
+
   add_headerfiles("FlashlightEngine/Include/**.hpp", "FlashlightEngine/Include/**.h", "FlashlightEngine/Include/**.inl")
   add_includedirs("FlashlightEngine/Include", {public = true})
+
+  add_headerfiles("FlashlightEngine/ThirdParty/**.hpp")
+  add_includedirs("FlashlightEngine/ThirdParty")
+
   set_pcxxheader("FlashlightEngine/Include/FlashlightEngine/pch.hpp")
 
   add_packages("glfw", "glm", "spdlog", "wgpu-native", {public = true})
