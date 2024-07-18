@@ -19,7 +19,7 @@ if (is_mode("debug")) then
     add_defines("FL_DEBUG")
 end
 
-add_requires("glfw", "glm", "spdlog", "wgpu-native")
+add_requires("glfw 3.4", "glm 1.0.1", "spdlog v1.9.0", "wgpu-native v0.19.4+1")
 
 local outputdir = "$(mode)-$(os)-$(arch)"
 
