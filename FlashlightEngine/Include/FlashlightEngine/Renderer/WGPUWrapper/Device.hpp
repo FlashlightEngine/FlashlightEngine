@@ -25,6 +25,7 @@ namespace Flashlight::WGPUWrapper {
         void Destroy() const;
 
         static WGPUAdapter RequestAdapterSync(WGPUInstance instance, WGPURequestAdapterOptions const *options);
+        static void InspectAdapter(WGPUAdapter adapter);
     };
 
 #include "Device.inl"

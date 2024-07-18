@@ -4,6 +4,8 @@
 
 #include "FlashlightEngine/pch.hpp"
 
+#include <magic_enum/magic_enum.hpp>
+
 namespace Flashlight::WGPUWrapper {
     Device::Device(const Instance& instance) {
         Create(instance.GetNativeInstance());
@@ -24,14 +26,16 @@ namespace Flashlight::WGPUWrapper {
 
         Log::EngineTrace("Got WebGPU adapter.");
 
+        InspectAdapter(adapter);
+
         Log::EngineTrace("Releasing WebGPU adapter.");
         wgpuAdapterRelease(adapter);
     }
 
     void Device::Destroy() const {
-        /*if (m_Device) {
-            // wgpuDeviceRelease(m_Device);
-        }*/
+        if (m_Device) {
+            wgpuDeviceRelease(m_Device);
+        }
     }
 
     /**
@@ -57,8 +61,9 @@ namespace Flashlight::WGPUWrapper {
         // is to convey what we want to capture through the pUserData pointer,
         // provided as the last argument of wgpuInstanceRequestAdapter and recieved
         // by the callback as its last argument.
-        auto onAdapterRequestEnded = [](WGPURequestAdapterStatus status, WGPUAdapter adapter, char const *pMessage, void *pUserData) {
-            auto & [Adapter, RequestEnded] = *static_cast<UserData*>(pUserData);
+        auto onAdapterRequestEnded = [](const WGPURequestAdapterStatus status, WGPUAdapter adapter, char const* pMessage,
+                                        void* pUserData) {
+            auto& [Adapter, RequestEnded] = *static_cast<UserData*>(pUserData);
 
             if (status == WGPURequestAdapterStatus_Success) {
                 Adapter = adapter;
@@ -80,4 +85,83 @@ namespace Flashlight::WGPUWrapper {
         return userData.Adapter;
     }
 
+    void Device::InspectAdapter(WGPUAdapter adapter) {
+        WGPUSupportedLimits supportedLimits = {};
+        supportedLimits.nextInChain = nullptr;
+
+        // We're using wgpu-native so wgpuAdapterGetLimits returns a boolean.
+        if (wgpuAdapterGetLimits(adapter, &supportedLimits)) {
+            Log::EngineTrace("Adapter limits:");
+            Log::EngineTrace(" - maxTextureDimension1D: {0}",supportedLimits.limits.maxTextureDimension1D);
+            Log::EngineTrace(" - maxTextureDimension2D: {0}",supportedLimits.limits.maxTextureDimension2D);
+            Log::EngineTrace(" - maxTextureDimension3D: {0}",supportedLimits.limits.maxTextureDimension3D);
+            Log::EngineTrace(" - maxTextureArrayLayers: {0}",supportedLimits.limits.maxTextureArrayLayers);
+		    Log::EngineTrace(" - maxBindGroups: {0}", supportedLimits.limits.maxBindGroups);
+		    Log::EngineTrace(" - maxDynamicUniformBuffersPerPipelineLayout: {0}", supportedLimits.limits.maxDynamicUniformBuffersPerPipelineLayout);
+		    Log::EngineTrace(" - maxDynamicStorageBuffersPerPipelineLayout: {0}", supportedLimits.limits.maxDynamicStorageBuffersPerPipelineLayout);
+		    Log::EngineTrace(" - maxSampledTexturesPerShaderStage: {0}", supportedLimits.limits.maxSampledTexturesPerShaderStage);
+		    Log::EngineTrace(" - maxSamplersPerShaderStage: {0}", supportedLimits.limits.maxSamplersPerShaderStage);
+		    Log::EngineTrace(" - maxStorageBuffersPerShaderStage: {0}", supportedLimits.limits.maxStorageBuffersPerShaderStage);
+		    Log::EngineTrace(" - maxStorageTexturesPerShaderStage: {0}", supportedLimits.limits.maxStorageTexturesPerShaderStage);
+		    Log::EngineTrace(" - maxUniformBuffersPerShaderStage: {0}", supportedLimits.limits.maxUniformBuffersPerShaderStage);
+		    Log::EngineTrace(" - maxUniformBufferBindingSize: {0}", supportedLimits.limits.maxUniformBufferBindingSize);
+		    Log::EngineTrace(" - maxStorageBufferBindingSize: {0}", supportedLimits.limits.maxStorageBufferBindingSize);
+		    Log::EngineTrace(" - minUniformBufferOffsetAlignment: {0}", supportedLimits.limits.minUniformBufferOffsetAlignment);
+		    Log::EngineTrace(" - minStorageBufferOffsetAlignment: {0}", supportedLimits.limits.minStorageBufferOffsetAlignment);
+		    Log::EngineTrace(" - maxVertexBuffers: {0}", supportedLimits.limits.maxVertexBuffers);
+		    Log::EngineTrace(" - maxVertexAttributes: {0}", supportedLimits.limits.maxVertexAttributes);
+		    Log::EngineTrace(" - maxVertexBufferArrayStride: {0}", supportedLimits.limits.maxVertexBufferArrayStride);
+		    Log::EngineTrace(" - maxInterStageShaderComponents: {0}", supportedLimits.limits.maxInterStageShaderComponents);
+		    Log::EngineTrace(" - maxComputeWorkgroupStorageSize: {0}", supportedLimits.limits.maxComputeWorkgroupStorageSize);
+		    Log::EngineTrace(" - maxComputeInvocationsPerWorkgroup: {0}", supportedLimits.limits.maxComputeInvocationsPerWorkgroup);
+		    Log::EngineTrace(" - maxComputeWorkgroupSizeX: {0}", supportedLimits.limits.maxComputeWorkgroupSizeX);
+		    Log::EngineTrace(" - maxComputeWorkgroupSizeY: {0}", supportedLimits.limits.maxComputeWorkgroupSizeY);
+		    Log::EngineTrace(" - maxComputeWorkgroupSizeZ: {0}", supportedLimits.limits.maxComputeWorkgroupSizeZ);
+		    Log::EngineTrace(" - maxComputeWorkgroupsPerDimension: {0}", supportedLimits.limits.maxComputeWorkgroupsPerDimension);
+        }
+
+        std::vector<WGPUFeatureName> features;
+
+        const size featureCount = wgpuAdapterEnumerateFeatures(adapter, nullptr);
+
+        features.resize(featureCount);
+
+        wgpuAdapterEnumerateFeatures(adapter, features.data());
+
+        Log::EngineTrace("Adaper features:");
+        for (const auto featureNumber : features) {
+            // Check if the feature is in the WGPUFeatureName enum.
+            if (featureNumber <= 0x0000000B) {
+                Log::EngineTrace(" - {0}", magic_enum::enum_name<WGPUFeatureName>(featureNumber));
+            } else {
+                // If it's not, then the feature is part of WGPUNativeFeature. This enum isn't supported by magic_enum so
+                // we print it as a hex number.
+                std::stringstream featureHexNumber;
+                featureHexNumber << std::hex << featureNumber;
+                Log::EngineTrace(" - wgpu-native feature: 0x{0}", featureHexNumber.str());
+            }
+        }
+
+        WGPUAdapterProperties properties = {};
+        properties.nextInChain = nullptr;
+        wgpuAdapterGetProperties(adapter, &properties);
+
+        Log::EngineTrace("Adapter properties:");
+        Log::EngineTrace("- Vender ID: {0}", properties.vendorID);
+        if (properties.vendorName) {
+            Log::EngineTrace("- Vendor name: {0}", properties.vendorName);
+        }
+        if (properties.architecture) {
+            Log::EngineTrace("- Architecture: {0}", properties.architecture);
+        }
+        Log::EngineTrace("- Device ID: {0}", properties.deviceID);
+        if (properties.name) {
+            Log::EngineTrace("- Device name: {0}", properties.name);
+        }
+        if (properties.driverDescription) {
+            Log::EngineTrace("- Driver description: {0}", properties.driverDescription);
+        }
+        Log::EngineTrace("- Adapter type: {0}", magic_enum::enum_name<WGPUAdapterType>(properties.adapterType));
+        Log::EngineTrace("- Backend type: {0}", magic_enum::enum_name<WGPUBackendType>(properties.backendType));
+    }
 }
