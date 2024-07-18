@@ -1,3 +1,11 @@
+/* Copyright (C) 2024 Jean "Pixfri" Letessier
+ * This file is part of "Flashlight Engine"
+ * For conditions of distribution and use, see copyright notice in LICENSE.
+ *
+ * File : Renderer.hpp
+ * Description : Declaration of the Renderer class. This class manages objects required for rendering, such as
+ *               the WebGPU instance and device.
+ */
 #pragma once
 
 #include "FlashlightEngine/Renderer/WGPUWrapper/Instance.hpp"

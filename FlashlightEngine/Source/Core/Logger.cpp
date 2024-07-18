@@ -1,3 +1,10 @@
+/* Copyright (C) 2024 Jean "Pixfri" Letessier
+ * This file is part of "Flashlight Engine"
+ * For conditions of distribution and use, see copyright notice in LICENSE.
+ *
+ * File : Logger.cpp
+ * Description : Definitions of methods from the Logger class.
+ */
 #include "FlashlightEngine/Core/Logger.hpp"
 
 #include <spdlog/sinks/stdout_color_sinks.h>

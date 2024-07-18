@@ -1,4 +1,12 @@
-﻿#pragma once
+﻿/* Copyright (C) 2024 Jean "Pixfri" Letessier
+ * This file is part of "Flashlight Engine"
+ * For conditions of distribution and use, see copyright notice in LICENSE.
+ *
+ * File : Logger.inl
+ * Description : Definitions of inline and template methods and functions.
+ */
+
+#pragma once
 
 inline spdlog::logger* Logger::GetEngineLogger() {
     return m_EngineLogger.get();

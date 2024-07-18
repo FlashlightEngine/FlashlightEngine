@@ -1,10 +1,17 @@
+/* Copyright (C) 2024 Jean "Pixfri" Letessier
+ * This file is part of "Flashlight Engine"
+ * For conditions of distribution and use, see copyright notice in LICENSE.
+ *
+ * File : Device.cpp
+ * Description : Definitions of methods from the Device class.
+ */
 #include "FlashlightEngine/Renderer/WGPUWrapper/Device.hpp"
 
 #include "FlashlightEngine/Core/Logger.hpp"
 
 #include "FlashlightEngine/pch.hpp"
 
-#include <magic_enum/magic_enum.hpp>
+#include <magic_enum.hpp>
 
 namespace Flashlight::WGPUWrapper {
     Device::Device(const Instance& instance) {
