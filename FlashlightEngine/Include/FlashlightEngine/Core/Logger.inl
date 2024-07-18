@@ -38,7 +38,7 @@ namespace Log {
     constexpr void EngineFatal(const ErrorCode errorCode, Args&&... args) {
         std::stringstream hexErrorCodeStream;
         hexErrorCodeStream << std::hex << errorCode.GetFormattedErrorCode();
-        Logger::GetApplicationLogger()->critical("FATAL ENGINE ERROR: Code: {0}", hexErrorCodeStream.str());
+        Logger::GetApplicationLogger()->critical("FATAL ENGINE ERROR: Code: 0x{0}", hexErrorCodeStream.str());
         Logger::GetEngineLogger()->critical(std::forward<Args>(args)...);
         exit(errorCode.GetFormattedErrorCode());
     }
@@ -73,7 +73,7 @@ namespace Log {
     constexpr void AppFatal(const ErrorCode errorCode, Args&&... args) {
         std::stringstream hexErrorCodeStream;
         hexErrorCodeStream << std::hex << errorCode.GetFormattedErrorCode();
-        Logger::GetApplicationLogger()->critical("FATAL APPLICATION ERROR: Code: {0}", hexErrorCodeStream.str());
+        Logger::GetApplicationLogger()->critical("FATAL APPLICATION ERROR: Code: 0x{0}", hexErrorCodeStream.str());
         Logger::GetApplicationLogger()->critical(std::forward<Args>(args)...);
         exit(errorCode.GetFormattedErrorCode());
     }
