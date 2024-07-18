@@ -5,7 +5,7 @@ contributing to the engine.
 ## File header
 Every file should have a header which should be presented with the following form : 
 ```c++
-/* Copyright (C) <year> <Author> (<Author E-Mail address>)
+/* Copyright (C) <year> <Author>
  * This file is part of "FlashLight Engine"
  * For conditions of distribution and use, see copyright notice in FlashLightEngine.hpp
  *
