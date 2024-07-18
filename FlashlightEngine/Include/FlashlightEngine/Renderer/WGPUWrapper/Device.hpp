@@ -19,10 +19,10 @@ namespace Flashlight::WGPUWrapper {
         explicit Device(const Instance &instance);
         ~Device();
 
-        Device(const Device &) = delete;
+        Device(const Device &) = default;
         Device(Device &&) = delete;
 
-        Device &operator=(const Device &) = delete;
+        Device &operator=(const Device &) = default;
         Device &operator=(Device &&) = delete;
 
         [[nodiscard]] inline WGPUDevice GetNativeDevice() const;

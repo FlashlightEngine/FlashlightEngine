@@ -6,3 +6,11 @@
  * Description : Definitions of inline methods from the Renderer class.
  */
 #pragma once
+
+inline WGPUWrapper::Device Renderer::GetDevice() const {
+    return *m_Device;
+}
+
+inline WGPUWrapper::Queue Renderer::GetQueue() const {
+    return *m_Queue;
+}

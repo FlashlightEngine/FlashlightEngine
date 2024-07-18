@@ -17,10 +17,10 @@ namespace Flashlight::WGPUWrapper {
         inline Instance();
         inline ~Instance();
 
-        Instance(const Instance&) = delete;
+        Instance(const Instance&) = default;
         Instance(Instance&&) = delete;
 
-        Instance& operator=(const Instance&) = delete;
+        Instance& operator=(const Instance&) = default;
         Instance& operator=(Instance&&) = delete;
 
         [[nodiscard]] inline WGPUInstance GetNativeInstance() const;
