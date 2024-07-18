@@ -25,7 +25,7 @@ namespace Flashlight::WGPUWrapper {
         Device &operator=(const Device &) = delete;
         Device &operator=(Device &&) = delete;
 
-        [[nodiscard]] inline WGPUDevice GetDevice() const;
+        [[nodiscard]] inline WGPUDevice GetNativeDevice() const;
 
     private:
         void Create(WGPUInstance instance);

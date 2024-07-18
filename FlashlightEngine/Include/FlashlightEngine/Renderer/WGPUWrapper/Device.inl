@@ -7,6 +7,6 @@
  */
 #pragma once
 
-inline WGPUDevice Device::GetDevice() const {
+inline WGPUDevice Device::GetNativeDevice() const {
     return m_Device;
 }
