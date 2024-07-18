@@ -14,7 +14,7 @@ namespace Flashlight {
         Renderer();
         ~Renderer() = default;
 
-        void Initialize();
+        static void Initialize();
     };
 
 #include "Renderer.inl"

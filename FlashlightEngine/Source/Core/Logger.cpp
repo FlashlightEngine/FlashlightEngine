@@ -1,7 +1,5 @@
 #include "FlashlightEngine/Core/Logger.hpp"
 
-#include "FlashlightEngine/pch.hpp"
-
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/sinks/base_sink.h>
 
@@ -33,7 +31,7 @@ namespace Flashlight {
             spdlog::memory_buf_t formatted;
             m_Formatter.format(msg, formatted);
             const auto eol_len = strlen(spdlog::details::os::default_eol);
-            std::string message(formatted.begin(), formatted.end() - eol_len);
+            const std::string message(formatted.begin(), formatted.end() - eol_len);
             m_Callback(msg.level, message + '\n');
         }
 
