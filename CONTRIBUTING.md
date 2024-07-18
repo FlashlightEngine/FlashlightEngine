@@ -24,7 +24,8 @@ constructors inside of a header file only if they initialize fields and do notin
 of the corresponding project, under the right module folder.
 
 Inline files (`.inl`) should only contain definitions of inline functions and templates. These should be included in header
-files. They must be in the same folder as header files.
+files. They must be in the same folder as header files. The inline file should be included in the corresponding header file
+inside the namespace the main class of the file is in.
 
 Source files (`.cpp`) should only contain definitions of functions that are not inline and definitions of local functions.
 They Must be in the `Source` folder of the corresponding project, under the right module folder.
