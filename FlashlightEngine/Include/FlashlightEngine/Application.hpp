@@ -7,6 +7,8 @@
  */
 #pragma once
 
+#include "FlashlightEngine/Core/Window.hpp"
+
 #include "FlashlightEngine/Renderer/Renderer.hpp"
 
 #include "FlashlightEngine/pch.hpp"
@@ -28,6 +30,7 @@ namespace Flashlight {
 
     protected:
         bool m_IsRunning = false;
+        std::unique_ptr<Window>  m_Window;
         std::shared_ptr<Renderer> m_Renderer;
     };
 

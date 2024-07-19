@@ -1,10 +1,11 @@
 #include "TestApplication.hpp"
 
-#include "FlashlightEngine/Core/Logger.hpp"
-
 #include "FlashlightEngine/Renderer/WGPUWrapper/CommandEncoder.hpp"
 
 bool TestApplication::Init() {
+    const Flashlight::WindowProperties windowProperties {640, 480, "Test Application"};
+
+    m_Window = std::make_unique<Flashlight::Window>(windowProperties);
     m_Renderer = std::make_shared<Flashlight::Renderer>();
 
     m_IsRunning = true;
@@ -13,7 +14,11 @@ bool TestApplication::Init() {
 }
 
 void TestApplication::Update() {
-    Close();
+    m_Window->Update();
+
+    if (m_Window->ShouldClose()) {
+        m_IsRunning = false;
+    }
 }
 
 void TestApplication::Render() {
@@ -24,9 +29,7 @@ void TestApplication::Render() {
 
     WGPUCommandBuffer commandBuffer = m_Renderer->EndRecordCommands(commandEncoder);
 
-    Flashlight::Log::AppTrace("Submitting command buffer...");
     m_Renderer->SubmitCommandBuffers({commandBuffer});
-    Flashlight::Log::AppTrace("Command buffer submitted.");
 }
 
 void TestApplication::Cleanup() {
