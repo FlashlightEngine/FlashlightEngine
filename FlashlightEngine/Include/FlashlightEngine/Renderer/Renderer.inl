@@ -14,3 +14,12 @@ inline WGPUWrapper::Device Renderer::GetDevice() const {
 inline WGPUWrapper::Queue Renderer::GetQueue() const {
     return *m_Queue;
 }
+
+inline void Renderer::SubmitCommandBuffers(const std::vector<WGPUCommandBuffer>& commandBuffers) const {
+    m_Queue->Submit(commandBuffers);
+
+    for (int i = 0; i < 5; ++i) {
+        Log::EngineTrace("Polling device...");
+        wgpuDevicePoll(m_Device->GetNativeDevice(), false, nullptr);
+    }
+}

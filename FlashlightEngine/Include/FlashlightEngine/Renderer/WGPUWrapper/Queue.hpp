@@ -19,7 +19,7 @@ namespace Flashlight::WGPUWrapper {
         explicit inline Queue(const Device& device);
         inline ~Queue();
 
-        inline void Submit(size commandNumber, const std::vector<WGPUCommandBuffer>& commandBuffers) const;
+        inline void Submit(const std::vector<WGPUCommandBuffer> &commandBuffers) const;
         inline void WriteBuffer(WGPUBuffer buffer, u64 offset, void const* data, size bufferSize) const;
         inline void WriteTexture(WGPUImageCopyTexture const* destination, void const* data, size dataSize,
                                  WGPUTextureDataLayout const* dataLayout, WGPUExtent3D const* writeSize) const;

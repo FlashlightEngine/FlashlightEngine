@@ -4,7 +4,8 @@
  *
  * File : CommandEncoder.cpp
  * Description : Definitions of methods from the CommandEncoder class.
- */#include "FlashlightEngine/Renderer/WGPUWrapper/CommandEncoder.hpp"
+ */
+#include "FlashlightEngine/Renderer/WGPUWrapper/CommandEncoder.hpp"
 
 #include "FlashlightEngine/pch.hpp"
 

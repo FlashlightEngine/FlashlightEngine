@@ -11,6 +11,9 @@
 #include "FlashlightEngine/Renderer/WGPUWrapper/Instance.hpp"
 #include "FlashlightEngine/Renderer/WGPUWrapper/Device.hpp"
 #include "FlashlightEngine/Renderer/WGPUWrapper/Queue.hpp"
+#include "FlashlightEngine/Renderer/WGPUWrapper/CommandEncoder.hpp"
+
+#include "FlashlightEngine/Core/Logger.hpp"
 
 #include "FlashlightEngine/pch.hpp"
 
@@ -28,6 +31,10 @@ namespace Flashlight {
 
         [[nodiscard]] inline WGPUWrapper::Device GetDevice() const;
         [[nodiscard]] inline WGPUWrapper::Queue GetQueue() const;
+
+        [[nodiscard]] WGPUWrapper::CommandEncoder BeginRecordCommands() const;
+        [[nodiscard]] static WGPUCommandBuffer EndRecordCommands(const WGPUWrapper::CommandEncoder &commandEncoder);
+        inline void SubmitCommandBuffers(const std::vector<WGPUCommandBuffer> &commandBuffers) const;
     };
 
 #include "Renderer.inl"

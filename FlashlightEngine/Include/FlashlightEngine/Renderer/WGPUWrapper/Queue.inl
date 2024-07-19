@@ -16,10 +16,9 @@ inline Queue::~Queue() {
     Destroy();
 }
 
-inline void Queue::Submit(const size commandNumber, const std::vector<WGPUCommandBuffer>& commandBuffers) const {
-    wgpuQueueSubmit(m_Queue, commandNumber, commandBuffers.data());
+inline void Queue::Submit(const std::vector<WGPUCommandBuffer> &commandBuffers) const {
+    wgpuQueueSubmit(m_Queue, commandBuffers.size(), commandBuffers.data());
 
-    // Release command buffers after submitting.
     for (const auto commandBuffer : commandBuffers) {
         wgpuCommandBufferRelease(commandBuffer);
     }

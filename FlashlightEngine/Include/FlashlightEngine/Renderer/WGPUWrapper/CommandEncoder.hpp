@@ -19,6 +19,12 @@ namespace Flashlight::WGPUWrapper {
         explicit inline CommandEncoder(const Device &device);
         inline ~CommandEncoder();
 
+        CommandEncoder(const CommandEncoder&) = default;
+        CommandEncoder(CommandEncoder&&) = default;
+
+        CommandEncoder &operator=(const CommandEncoder&) = default;
+        CommandEncoder &operator=(CommandEncoder&&) = default;
+
         [[nodiscard]] inline WGPUCommandEncoder GetNativeEncoder() const;
 
     private:
