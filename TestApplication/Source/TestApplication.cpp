@@ -3,11 +3,6 @@
 #include "FlashlightEngine/Renderer/WGPUWrapper/CommandEncoder.hpp"
 
 bool TestApplication::Init() {
-    const Flashlight::WindowProperties windowProperties {640, 480, "Test Application"};
-
-    m_Window = std::make_unique<Flashlight::Window>(windowProperties);
-    m_Renderer = std::make_shared<Flashlight::Renderer>();
-
     m_IsRunning = true;
 
     return true;
