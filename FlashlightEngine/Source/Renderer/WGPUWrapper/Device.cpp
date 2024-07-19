@@ -7,6 +7,8 @@
  */
 #include "FlashlightEngine/Renderer/WGPUWrapper/Device.hpp"
 
+#include "FlashlightEngine/Renderer/WGPUWrapper/SurfaceConfigurator.hpp"
+
 #include "FlashlightEngine/Core/Logger.hpp"
 
 #include "FlashlightEngine/pch.hpp"
@@ -62,6 +64,16 @@ namespace Flashlight::WGPUWrapper {
 
         InspectDevice(m_Device);
 
+        SurfaceConfiguration surfaceConfiguration{};
+
+        int width, height;
+        glfwGetFramebufferSize(window, &width, &height);
+
+        surfaceConfiguration.Width = static_cast<u32>(width);
+        surfaceConfiguration.Height = static_cast<u32>(height);
+
+        SurfaceConfigurator::Configure(m_Surface, adapter, m_Device, surfaceConfiguration);
+
         Log::EngineTrace("Releasing WebGPU adapter.");
         wgpuAdapterRelease(adapter);
     }
@@ -69,6 +81,7 @@ namespace Flashlight::WGPUWrapper {
     void Device::Destroy() const {
         if (m_Surface) {
             Log::EngineTrace("Releasing window surface.");
+            SurfaceConfigurator::Unconfigure(m_Surface);
             wgpuSurfaceRelease(m_Surface);
         }
 
