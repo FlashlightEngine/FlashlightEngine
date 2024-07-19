@@ -7,6 +7,18 @@
  */
 #pragma once
 
+inline Device::Device(const Instance &instance, const Window &window) {
+    Create(instance.GetNativeInstance(), window.GetGlfwWindow());
+}
+
+inline Device::~Device() {
+    Destroy();
+}
+
 inline WGPUDevice Device::GetNativeDevice() const {
     return m_Device;
+}
+
+inline WGPUSurface Device::GetSurface() const {
+    return m_Surface;
 }

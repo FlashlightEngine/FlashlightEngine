@@ -13,21 +13,17 @@
 
 #include <magic_enum.hpp>
 
+#include <glfw3webgpu.h>
+
 namespace Flashlight::WGPUWrapper {
-    Device::Device(const Instance& instance) {
-        Create(instance.GetNativeInstance());
-    }
-
-    Device::~Device() {
-        Destroy();
-    }
-
-
-    void Device::Create(WGPUInstance instance) {
+    void Device::Create(WGPUInstance instance, GLFWwindow* window) {
         Log::EngineTrace("Requesting WebGPU adapter...");
+
+        m_Surface = glfwGetWGPUSurface(instance, window);
 
         WGPURequestAdapterOptions adapterOptions = {};
         adapterOptions.nextInChain = nullptr;
+        adapterOptions.compatibleSurface = m_Surface;
 
         WGPUAdapter adapter = RequestAdapterSync(instance, &adapterOptions);
 
@@ -71,6 +67,11 @@ namespace Flashlight::WGPUWrapper {
     }
 
     void Device::Destroy() const {
+        if (m_Surface) {
+            Log::EngineTrace("Releasing window surface.");
+            wgpuSurfaceRelease(m_Surface);
+        }
+
         if (m_Device) {
             Log::EngineTrace("Releasing WebGPU device.");
             wgpuDeviceRelease(m_Device);

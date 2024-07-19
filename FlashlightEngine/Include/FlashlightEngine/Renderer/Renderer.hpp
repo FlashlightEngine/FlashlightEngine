@@ -24,7 +24,7 @@ namespace Flashlight {
         std::unique_ptr<WGPUWrapper::Queue> m_Queue;
 
     public:
-        Renderer();
+        Renderer(const Window &window);
         ~Renderer() = default;
 
         static void Initialize();

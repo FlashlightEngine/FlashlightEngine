@@ -8,9 +8,9 @@
 #include "FlashlightEngine/Renderer/Renderer.hpp"
 
 namespace Flashlight {
-    Renderer::Renderer() {
+    Renderer::Renderer(const Window &window) {
         m_Instance = std::make_unique<WGPUWrapper::Instance>();
-        m_Device = std::make_unique<WGPUWrapper::Device>(*m_Instance);
+        m_Device = std::make_unique<WGPUWrapper::Device>(*m_Instance, window);
         m_Queue = std::make_unique<WGPUWrapper::Queue>(*m_Device);
     }
 

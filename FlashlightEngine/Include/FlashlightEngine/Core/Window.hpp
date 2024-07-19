@@ -5,7 +5,6 @@
 #include "FlashlightEngine/pch.hpp"
 
 #include <GLFW/glfw3.h>
-#include <glfw3webgpu.h>
 
 namespace Flashlight {
     struct WindowProperties {
