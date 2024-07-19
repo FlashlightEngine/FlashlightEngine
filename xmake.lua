@@ -41,7 +41,7 @@ target("FlashlightEngine")
 
   set_pcxxheader("FlashlightEngine/Include/FlashlightEngine/pch.hpp")
 
-  add_packages("glfw", "glm", "spdlog", "wgpu-native", {public = true})
+  add_packages("glfw", "glfw3webgpu", "glm", "spdlog", "wgpu-native", {public = true})
   add_packages("magic_enum")
 
   add_defines("WEBGPU_BACKEND_WGPU")
