@@ -55,7 +55,7 @@ Includes must be in the following order :
  * // Header files from the standard library.
  */
 ```
-The code must use type definitions from `defines.hpp` (included in `pch.hpp`) for primitive integer, unsigned integer and
+The code must use type definitions from `fltypes.hpp` (included in `pch.hpp`) for primitive integer, unsigned integer and
 decimal types.
 
 ## Commit messages
