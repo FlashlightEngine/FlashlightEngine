@@ -1,3 +1,11 @@
+/* Copyright (C) 2024 Jean "Pixfri" Letessier
+* This file is part of "Flashlight Engine"
+ * For conditions of distribution and use, see copyright notice in LICENSE.
+ *
+ * File : RenderPass.hpp
+ * Description : Declaration of the RenderPass class. A render pass is a specialised command encoder object for drawing
+ *               commands.
+ */
 #pragma once
 
 #include "FlashlightEngine/Renderer/CommandEncoder.hpp"

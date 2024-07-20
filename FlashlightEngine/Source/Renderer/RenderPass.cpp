@@ -1,3 +1,10 @@
+/* Copyright (C) 2024 Jean "Pixfri" Letessier
+ * This file is part of "Flashlight Engine"
+ * For conditions of distribution and use, see copyright notice in LICENSE.
+ *
+ * File : RenderPass.cpp
+ * Description : Definitions of methods from the RenderPass class.
+ */
 #include "FlashlightEngine/Renderer/RenderPass.hpp"
 
 #include "FlashlightEngine/pch.hpp"
