@@ -8,7 +8,7 @@
 #pragma once
 
 inline Device::Device(const Instance &instance, const Window &window) {
-    Create(instance.GetNativeInstance(), window.GetGlfwWindow());
+    Create(instance.GetNativeInstance(), window);
 }
 
 inline Device::~Device() {
@@ -19,6 +19,6 @@ inline WGPUDevice Device::GetNativeDevice() const {
     return m_Device;
 }
 
-inline WGPUSurface Device::GetSurface() const {
+inline WGPUSurface Device::GetWindowSurface() const {
     return m_Surface;
 }

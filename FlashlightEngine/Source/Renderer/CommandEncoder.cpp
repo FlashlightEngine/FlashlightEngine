@@ -5,11 +5,11 @@
  * File : CommandEncoder.cpp
  * Description : Definitions of methods from the CommandEncoder class.
  */
-#include "FlashlightEngine/Renderer/WGPUWrapper/CommandEncoder.hpp"
+#include "FlashlightEngine/Renderer/CommandEncoder.hpp"
 
 #include "FlashlightEngine/pch.hpp"
 
-namespace Flashlight::WGPUWrapper {
+namespace Flashlight {
     void CommandEncoder::Create(WGPUDevice device) {
         WGPUCommandEncoderDescriptor encoderDescriptor = {};
         encoderDescriptor.nextInChain = nullptr;

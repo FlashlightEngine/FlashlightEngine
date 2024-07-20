@@ -2,6 +2,8 @@
 
 #include "FlashlightEngine/Core/Logger.hpp"
 
+#include "FlashlightEngine/Renderer/WGPUWrapper/SurfaceConfigurator.hpp"
+
 #include "FlashlightEngine/pch.hpp"
 
 #include <GLFW/glfw3.h>
@@ -11,10 +13,8 @@ namespace Flashlight {
         i32 Width, Height;
         std::string Title;
 
-        WindowProperties(i32 width, i32 height, std::string &&title) {
-            Width = width;
-            Height = height;
-            Title = std::move(title);
+        WindowProperties(const i32 width, const i32 height, std::string&& title) : Width(width), Height(height),
+                                                                                   Title(std::move(title)) {
         }
     };
 
@@ -33,12 +33,13 @@ namespace Flashlight {
 
         [[nodiscard]] inline GLFWwindow* GetGlfwWindow() const;
         [[nodiscard]] inline bool ShouldClose() const;
+        [[nodiscard]] inline WGPUWrapper::SurfaceConfiguration GetDefaultSurfaceConfiguration() const;
 
         static inline void Update();
         inline void Close() const;
 
     private:
-        void Create(const WindowProperties &windowProperties);
+        void Create(const WindowProperties& windowProperties);
         void Destroy() const;
     };
 

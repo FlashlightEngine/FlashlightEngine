@@ -2,6 +2,8 @@
 
 #include "FlashlightEngine/Core/Logger.hpp"
 
+#include "FlashlightEngine/pch.hpp"
+
 namespace Flashlight {
     void Window::Create(const WindowProperties& windowProperties) {
         if (!glfwInit()) {

@@ -18,10 +18,10 @@
 #include <glfw3webgpu.h>
 
 namespace Flashlight::WGPUWrapper {
-    void Device::Create(WGPUInstance instance, GLFWwindow* window) {
+    void Device::Create(WGPUInstance instance, const Window &window) {
         Log::EngineTrace("Requesting WebGPU adapter...");
 
-        m_Surface = glfwGetWGPUSurface(instance, window);
+        m_Surface = glfwGetWGPUSurface(instance, window.GetGlfwWindow());
 
         WGPURequestAdapterOptions adapterOptions = {};
         adapterOptions.nextInChain = nullptr;
@@ -64,27 +64,13 @@ namespace Flashlight::WGPUWrapper {
 
         InspectDevice(m_Device);
 
-        SurfaceConfiguration surfaceConfiguration{};
-
-        int width, height;
-        glfwGetFramebufferSize(window, &width, &height);
-
-        surfaceConfiguration.Width = static_cast<u32>(width);
-        surfaceConfiguration.Height = static_cast<u32>(height);
-
-        SurfaceConfigurator::Configure(m_Surface, adapter, m_Device, surfaceConfiguration);
+        SurfaceConfigurator::Configure(m_Surface, adapter, m_Device, window.GetDefaultSurfaceConfiguration());
 
         Log::EngineTrace("Releasing WebGPU adapter.");
         wgpuAdapterRelease(adapter);
     }
 
     void Device::Destroy() const {
-        if (m_Surface) {
-            Log::EngineTrace("Releasing window surface.");
-            SurfaceConfigurator::Unconfigure(m_Surface);
-            wgpuSurfaceRelease(m_Surface);
-        }
-
         if (m_Device) {
             Log::EngineTrace("Releasing WebGPU device.");
             wgpuDeviceRelease(m_Device);

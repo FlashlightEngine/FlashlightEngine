@@ -7,7 +7,7 @@
  */
 #pragma once
 
-inline CommandEncoder::CommandEncoder(const Device &device) {
+inline CommandEncoder::CommandEncoder(const WGPUWrapper::Device &device) {
     Create(device.GetNativeDevice());
 }
 

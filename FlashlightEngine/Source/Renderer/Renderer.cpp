@@ -18,13 +18,36 @@ namespace Flashlight {
     void Renderer::Initialize() {
     }
 
-    WGPUWrapper::CommandEncoder Renderer::BeginRecordCommands() const {
-        WGPUWrapper::CommandEncoder commandEncoder{*m_Device};
+    WGPUTextureView Renderer::GetNextSwapChainTextureView() const {
+        WGPUSurfaceTexture surfaceTexture;
+        wgpuSurfaceGetCurrentTexture(m_Device->GetWindowSurface(), &surfaceTexture);
+
+        if (surfaceTexture.status != WGPUSurfaceGetCurrentTextureStatus_Success) {
+            return nullptr;
+        }
+
+        WGPUTextureViewDescriptor viewDescriptor;
+        viewDescriptor.nextInChain = nullptr;
+        viewDescriptor.label = "Surface texture view";
+        viewDescriptor.format = wgpuTextureGetFormat(surfaceTexture.texture);
+        viewDescriptor.dimension = WGPUTextureViewDimension_2D;
+        viewDescriptor.baseMipLevel = 0;
+        viewDescriptor.mipLevelCount = 1;
+        viewDescriptor.baseArrayLayer = 0;
+        viewDescriptor.arrayLayerCount = 1;
+        viewDescriptor.aspect = WGPUTextureAspect_All;
+        WGPUTextureView targetView = wgpuTextureCreateView(surfaceTexture.texture, &viewDescriptor);
+
+        return targetView;
+    }
+
+    CommandEncoder Renderer::BeginRecordCommands() const {
+        CommandEncoder commandEncoder{*m_Device};
 
         return commandEncoder;
     }
 
-    WGPUCommandBuffer Renderer::EndRecordCommands(const WGPUWrapper::CommandEncoder& commandEncoder) {
+    WGPUCommandBuffer Renderer::EndRecordCommands(const CommandEncoder& commandEncoder) {
         WGPUCommandBufferDescriptor commandBufferDescriptor = {};
         commandBufferDescriptor.nextInChain = nullptr;
         commandBufferDescriptor.label = "Command buffer";

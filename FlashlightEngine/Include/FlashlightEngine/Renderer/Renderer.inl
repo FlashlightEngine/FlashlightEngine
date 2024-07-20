@@ -22,3 +22,12 @@ inline void Renderer::SubmitCommandBuffers(const std::vector<WGPUCommandBuffer>&
         wgpuDevicePoll(m_Device->GetNativeDevice(), false, nullptr);
     }
 }
+
+inline void Renderer::ReleaseTextureView(WGPUTextureView textureView) {
+    wgpuTextureViewRelease(textureView);
+}
+
+
+inline void Renderer::PresentSurface() const {
+    wgpuSurfacePresent(m_Device->GetWindowSurface());
+}

@@ -11,12 +11,12 @@
 
 #include "FlashlightEngine/pch.hpp"
 
-namespace Flashlight::WGPUWrapper {
+namespace Flashlight {
     class CommandEncoder {
         WGPUCommandEncoder m_Encoder = nullptr;
 
     public:
-        explicit inline CommandEncoder(const Device &device);
+        explicit inline CommandEncoder(const WGPUWrapper::Device &device);
         inline ~CommandEncoder();
 
         CommandEncoder(const CommandEncoder&) = default;

@@ -19,7 +19,7 @@ namespace Flashlight::WGPUWrapper {
         WGPUSurface m_Surface = nullptr;
 
     public:
-        inline Device(const Instance& instance, const Window& window);
+        inline Device(const Instance& instance, const Window &window);
         inline ~Device();
 
         Device(const Device&) = default;
@@ -29,10 +29,10 @@ namespace Flashlight::WGPUWrapper {
         Device& operator=(Device&&) = delete;
 
         [[nodiscard]] inline WGPUDevice GetNativeDevice() const;
-        [[nodiscard]] inline WGPUSurface GetSurface() const;
+        [[nodiscard]] inline WGPUSurface GetWindowSurface() const;
 
     private:
-        void Create(WGPUInstance instance, GLFWwindow* window);
+        void Create(WGPUInstance instance, const Window &window);
         void Destroy() const;
 
         static WGPUAdapter RequestAdapterSync(WGPUInstance instance, WGPURequestAdapterOptions const* options);

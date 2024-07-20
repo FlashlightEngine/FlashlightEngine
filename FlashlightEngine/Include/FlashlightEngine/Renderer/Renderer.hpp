@@ -11,7 +11,7 @@
 #include "FlashlightEngine/Renderer/WGPUWrapper/Instance.hpp"
 #include "FlashlightEngine/Renderer/WGPUWrapper/Device.hpp"
 #include "FlashlightEngine/Renderer/WGPUWrapper/Queue.hpp"
-#include "FlashlightEngine/Renderer/WGPUWrapper/CommandEncoder.hpp"
+#include "CommandEncoder.hpp"
 
 #include "FlashlightEngine/Core/Logger.hpp"
 
@@ -24,17 +24,21 @@ namespace Flashlight {
         std::unique_ptr<WGPUWrapper::Queue> m_Queue;
 
     public:
-        Renderer(const Window &window);
+        explicit Renderer(const Window &window);
         ~Renderer() = default;
 
         static void Initialize();
 
         [[nodiscard]] inline WGPUWrapper::Device GetDevice() const;
         [[nodiscard]] inline WGPUWrapper::Queue GetQueue() const;
+        [[nodiscard]] WGPUTextureView GetNextSwapChainTextureView() const;
 
-        [[nodiscard]] WGPUWrapper::CommandEncoder BeginRecordCommands() const;
-        [[nodiscard]] static WGPUCommandBuffer EndRecordCommands(const WGPUWrapper::CommandEncoder &commandEncoder);
+        [[nodiscard]] CommandEncoder BeginRecordCommands() const;
+        [[nodiscard]] static WGPUCommandBuffer EndRecordCommands(const CommandEncoder &commandEncoder);
         inline void SubmitCommandBuffers(const std::vector<WGPUCommandBuffer> &commandBuffers) const;
+        static inline void ReleaseTextureView(WGPUTextureView textureView);
+
+        inline void PresentSurface() const;
     };
 
 #include "Renderer.inl"
