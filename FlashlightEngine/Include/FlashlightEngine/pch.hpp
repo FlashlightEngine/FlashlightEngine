@@ -11,7 +11,7 @@
 
 #pragma once
 
-#include "defines.hpp"
+#include "fltypes.hpp"
 
 #include <webgpu/webgpu.h>
 #include <webgpu/wgpu.h>
