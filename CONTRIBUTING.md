@@ -5,7 +5,7 @@ contributing to the engine.
 ## File header
 Every file should have a header which should be presented with the following form : 
 ```c++
-/* Copyright (C) <year> <Author> (<Author E-Mail address>)
+/* Copyright (C) <year> <Author>
  * This file is part of "FlashLight Engine"
  * For conditions of distribution and use, see copyright notice in FlashLightEngine.hpp
  *
@@ -16,39 +16,16 @@ Every file should have a header which should be presented with the following for
 
 ## Modules
 A module is a part of the engine, whose code is stored in the folder named with the module's name. For example `Core` is a
-module, and its code is stored in the `Core` folder in `Include` and `Source`.
-Each module must contain a `<module name>.hpp` file at the root of the module. This file includes the header files that 
-can be used by the user of the module. This header file must also contain a define of the module name for namespace
-declaration in the form of `#define FLASHLIGHT_<module name>_MODULE ::<module name>` in all caps. This definitions must
-be used in the declaration of the namespace.
+module, and its code is stored in the `Core` folder in `Include` and `Source`. 
 
-Example :
-```c++
-// Module main file (Example.hpp).
-#pragma once
-#define FLASHLIGHT_EXAMPLE_MODULE ::Example
-
-#include "ExampleClass.hpp"
-```
-
-```c++
-/// ExampleClass.hpp
-
-#include "Example.hpp"
-
-// Puts the class under the Flashlight::<module name> namespace, in that case Flashlight::Example
-namespace Flashlight FLASHLIGHT_EXAMPLE_MODULE {
-
-class ExampleClass {};
-}
-```
 ## File types
 Header files (`.hpp`) should only contain the declaration of structures and classes. Structures are allowed to have their
 constructors inside of a header file only if they initialize fields and do noting more. They must be in the `Include` folder
 of the corresponding project, under the right module folder.
 
 Inline files (`.inl`) should only contain definitions of inline functions and templates. These should be included in header
-files. They must be in the same folder as header files.
+files. They must be in the same folder as header files. The inline file should be included in the corresponding header file
+inside the namespace the main class of the file is in.
 
 Source files (`.cpp`) should only contain definitions of functions that are not inline and definitions of local functions.
 They Must be in the `Source` folder of the corresponding project, under the right module folder.
@@ -56,43 +33,13 @@ They Must be in the `Source` folder of the corresponding project, under the righ
 ## Code style
 Function names are in UpperCamelCase, parameters are in lowerCamel case.  
 Public fields in structs and classes are in UpperCamelCase.  
-Protected fields in structs and classes are prefixed with `p_` and named in UpperCamelCase.  
-Private fields in structs and classes are prefixed with `m_` and named in UpperCamelCase.  
+Private and protected fields in structs and classes are prefixed with `m_` and named in PascalCase.  
 Header files and inline files use `#pragma once` as header guard.  
 Lines have a limit of 120 characters.  
-Indentation is 4 spaces.  
-Code inside of namespaces is not indented.  
+Indentation is 4 spaces.
 Access modifiers in structures and classes must be on the same indent level as the class declaration.  
-Functions must be documented with the following form : 
-```c++
-/// @brief <Brief description of the function>
-///
-/// @param param1 <description of the parameter>
-/// @param param2 <description of the parameter>
-/// ...
-///
-/// @returns <description of the return value>
-```
 
-Example :
-```c++
-/// @brief Adds two integers together.
-///
-/// @param a The first number.
-/// @param b The second number.
-///
-/// @returns The sum of the two parameters.
-int addInt(int a, int b) {
-    return a + b;
-}
-```
-Before writing the definition of functions in a source or inline file (or header file if the constructor of a structure 
-only initialises fields), there must be documentation lines in the following form :
-```c++
-/// @ingroup <Module name>
-/// @class or @struct <namespace>::<class/struct name>
-/// @brief Description of the struct/class
-```
+
 Includes must be in the following order :
 ```c++
 /* // Main module file
@@ -108,13 +55,13 @@ Includes must be in the following order :
  * // Header files from the standard library.
  */
 ```
-The code must use type definitions from `defines.hpp` (included in `pch.hpp`) for primitive integer, unsigned integer and
+The code must use type definitions from `fltypes.hpp` (included in `pch.hpp`) for primitive integer, unsigned integer and
 decimal types.
 
 ## Commit messages
 
-You must follow the Conventional Commits specification to write commit messages. This convention makes it easier to
-understand the changes that are made in the repository.
+You must follow the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification to write commit messages.
+This convention makes it easier to understand the changes that are made in the repository.
 
 So, the commit message should be structured as follows:
 

@@ -19,7 +19,7 @@ if (is_mode("debug")) then
     add_defines("FL_DEBUG")
 end
 
-add_requires("glfw", "glm", "spdlog")
+add_requires("glfw 3.4", "glm 1.0.1", "spdlog v1.9.0", "magic_enum v0.9.5")
 
 local outputdir = "$(mode)-$(os)-$(arch)"
 
@@ -35,13 +35,16 @@ target("FlashlightEngine")
   set_objectdir("build/" .. outputdir .. "/FlashlightEngine/obj")
 
   add_files("FlashlightEngine/Source/**.cpp")
+
   add_headerfiles("FlashlightEngine/Include/**.hpp", "FlashlightEngine/Include/**.h", "FlashlightEngine/Include/**.inl")
   add_includedirs("FlashlightEngine/Include", {public = true})
+
   set_pcxxheader("FlashlightEngine/Include/FlashlightEngine/pch.hpp")
 
   add_packages("glfw", "glm", "spdlog", {public = true})
-  
-  add_defines("VK_NO_PROTOTYPES", {public = true})
+  add_packages("magic_enum")
+
+  add_defines("WEBGPU_BACKEND_WGPU")
   
 target("TestApplication")
     set_kind("binary")

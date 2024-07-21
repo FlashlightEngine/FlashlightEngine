@@ -1,4 +1,4 @@
-/* Copyright (C) 2024 Jean "Pixfri" Letessier (jean.letessier@protonmail.com)
+/* Copyright (C) 2024 Jean "Pixfri" Letessier
  * This file is part of "FlashLight Engine"
  * For conditions of distribution and use, see copyright notice in FlashLightEngine.hpp
  *
@@ -19,6 +19,8 @@ using u8 = std::uint8_t;
 using u16 = std::uint16_t;
 using u32 = std::uint32_t;
 using u64 = std::uint64_t;
+
+using size = u64;
 
 using f32 = float;
 using f64 = double;

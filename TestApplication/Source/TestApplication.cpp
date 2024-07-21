@@ -1,6 +1,5 @@
 #include "TestApplication.hpp"
 
-#include "FlashlightEngine/Core/Logger.hpp"
 
 bool TestApplication::Init() {
     m_IsRunning = true;
@@ -9,13 +8,15 @@ bool TestApplication::Init() {
 }
 
 void TestApplication::Update() {
-    Close();
+    m_Window->Update();
+
+    if (m_Window->ShouldClose()) {
+        m_IsRunning = false;
+    }
 }
 
 void TestApplication::Render() {
-
 }
 
 void TestApplication::Cleanup() {
-    Flashlight::Log::AppInfo("Quitting.");
 }
