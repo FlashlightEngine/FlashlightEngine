@@ -14,6 +14,7 @@ namespace Flashlight {
         Logger::Init();
 
         m_Window = std::make_unique<Window>(windowProperties);
+        m_Renderer = std::make_unique<Renderer>();
 
         Log::AppInfo("Launching application.");
 
@@ -27,6 +28,8 @@ namespace Flashlight {
             Render();
         }
 
+        Log::AppInfo("Quitting application.");
+        
         Cleanup();
     }
 }
