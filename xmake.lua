@@ -1,7 +1,7 @@
 set_xmakever("2.9.3")
 
 set_project("FlashlightEngine")
-set_version("1.0.0")
+set_version("0.0.1")
 
 set_allowedplats("windows", "linux")
 set_allowedarchs("windows|x64", "linux|x64", "linux|x86_64")
@@ -19,7 +19,7 @@ if (is_mode("debug")) then
     add_defines("FL_DEBUG")
 end
 
-add_defines("VK_NO_PROTOTYPE", "GLFW_INCLUDE_VULKAN")
+add_defines("VK_NO_PROTOTYPES", "GLFW_INCLUDE_VULKAN")
 
 -- Define packages to download.
 add_requires("volk 1.3.283+0", "glfw 3.4", "glm 1.0.1", "spdlog v1.9.0", "magic_enum v0.9.5")
