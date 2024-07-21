@@ -13,9 +13,6 @@
 
 #include "fltypes.hpp"
 
-#include <webgpu/webgpu.h>
-#include <webgpu/wgpu.h>
-
 #include <cassert>
 #include <cstring>
 #include <filesystem>
