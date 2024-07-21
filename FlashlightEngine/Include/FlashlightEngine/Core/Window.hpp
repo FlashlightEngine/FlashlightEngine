@@ -2,8 +2,6 @@
 
 #include "FlashlightEngine/Core/Logger.hpp"
 
-#include "FlashlightEngine/Renderer/WGPUWrapper/SurfaceConfigurator.hpp"
-
 #include "FlashlightEngine/pch.hpp"
 
 #include <GLFW/glfw3.h>
@@ -33,7 +31,6 @@ namespace Flashlight {
 
         [[nodiscard]] inline GLFWwindow* GetGlfwWindow() const;
         [[nodiscard]] inline bool ShouldClose() const;
-        [[nodiscard]] inline WGPUWrapper::SurfaceConfiguration GetDefaultSurfaceConfiguration() const;
 
         static inline void Update();
         inline void Close() const;

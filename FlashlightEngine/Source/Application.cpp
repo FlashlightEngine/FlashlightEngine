@@ -14,7 +14,6 @@ namespace Flashlight {
         Logger::Init();
 
         m_Window = std::make_unique<Window>(windowProperties);
-        m_Renderer = std::make_shared<Renderer>(*m_Window);
 
         Log::AppInfo("Launching application.");
 

@@ -19,7 +19,7 @@ if (is_mode("debug")) then
     add_defines("FL_DEBUG")
 end
 
-add_requires("glfw 3.4", "glfw3webgpu v1.2.0", "glm 1.0.1", "spdlog v1.9.0", "wgpu-native v0.19.4+1", "magic_enum v0.9.5")
+add_requires("glfw 3.4", "glm 1.0.1", "spdlog v1.9.0", "magic_enum v0.9.5")
 
 local outputdir = "$(mode)-$(os)-$(arch)"
 
@@ -41,7 +41,7 @@ target("FlashlightEngine")
 
   set_pcxxheader("FlashlightEngine/Include/FlashlightEngine/pch.hpp")
 
-  add_packages("glfw", "glfw3webgpu", "glm", "spdlog", "wgpu-native", {public = true})
+  add_packages("glfw", "glm", "spdlog", {public = true})
   add_packages("magic_enum")
 
   add_defines("WEBGPU_BACKEND_WGPU")
