@@ -14,8 +14,6 @@
 
 #include "FlashlightEngine/pch.hpp"
 
-#include <volk.h>
-
 namespace Flashlight::VulkanWrapper {
     struct QueueFamilyIndices {
         u32 GraphicsFamily;
@@ -39,10 +37,14 @@ namespace Flashlight::VulkanWrapper {
         VkQueue m_GraphicsQueue = VK_NULL_HANDLE;
         VkQueue m_PresentQueue = VK_NULL_HANDLE;
 
+        std::vector<const char*> m_DeviceExtensions = {
+            VK_KHR_SWAPCHAIN_EXTENSION_NAME
+        };
+
         VkInstance m_Instance = VK_NULL_HANDLE;
         std::vector<const char*> m_ValidationLayers;
         VkSurfaceKHR m_Surface = VK_NULL_HANDLE;
-
+    
     public:
         inline Device(const Instance& instance, const Surface& surface, const DebugLevel& debugLevel);
         inline ~Device();
@@ -67,12 +69,14 @@ namespace Flashlight::VulkanWrapper {
         inline void Destroy() const;
 
         // Physical device utility functions.
-        [[nodiscard]] int RateDeviceSuitability(VkPhysicalDevice physicalDevice) const;
-        [[nodiscard]] bool IsDeviceSuitable(VkPhysicalDevice physicalDevice) const;
+        [[nodiscard]] int RateDeviceSuitability(VkPhysicalDevice physicalDevice);
+        [[nodiscard]] bool IsDeviceSuitable(VkPhysicalDevice physicalDevice);
         [[nodiscard]] static VkPhysicalDeviceProperties
         GetPhysicalDeviceProperties(VkPhysicalDevice physicalDevice);
         [[nodiscard]] static VkPhysicalDeviceFeatures GetPhysicalDeviceFeatures(VkPhysicalDevice physicalDevice);
         [[nodiscard]] QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice physicalDevice) const;
+        [[nodiscard]] bool CheckDeviceExtensionsSupport(VkPhysicalDevice physicalDevice);
+        [[nodiscard]] static std::vector<VkExtensionProperties> GetAvailableDeviceExtensions(VkPhysicalDevice physicalDevice);
 
         // Logical device utility functions.
     };

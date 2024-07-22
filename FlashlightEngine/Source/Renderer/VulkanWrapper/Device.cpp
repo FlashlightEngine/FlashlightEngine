@@ -64,14 +64,14 @@ namespace Flashlight::VulkanWrapper {
 #if defined(_WIN32) || defined(_WIN64)
         // 0x8086 : Intel, only differs on Windows.
         else if (m_PhysicalDeviceProperties.vendorID == 0x8086) {
-            Log::EngineTrace("\t Driver version:          {0}.{1}",
+            Log::EngineTrace("\t - Driver version:          {0}.{1}",
                              (m_PhysicalDeviceProperties.driverVersion >> 14),
                              (m_PhysicalDeviceProperties.driverVersion) & 0x3FFF);
         }
 #endif
         // For other vendors, use the Vulkan version convention.
         else {
-            Log::EngineTrace("\t Driver version:          {0}.{0}.{0}",
+            Log::EngineTrace("\t - Driver version:          {0}.{0}.{0}",
                              VK_API_VERSION_MAJOR(m_PhysicalDeviceProperties.driverVersion),
                              VK_API_VERSION_MINOR(m_PhysicalDeviceProperties.driverVersion),
                              VK_API_VERSION_PATCH(m_PhysicalDeviceProperties.driverVersion));
@@ -80,13 +80,13 @@ namespace Flashlight::VulkanWrapper {
 
     void Device::CreateLogicalDevice(const DebugLevel& debugLevel) {
         std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
-        std::set<u32> uniqueQueueFamilies = {m_QueueFamilies.GraphicsFamily, m_QueueFamilies.PresentFamily};
+        const std::set<u32> uniqueQueueFamilies = {m_QueueFamilies.GraphicsFamily, m_QueueFamilies.PresentFamily};
 
         constexpr float queuePriority = 1.0f;
-        for (u32 queueFamily : uniqueQueueFamilies) {
+        for (const u32 queueFamily : uniqueQueueFamilies) {
             VkDeviceQueueCreateInfo queueCreateInfo{};
             queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-            queueCreateInfo.queueFamilyIndex = m_QueueFamilies.GraphicsFamily;
+            queueCreateInfo.queueFamilyIndex = queueFamily;
             queueCreateInfo.queueCount = 1;
             queueCreateInfo.pQueuePriorities = &queuePriority;
             queueCreateInfos.push_back(queueCreateInfo);
@@ -103,12 +103,11 @@ namespace Flashlight::VulkanWrapper {
 
         deviceCreateInfo.pEnabledFeatures = &deviceFeatures;
 
-        // No extensions required for now.
-        deviceCreateInfo.enabledExtensionCount = 0;
-        deviceCreateInfo.ppEnabledExtensionNames = nullptr;
+        deviceCreateInfo.enabledExtensionCount = static_cast<u32>(m_DeviceExtensions.size());
+        deviceCreateInfo.ppEnabledExtensionNames = m_DeviceExtensions.data();
 
         if (debugLevel > DebugLevel::None) {
-            deviceCreateInfo.enabledLayerCount = static_cast<uint32_t>(m_ValidationLayers.size());
+            deviceCreateInfo.enabledLayerCount = static_cast<u32>(m_ValidationLayers.size());
             deviceCreateInfo.ppEnabledLayerNames = m_ValidationLayers.data();
         } else {
             deviceCreateInfo.enabledLayerCount = 0;
@@ -123,11 +122,22 @@ namespace Flashlight::VulkanWrapper {
 
         volkLoadDevice(m_Device);
 
+        const std::vector<VkExtensionProperties> availableExtensions = GetAvailableDeviceExtensions(m_PhysicalDevice);
+        Log::EngineTrace("Available Vulkan device extensions:");
+        for (const auto& extension : availableExtensions) {
+            Log::EngineTrace("\t - {0}", extension.extensionName);
+        }
+
+        Log::EngineTrace("Required Vulkan device extensions:");
+        for (const auto& extension : m_DeviceExtensions) {
+            Log::EngineTrace("\t - {0}", extension);
+        }
+
         vkGetDeviceQueue(m_Device, m_QueueFamilies.GraphicsFamily, 0, &m_GraphicsQueue);
         vkGetDeviceQueue(m_Device, m_QueueFamilies.PresentFamily, 0, &m_PresentQueue);
     }
 
-    int Device::RateDeviceSuitability(const VkPhysicalDevice physicalDevice) const {
+    int Device::RateDeviceSuitability(const VkPhysicalDevice physicalDevice) {
         if (!IsDeviceSuitable(physicalDevice)) {
             return 0;
         }
@@ -145,10 +155,12 @@ namespace Flashlight::VulkanWrapper {
         return score;
     }
 
-    bool Device::IsDeviceSuitable(const VkPhysicalDevice physicalDevice) const {
+    bool Device::IsDeviceSuitable(const VkPhysicalDevice physicalDevice) {
         const QueueFamilyIndices indices = FindQueueFamilies(physicalDevice);
 
-        return indices.IsComplete();
+        bool extensionsSupported = CheckDeviceExtensionsSupport(physicalDevice);
+
+        return indices.IsComplete() && extensionsSupported;
     }
 
     VkPhysicalDeviceProperties Device::GetPhysicalDeviceProperties(const VkPhysicalDevice physicalDevice) {
@@ -197,5 +209,27 @@ namespace Flashlight::VulkanWrapper {
         }
 
         return indices;
+    }
+
+    bool Device::CheckDeviceExtensionsSupport(const VkPhysicalDevice physicalDevice) {
+        const std::vector<VkExtensionProperties> availableExtensions = GetAvailableDeviceExtensions(physicalDevice);
+
+        std::set<std::string> requiredExtensions(m_DeviceExtensions.begin(), m_DeviceExtensions.end());
+
+        for (const auto& extension : availableExtensions) {
+            requiredExtensions.erase(extension.extensionName);
+        }
+
+        return requiredExtensions.empty();
+    }
+
+    std::vector<VkExtensionProperties> Device::GetAvailableDeviceExtensions(const VkPhysicalDevice physicalDevice) {
+        u32 extensionCount = 0;
+        vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &extensionCount, nullptr);
+
+        std::vector<VkExtensionProperties> availableExtensions(extensionCount);
+        vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &extensionCount, availableExtensions.data());
+
+        return availableExtensions;
     }
 }
