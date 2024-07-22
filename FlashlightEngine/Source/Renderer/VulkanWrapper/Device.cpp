@@ -39,6 +39,7 @@ namespace Flashlight::VulkanWrapper {
         m_PhysicalDeviceProperties = GetPhysicalDeviceProperties(m_PhysicalDevice);
         m_PhysicalDeviceFeatures = GetPhysicalDeviceFeatures(m_PhysicalDevice);
         m_QueueFamilies = FindQueueFamilies(m_PhysicalDevice);
+        m_SwapChainSupport = QuerySwapChainSupport(m_PhysicalDevice);
 
         Log::EngineTrace("Physical device properties:");
         Log::EngineTrace("\t - Device name:           {0}", m_PhysicalDeviceProperties.deviceName);
@@ -158,9 +159,15 @@ namespace Flashlight::VulkanWrapper {
     bool Device::IsDeviceSuitable(const VkPhysicalDevice physicalDevice) {
         const QueueFamilyIndices indices = FindQueueFamilies(physicalDevice);
 
-        bool extensionsSupported = CheckDeviceExtensionsSupport(physicalDevice);
+        const bool extensionsSupported = CheckDeviceExtensionsSupport(physicalDevice);
 
-        return indices.IsComplete() && extensionsSupported;
+        bool swapChainAdequate = false;
+        if (extensionsSupported) {
+            const SwapChainSupportDetails swapChainSupport = QuerySwapChainSupport(physicalDevice);
+            swapChainAdequate = !swapChainSupport.Formats.empty() && !swapChainSupport.PresentModes.empty();
+        }
+
+        return indices.IsComplete() && extensionsSupported && swapChainAdequate;
     }
 
     VkPhysicalDeviceProperties Device::GetPhysicalDeviceProperties(const VkPhysicalDevice physicalDevice) {
@@ -231,5 +238,29 @@ namespace Flashlight::VulkanWrapper {
         vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &extensionCount, availableExtensions.data());
 
         return availableExtensions;
+    }
+
+    SwapChainSupportDetails Device::QuerySwapChainSupport(const VkPhysicalDevice physicalDevice) const {
+        SwapChainSupportDetails details;
+
+        vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, m_Surface, &details.Capabilities);
+
+        u32 formatCount;
+        vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, m_Surface, &formatCount, nullptr);
+
+        if (formatCount != 0) {
+            details.Formats.resize(formatCount);
+            vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, m_Surface, &formatCount, details.Formats.data());
+        }
+
+        u32 presentModeCount;
+        vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, m_Surface, &presentModeCount, nullptr);
+
+        if (presentModeCount != 0) {
+            details.PresentModes.resize(presentModeCount);
+            vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, m_Surface, &presentModeCount, details.PresentModes.data());
+        }
+        
+        return details;
     }
 }

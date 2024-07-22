@@ -7,8 +7,8 @@
  */
 #pragma once
 
-inline DebugMessenger::DebugMessenger(const Instance& instance, const DebugLevel& debugLevel) {
-    m_Instance = instance.GetNativeInstance();
+inline DebugMessenger::DebugMessenger(const Instance& instance, const DebugLevel& debugLevel)
+    : m_Instance(instance.GetNativeInstance()) {
     Create(debugLevel);
 }
 

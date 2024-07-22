@@ -27,11 +27,18 @@ namespace Flashlight::VulkanWrapper {
         }
     };
 
+    struct SwapChainSupportDetails {
+        VkSurfaceCapabilitiesKHR Capabilities;
+        std::vector<VkSurfaceFormatKHR> Formats;
+        std::vector<VkPresentModeKHR> PresentModes;
+    };
+    
     class Device {
         VkPhysicalDevice m_PhysicalDevice = VK_NULL_HANDLE;
         VkPhysicalDeviceProperties m_PhysicalDeviceProperties;
         VkPhysicalDeviceFeatures m_PhysicalDeviceFeatures;
         QueueFamilyIndices m_QueueFamilies;
+        SwapChainSupportDetails m_SwapChainSupport;
 
         VkDevice m_Device = VK_NULL_HANDLE;
         VkQueue m_GraphicsQueue = VK_NULL_HANDLE;
@@ -60,7 +67,9 @@ namespace Flashlight::VulkanWrapper {
         [[nodiscard]] inline VkPhysicalDeviceProperties GetPhysicalDeviceProperties() const;
         [[nodiscard]] inline VkPhysicalDeviceFeatures GetPhysicalDeviceFeatures() const;
         [[nodiscard]] inline QueueFamilyIndices GetQueueFamilies() const;
+        [[nodiscard]] inline SwapChainSupportDetails GetSwapChainSupport() const;
         [[nodiscard]] inline VkQueue GetGraphicsQueue() const;
+        [[nodiscard]] inline VkQueue GetPresentQueue() const;
 
     private:
         void PickPhysicalDevice();
@@ -77,7 +86,8 @@ namespace Flashlight::VulkanWrapper {
         [[nodiscard]] QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice physicalDevice) const;
         [[nodiscard]] bool CheckDeviceExtensionsSupport(VkPhysicalDevice physicalDevice);
         [[nodiscard]] static std::vector<VkExtensionProperties> GetAvailableDeviceExtensions(VkPhysicalDevice physicalDevice);
-
+        [[nodiscard]] SwapChainSupportDetails QuerySwapChainSupport(VkPhysicalDevice physicalDevice) const;
+        
         // Logical device utility functions.
     };
 

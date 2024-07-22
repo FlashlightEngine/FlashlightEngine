@@ -7,11 +7,11 @@
  */
 #pragma once
 
-inline Device::Device(const Instance& instance, const Surface& surface, const DebugLevel& debugLevel) {
-    m_Instance = instance.GetNativeInstance();
-    m_ValidationLayers = instance.GetValidationLayers();
-    m_Surface = surface.GetNativeSurface();
-    
+inline
+Device::Device(const Instance& instance, const Surface& surface,
+               const DebugLevel& debugLevel) : m_Instance(instance.GetNativeInstance()),
+                                               m_ValidationLayers(instance.GetValidationLayers()),
+                                               m_Surface(surface.GetNativeSurface()) {
     PickPhysicalDevice();
     CreateLogicalDevice(debugLevel);
 }
@@ -40,8 +40,16 @@ inline QueueFamilyIndices Device::GetQueueFamilies() const {
     return m_QueueFamilies;
 }
 
+inline SwapChainSupportDetails Device::GetSwapChainSupport() const {
+    return m_SwapChainSupport;
+}
+
 inline VkQueue Device::GetGraphicsQueue() const {
     return m_GraphicsQueue;
+}
+
+inline VkQueue Device::GetPresentQueue() const {
+    return m_PresentQueue;
 }
 
 inline void Device::Destroy() const {

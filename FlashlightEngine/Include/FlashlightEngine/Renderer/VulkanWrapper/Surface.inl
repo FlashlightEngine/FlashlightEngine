@@ -7,9 +7,8 @@
  */
 #pragma once
 
-inline Surface::Surface(const Instance& instance, const Window& window) {
-    m_Instance = instance.GetNativeInstance();
-    m_Window = window.GetGlfwWindow();
+inline Surface::Surface(const Instance& instance, const Window& window) : m_Instance(instance.GetNativeInstance()),
+                                                                          m_Window(window.GetGlfwWindow()) {
     Create();
 }
 

@@ -177,8 +177,6 @@ namespace Flashlight::VulkanWrapper {
             availableExtensions.insert(extension.extensionName);
         }
 
-        std::cout << '\n';
-
         const auto requiredInstanceExtensions = GetRequiredInstanceExtensions(debugLevel);
 
         Log::EngineTrace("Required instance extensions :");
@@ -190,8 +188,6 @@ namespace Flashlight::VulkanWrapper {
                 Log::EngineError("Instance extension {0} is required but not available.", required);
             }
         }
-
-        std::cout << '\n';
     }
 
     std::vector<VkExtensionProperties> Instance::GetAvailableInstanceExtensions() {
