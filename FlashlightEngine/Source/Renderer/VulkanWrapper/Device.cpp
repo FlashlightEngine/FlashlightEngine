@@ -114,6 +114,8 @@ namespace Flashlight::VulkanWrapper {
         }
 
         volkLoadDevice(m_Device);
+
+        vkGetDeviceQueue(m_Device, m_QueueFamilies.GraphicsFamily, 0, &m_GraphicsQueue);
     }
 
     int Device::RateDeviceSuitability(const VkPhysicalDevice physicalDevice) {

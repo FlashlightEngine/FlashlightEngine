@@ -33,6 +33,7 @@ namespace Flashlight::VulkanWrapper {
         QueueFamilyIndices m_QueueFamilies;
 
         VkDevice m_Device = VK_NULL_HANDLE;
+        VkQueue m_GraphicsQueue = VK_NULL_HANDLE;
 
         VkInstance m_Instance = VK_NULL_HANDLE;
         std::vector<const char*> m_ValidationLayers;
@@ -52,6 +53,7 @@ namespace Flashlight::VulkanWrapper {
         [[nodiscard]] inline VkPhysicalDeviceProperties GetPhysicalDeviceProperties() const;
         [[nodiscard]] inline VkPhysicalDeviceFeatures GetPhysicalDeviceFeatures() const;
         [[nodiscard]] inline QueueFamilyIndices GetQueueFamilies() const;
+        [[nodiscard]] inline VkQueue GetGraphicsQueue() const;
 
     private:
         void PickPhysicalDevice();

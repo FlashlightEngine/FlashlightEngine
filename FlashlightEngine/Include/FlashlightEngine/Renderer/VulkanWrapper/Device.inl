@@ -39,6 +39,10 @@ inline QueueFamilyIndices Device::GetQueueFamilies() const {
     return m_QueueFamilies;
 }
 
+inline VkQueue Device::GetGraphicsQueue() const {
+    return m_GraphicsQueue;
+}
+
 inline void Device::Destroy() const {
     if (m_Device) {
         vkDestroyDevice(m_Device, nullptr);
