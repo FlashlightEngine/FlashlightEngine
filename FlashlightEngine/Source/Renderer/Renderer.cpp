@@ -19,7 +19,7 @@ namespace Flashlight {
 
         m_Surface = std::make_unique<VulkanWrapper::Surface>(*m_Instance, window);
 
-        m_Device = std::make_unique<VulkanWrapper::Device>(*m_Instance, debugLevel);
+        m_Device = std::make_unique<VulkanWrapper::Device>(*m_Instance, *m_Surface, debugLevel);
     }
 
 }
