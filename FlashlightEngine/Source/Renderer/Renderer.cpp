@@ -12,8 +12,8 @@
 #include "FlashlightEngine/pch.hpp"
 
 namespace Flashlight {
-    void Renderer::Create() {
-        m_Instance = std::make_unique<VulkanWrapper::Instance>();
+    void Renderer::Create(const DebugLevel &debugLevel) {
+        m_Instance = std::make_unique<VulkanWrapper::Instance>(debugLevel);
     }
 
 }

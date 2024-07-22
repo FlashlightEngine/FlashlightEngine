@@ -17,7 +17,7 @@ namespace Flashlight {
         std::unique_ptr<VulkanWrapper::Instance> m_Instance;
         
     public:
-        inline Renderer();
+        explicit inline Renderer(const DebugLevel &debugLevel);
         ~Renderer() = default;
 
         Renderer(const Renderer&) = delete;
@@ -26,7 +26,7 @@ namespace Flashlight {
         Renderer& operator=(const Renderer&) = delete;
         Renderer& operator=(Renderer&&) = delete;
     private:
-        void Create();
+        void Create(const DebugLevel &debugLevel);
     };
 
 #include "Renderer.inl"

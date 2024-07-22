@@ -9,34 +9,57 @@
  */
 #pragma once
 
-#include "FlashlightEngine/pch.hpp"
+#include "FlashlightEngine/Core/Logger.hpp"
 
 #include <volk.h>
 
-namespace Flashlight::VulkanWrapper {
-    class Instance {
-        VkInstance m_Instance = VK_NULL_HANDLE;
-
-    public:
-        inline Instance();
-        inline ~Instance();
-
-        Instance(const Instance&) = delete;
-        Instance(Instance&&) = delete;
-
-        Instance& operator=(const Instance&) = delete;
-        Instance& operator=(Instance&&) = delete;
-
-        [[nodiscard]] inline VkInstance GetNativeInstance() const;
-
-    private:
-        void Create();
-        inline void Destroy() const;
-
-        static std::vector<const char*> GetRequiredInstanceExtensions();
-        static void CheckRequiredInstanceExtensionsSupport();
-        static std::vector<VkExtensionProperties> GetAvailableInstanceExtensions();
+namespace Flashlight {
+    enum class DebugLevel {
+        None = 0,
+        Errors = 1,
+        Warnings = 2,
+        Verbose = 3,
+        Debug = 4
     };
 
+    namespace VulkanWrapper {
+        class Instance {
+            VkInstance m_Instance = VK_NULL_HANDLE;
+            VkDebugUtilsMessengerEXT m_DebugMessenger = VK_NULL_HANDLE;
+
+            std::vector<const char*> m_ValidationLayers = {
+                "VK_LAYER_KHRONOS_validation"
+            };
+
+        public:
+            explicit Instance(const DebugLevel& debugLevel);
+            inline ~Instance();
+
+            Instance(const Instance&) = delete;
+            Instance(Instance&&) = delete;
+
+            Instance& operator=(const Instance&) = delete;
+            Instance& operator=(Instance&&) = delete;
+
+            [[nodiscard]] inline VkInstance GetNativeInstance() const;
+            [[nodiscard]] inline std::vector<const char*> GetValidationLayers() const;
+
+        private:
+            void CreateInstance(const DebugLevel& debugLevel);
+            void CreateDebugMessenger(const DebugLevel& debugLevel);
+            inline void Destroy() const;
+
+            [[nodiscard]] static std::vector<const char*> GetRequiredInstanceExtensions(
+                const DebugLevel& debugLevel);
+            static void CheckRequiredInstanceExtensionsSupport(const DebugLevel& debugLevel);
+            [[nodiscard]] static std::vector<VkExtensionProperties> GetAvailableInstanceExtensions();
+
+            [[nodiscard]] bool CheckValidationLayerSupport() const;
+
+            static void PopulateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo,
+                                                         const DebugLevel& debugLevel);
+        };
+
 #include "Instance.inl"
+    }
 }

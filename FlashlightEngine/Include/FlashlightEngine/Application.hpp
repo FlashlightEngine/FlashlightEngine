@@ -18,7 +18,7 @@ namespace Flashlight {
     public:
         virtual ~Application() = default;
 
-        void Run(const WindowProperties &windowProperties);
+        void Run(const WindowProperties &windowProperties, const DebugLevel &debugLevel);
 
         virtual bool Init() = 0;
         virtual void Update() = 0;
