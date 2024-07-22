@@ -15,6 +15,7 @@ namespace Flashlight::VulkanWrapper {
     class SwapChain {
         VkSwapchainKHR m_SwapChain = VK_NULL_HANDLE;
         std::vector<VkImage> m_SwapChainImages;
+        std::vector<VkImageView> m_SwapChainImageViews;
         VkFormat m_SwapChainImageFormat = VK_FORMAT_UNDEFINED;
         VkExtent2D m_SwapChainExtent;
 
@@ -23,7 +24,7 @@ namespace Flashlight::VulkanWrapper {
         QueueFamilyIndices m_QueueFamilies;
         SwapChainSupportDetails m_SwapChainSupport;
         GLFWwindow* m_Window = nullptr;
-        
+
     public:
         inline SwapChain(const Device& device, const Window& window, const Surface& surface);
         inline ~SwapChain();
@@ -36,17 +37,21 @@ namespace Flashlight::VulkanWrapper {
 
         [[nodiscard]] inline VkSwapchainKHR GetNativeSwapChain() const;
         [[nodiscard]] inline std::vector<VkImage> GetSwapChainImages() const;
+        [[nodiscard]] inline std::vector<VkImageView> GetSwapChainImageViews() const;
         [[nodiscard]] inline VkFormat GetSwapChainImageFormat() const;
         [[nodiscard]] inline VkExtent2D GetSwapChainExtent() const;
 
     private:
-        void Create();
+        void CreateSwapChain();
+        void CreateSwapChainImageViews();
         inline void Destroy() const;
 
-        static VkSurfaceFormatKHR ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
-        static VkPresentModeKHR ChooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
-        VkExtent2D ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities) const;
+        [[nodiscard]] static VkSurfaceFormatKHR ChooseSwapSurfaceFormat(
+            const std::vector<VkSurfaceFormatKHR>& availableFormats);
+        [[nodiscard]] static VkPresentModeKHR ChooseSwapPresentMode(
+            const std::vector<VkPresentModeKHR>& availablePresentModes);
+        [[nodiscard]] VkExtent2D ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities) const;
     };
- 
+
 #include "SwapChain.inl"
 }

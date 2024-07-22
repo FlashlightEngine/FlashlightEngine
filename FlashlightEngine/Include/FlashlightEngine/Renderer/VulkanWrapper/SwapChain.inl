@@ -13,10 +13,11 @@ inline SwapChain::SwapChain(const Device& device, const Window& window,
                                                       m_QueueFamilies(device.GetQueueFamilies()),
                                                       m_SwapChainSupport(device.GetSwapChainSupport()),
                                                       m_Window(window.GetGlfwWindow()) {
-    Create();
+    CreateSwapChain();
+    CreateSwapChainImageViews();
 }
 
-inline SwapChain::~SwapChain() {
+inline SwapChain::~SwapChain() {    
     Destroy();
 }
 
@@ -28,6 +29,10 @@ inline std::vector<VkImage> SwapChain::GetSwapChainImages() const {
     return m_SwapChainImages;
 }
 
+inline std::vector<VkImageView> SwapChain::GetSwapChainImageViews() const {
+    return m_SwapChainImageViews;
+}
+
 inline VkFormat SwapChain::GetSwapChainImageFormat() const {
     return m_SwapChainImageFormat;
 }
@@ -37,6 +42,12 @@ inline VkExtent2D SwapChain::GetSwapChainExtent() const {
 }
 
 inline void SwapChain::Destroy() const {
+    for (const auto imageView : m_SwapChainImageViews) {
+        if (imageView) {
+            vkDestroyImageView(m_Device, imageView, nullptr);
+        }
+    }
+    
     if (m_SwapChain) {
         Log::EngineTrace("Destroying Vulkan swap chain.");
         vkDestroySwapchainKHR(m_Device, m_SwapChain, nullptr);
