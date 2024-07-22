@@ -16,6 +16,8 @@ namespace Flashlight {
         if (debugLevel > DebugLevel::None) {
             m_DebugMessenger = std::make_unique<VulkanWrapper::DebugMessenger>(*m_Instance, debugLevel);
         }
+
+        m_Device = std::make_unique<VulkanWrapper::Device>(*m_Instance, debugLevel);
     }
 
 }

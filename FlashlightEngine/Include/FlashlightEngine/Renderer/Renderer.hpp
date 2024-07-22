@@ -10,11 +10,13 @@
 
 #include "FlashlightEngine/Renderer/VulkanWrapper/Instance.hpp"
 #include "FlashlightEngine/Renderer/VulkanWrapper/DebugMessenger.hpp"
+#include "FlashlightEngine/Renderer/VulkanWrapper/Device.hpp"
 
 namespace Flashlight {
     class Renderer {
         std::unique_ptr<VulkanWrapper::Instance> m_Instance;
         std::unique_ptr<VulkanWrapper::DebugMessenger> m_DebugMessenger;
+        std::unique_ptr<VulkanWrapper::Device> m_Device;
         
     public:
         explicit inline Renderer(const DebugLevel &debugLevel);

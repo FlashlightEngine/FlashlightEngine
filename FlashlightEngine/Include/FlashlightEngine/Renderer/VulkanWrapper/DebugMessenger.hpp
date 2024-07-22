@@ -1,4 +1,12 @@
-﻿#pragma once
+﻿/* Copyright (C) 2024 Jean "Pixfri" Letessier
+ * This file is part of "Flashlight Engine"
+ * For conditions of distribution and use, see copyright notice in LICENSE.
+ *
+ * File : DebugMessenger.hpp
+ * Description : Declaration of the DebugMessenger class. The debug messenger is used to output debug messages
+ *               from validation layers.
+ */
+#pragma once
 
 #include "FlashlightEngine/Renderer/VulkanWrapper/Instance.hpp"
 
@@ -24,7 +32,7 @@ namespace Flashlight::VulkanWrapper {
         [[nodiscard]] inline VkDebugUtilsMessengerEXT GetNativeDebugMessenger() const;
 
     private:
-        void Create(VkInstance instance, const DebugLevel &debugLevel);
+        void Create(const DebugLevel &debugLevel);
         inline void Destroy() const;
     };
 
