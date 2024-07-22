@@ -59,12 +59,15 @@ namespace Flashlight::VulkanWrapper {
 
         inline void Destroy() const;
 
+        // Physical device utility functions.
         [[nodiscard]] static int RateDeviceSuitability(VkPhysicalDevice physicalDevice);
         [[nodiscard]] static bool IsDeviceSuitable(VkPhysicalDevice physicalDevice);
         [[nodiscard]] static VkPhysicalDeviceProperties
         GetPhysicalDeviceProperties(VkPhysicalDevice physicalDevice);
         [[nodiscard]] static VkPhysicalDeviceFeatures GetPhysicalDeviceFeatures(VkPhysicalDevice physicalDevice);
         [[nodiscard]] static QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice physicalDevice);
+
+        // Logical device utility functions.
     };
 
 #include "Device.inl"

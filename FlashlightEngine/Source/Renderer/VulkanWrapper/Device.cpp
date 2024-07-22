@@ -9,6 +9,8 @@
 
 #include <magic_enum.hpp>
 
+#include <volk.h>
+
 namespace Flashlight::VulkanWrapper {
     void Device::PickPhysicalDevice() {
         u32 deviceCount = 0;
@@ -77,6 +79,41 @@ namespace Flashlight::VulkanWrapper {
     }
 
     void Device::CreateLogicalDevice(const DebugLevel& debugLevel) {
+        VkDeviceQueueCreateInfo queueCreateInfo{};
+        queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+        queueCreateInfo.queueFamilyIndex = m_QueueFamilies.GraphicsFamily;
+        queueCreateInfo.queueCount = 1;
+
+        constexpr float queuePriority = 1.0f;
+        queueCreateInfo.pQueuePriorities = &queuePriority;
+
+        VkPhysicalDeviceFeatures deviceFeatures{}; // Keep the default features, we don't need more for now.
+
+        VkDeviceCreateInfo deviceCreateInfo{};
+        deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+
+        deviceCreateInfo.queueCreateInfoCount = 1;
+        deviceCreateInfo.pQueueCreateInfos = &queueCreateInfo;
+
+        deviceCreateInfo.pEnabledFeatures = &deviceFeatures;
+
+        // No extensions required for now.
+        deviceCreateInfo.enabledExtensionCount = 0;
+        deviceCreateInfo.ppEnabledExtensionNames = nullptr;
+
+        if (debugLevel > DebugLevel::None) {
+            deviceCreateInfo.enabledLayerCount = static_cast<uint32_t>(m_ValidationLayers.size());
+            deviceCreateInfo.ppEnabledLayerNames = m_ValidationLayers.data();
+        } else {
+            deviceCreateInfo.enabledLayerCount = 0;
+            deviceCreateInfo.ppEnabledLayerNames = nullptr;
+        }
+
+        if (vkCreateDevice(m_PhysicalDevice, &deviceCreateInfo, nullptr, &m_Device) != VK_SUCCESS) {
+            Log::EngineFatal({0x01, 0x03}, "Failed to create logical device.");
+        }
+
+        volkLoadDevice(m_Device);
     }
 
     int Device::RateDeviceSuitability(const VkPhysicalDevice physicalDevice) {
