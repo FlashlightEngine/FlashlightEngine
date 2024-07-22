@@ -143,8 +143,9 @@ namespace Flashlight::VulkanWrapper {
         Log::EngineTrace("Creating Vulkan instance.");
         if (vkCreateInstance(&instanceCreateInfo, nullptr, &m_Instance) != VK_SUCCESS) {
             Log::EngineFatal({0x01, 0x00}, "Failed to create Vulkan instance.");
+        } else {
+            Log::EngineTrace("Vulkan instance created.");
         }
-        Log::EngineTrace("Vulkan instance created.");
 
         volkLoadInstanceOnly(m_Instance);
 

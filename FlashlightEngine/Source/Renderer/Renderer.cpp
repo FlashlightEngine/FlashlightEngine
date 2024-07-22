@@ -10,12 +10,14 @@
 #include "FlashlightEngine/Renderer/VulkanWrapper/Instance.hpp"
 
 namespace Flashlight {
-    void Renderer::Create(const DebugLevel &debugLevel) {
+    void Renderer::Create(const DebugLevel &debugLevel, const Window& window) {
         m_Instance = std::make_unique<VulkanWrapper::Instance>(debugLevel);
 
         if (debugLevel > DebugLevel::None) {
             m_DebugMessenger = std::make_unique<VulkanWrapper::DebugMessenger>(*m_Instance, debugLevel);
         }
+
+        m_Surface = std::make_unique<VulkanWrapper::Surface>(*m_Instance, window);
 
         m_Device = std::make_unique<VulkanWrapper::Device>(*m_Instance, debugLevel);
     }

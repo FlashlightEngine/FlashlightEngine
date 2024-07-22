@@ -27,9 +27,9 @@ namespace Flashlight {
 
         if (!m_Window) {
             Log::EngineFatal({0x02, 0x01}, "Failed to create window.");
+        } else {
+            Log::EngineTrace("Window created.");
         }
-
-        Log::EngineTrace("Window created.");
     }
 
     void Window::Destroy() const {

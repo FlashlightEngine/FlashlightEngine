@@ -7,6 +7,6 @@
  */
 #pragma once
 
-inline Renderer::Renderer(const DebugLevel &debugLevel) {
-    Create(debugLevel);
+inline Renderer::Renderer(const DebugLevel &debugLevel, const Window& window) {
+    Create(debugLevel, window);
 }

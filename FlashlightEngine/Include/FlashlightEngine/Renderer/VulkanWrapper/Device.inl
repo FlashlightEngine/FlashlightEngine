@@ -45,6 +45,7 @@ inline VkQueue Device::GetGraphicsQueue() const {
 
 inline void Device::Destroy() const {
     if (m_Device) {
+        Log::EngineTrace("Destroying Vulkan device.");
         vkDestroyDevice(m_Device, nullptr);
     }
 }

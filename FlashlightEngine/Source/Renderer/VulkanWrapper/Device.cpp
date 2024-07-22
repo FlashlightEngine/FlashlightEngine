@@ -111,6 +111,8 @@ namespace Flashlight::VulkanWrapper {
 
         if (vkCreateDevice(m_PhysicalDevice, &deviceCreateInfo, nullptr, &m_Device) != VK_SUCCESS) {
             Log::EngineFatal({0x01, 0x03}, "Failed to create logical device.");
+        } else {
+            Log::EngineTrace("Logical device created.");
         }
 
         volkLoadDevice(m_Device);
