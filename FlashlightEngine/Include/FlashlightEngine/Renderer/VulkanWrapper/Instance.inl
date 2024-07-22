@@ -7,6 +7,10 @@
  */
 #pragma once
 
+inline Instance::Instance(const DebugLevel& debugLevel) {
+    Create(debugLevel);
+}
+
 inline Instance::~Instance() {
     Destroy();
 }
@@ -20,11 +24,6 @@ inline std::vector<const char*> Instance::GetValidationLayers() const {
 }
 
 inline void Instance::Destroy() const {
-    if (m_DebugMessenger) {
-        Log::EngineTrace("Destroying Vulkan debug messenger.");
-        vkDestroyDebugUtilsMessengerEXT(m_Instance, m_DebugMessenger, nullptr);
-    }
-    
     if (m_Instance) {
         Log::EngineTrace("Destroying Vulkan instance.");
         vkDestroyInstance(m_Instance, nullptr);

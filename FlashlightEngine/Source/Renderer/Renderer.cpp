@@ -9,11 +9,13 @@
 
 #include "FlashlightEngine/Renderer/VulkanWrapper/Instance.hpp"
 
-#include "FlashlightEngine/pch.hpp"
-
 namespace Flashlight {
     void Renderer::Create(const DebugLevel &debugLevel) {
         m_Instance = std::make_unique<VulkanWrapper::Instance>(debugLevel);
+
+        if (debugLevel > DebugLevel::None) {
+            m_DebugMessenger = std::make_unique<VulkanWrapper::DebugMessenger>(*m_Instance, debugLevel);
+        }
     }
 
 }

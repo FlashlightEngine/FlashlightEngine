@@ -9,12 +9,12 @@
 #pragma once
 
 #include "FlashlightEngine/Renderer/VulkanWrapper/Instance.hpp"
-
-#include "FlashlightEngine/pch.hpp"
+#include "FlashlightEngine/Renderer/VulkanWrapper/DebugMessenger.hpp"
 
 namespace Flashlight {
     class Renderer {
         std::unique_ptr<VulkanWrapper::Instance> m_Instance;
+        std::unique_ptr<VulkanWrapper::DebugMessenger> m_DebugMessenger;
         
     public:
         explicit inline Renderer(const DebugLevel &debugLevel);

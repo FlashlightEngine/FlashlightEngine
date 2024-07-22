@@ -25,14 +25,13 @@ namespace Flashlight {
     namespace VulkanWrapper {
         class Instance {
             VkInstance m_Instance = VK_NULL_HANDLE;
-            VkDebugUtilsMessengerEXT m_DebugMessenger = VK_NULL_HANDLE;
 
             std::vector<const char*> m_ValidationLayers = {
                 "VK_LAYER_KHRONOS_validation"
             };
 
         public:
-            explicit Instance(const DebugLevel& debugLevel);
+            explicit inline Instance(const DebugLevel& debugLevel);
             inline ~Instance();
 
             Instance(const Instance&) = delete;
@@ -44,9 +43,11 @@ namespace Flashlight {
             [[nodiscard]] inline VkInstance GetNativeInstance() const;
             [[nodiscard]] inline std::vector<const char*> GetValidationLayers() const;
 
+            static void PopulateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo,
+                                                         const DebugLevel& debugLevel);
+
         private:
-            void CreateInstance(const DebugLevel& debugLevel);
-            void CreateDebugMessenger(const DebugLevel& debugLevel);
+            void Create(const DebugLevel& debugLevel);
             inline void Destroy() const;
 
             [[nodiscard]] static std::vector<const char*> GetRequiredInstanceExtensions(
@@ -55,9 +56,6 @@ namespace Flashlight {
             [[nodiscard]] static std::vector<VkExtensionProperties> GetAvailableInstanceExtensions();
 
             [[nodiscard]] bool CheckValidationLayerSupport() const;
-
-            static void PopulateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo,
-                                                         const DebugLevel& debugLevel);
         };
 
 #include "Instance.inl"
