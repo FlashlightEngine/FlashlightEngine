@@ -7,9 +7,10 @@
  */
 #pragma once
 
-inline Device::Device(const Instance& instance, const DebugLevel& debugLevel) {
+inline Device::Device(const Instance& instance, const Surface& surface, const DebugLevel& debugLevel) {
     m_Instance = instance.GetNativeInstance();
     m_ValidationLayers = instance.GetValidationLayers();
+    m_Surface = surface.GetNativeSurface();
     
     PickPhysicalDevice();
     CreateLogicalDevice(debugLevel);

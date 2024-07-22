@@ -42,16 +42,16 @@ namespace Flashlight::VulkanWrapper {
 
         Log::EngineTrace("Physical device properties:");
         Log::EngineTrace("\t - Device name:           {0}", m_PhysicalDeviceProperties.deviceName);
-        
+
         Log::EngineTrace("\t - Device type:           {0}",
                          magic_enum::enum_name(m_PhysicalDeviceProperties.deviceType));
-        
+
         Log::EngineTrace("\t - Device API version:    {0}.{1}.{2}.{3}",
                          VK_API_VERSION_VARIANT(m_PhysicalDeviceProperties.apiVersion),
                          VK_API_VERSION_MAJOR(m_PhysicalDeviceProperties.apiVersion),
                          VK_API_VERSION_MINOR(m_PhysicalDeviceProperties.apiVersion),
                          VK_API_VERSION_PATCH(m_PhysicalDeviceProperties.apiVersion));
-        
+
         // 4318 : NVIDIA
         if (m_PhysicalDeviceProperties.vendorID == 4318) {
             Log::EngineTrace("\t - Driver version:        {0}.{1}.{2}.{3}",
@@ -79,21 +79,27 @@ namespace Flashlight::VulkanWrapper {
     }
 
     void Device::CreateLogicalDevice(const DebugLevel& debugLevel) {
-        VkDeviceQueueCreateInfo queueCreateInfo{};
-        queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-        queueCreateInfo.queueFamilyIndex = m_QueueFamilies.GraphicsFamily;
-        queueCreateInfo.queueCount = 1;
+        std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
+        std::set<u32> uniqueQueueFamilies = {m_QueueFamilies.GraphicsFamily, m_QueueFamilies.PresentFamily};
 
         constexpr float queuePriority = 1.0f;
-        queueCreateInfo.pQueuePriorities = &queuePriority;
+        for (u32 queueFamily : uniqueQueueFamilies) {
+            VkDeviceQueueCreateInfo queueCreateInfo{};
+            queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+            queueCreateInfo.queueFamilyIndex = m_QueueFamilies.GraphicsFamily;
+            queueCreateInfo.queueCount = 1;
+            queueCreateInfo.pQueuePriorities = &queuePriority;
+            queueCreateInfos.push_back(queueCreateInfo);
+        }
 
-        VkPhysicalDeviceFeatures deviceFeatures{}; // Keep the default features, we don't need more for now.
+        // Keep the default features, we don't need more for now.
+        constexpr VkPhysicalDeviceFeatures deviceFeatures{};
 
         VkDeviceCreateInfo deviceCreateInfo{};
         deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 
-        deviceCreateInfo.queueCreateInfoCount = 1;
-        deviceCreateInfo.pQueueCreateInfos = &queueCreateInfo;
+        deviceCreateInfo.queueCreateInfoCount = static_cast<u32>(queueCreateInfos.size());
+        deviceCreateInfo.pQueueCreateInfos = queueCreateInfos.data();
 
         deviceCreateInfo.pEnabledFeatures = &deviceFeatures;
 
@@ -118,9 +124,10 @@ namespace Flashlight::VulkanWrapper {
         volkLoadDevice(m_Device);
 
         vkGetDeviceQueue(m_Device, m_QueueFamilies.GraphicsFamily, 0, &m_GraphicsQueue);
+        vkGetDeviceQueue(m_Device, m_QueueFamilies.PresentFamily, 0, &m_PresentQueue);
     }
 
-    int Device::RateDeviceSuitability(const VkPhysicalDevice physicalDevice) {
+    int Device::RateDeviceSuitability(const VkPhysicalDevice physicalDevice) const {
         if (!IsDeviceSuitable(physicalDevice)) {
             return 0;
         }
@@ -138,7 +145,7 @@ namespace Flashlight::VulkanWrapper {
         return score;
     }
 
-    bool Device::IsDeviceSuitable(const VkPhysicalDevice physicalDevice) {
+    bool Device::IsDeviceSuitable(const VkPhysicalDevice physicalDevice) const {
         const QueueFamilyIndices indices = FindQueueFamilies(physicalDevice);
 
         return indices.IsComplete();
@@ -158,7 +165,7 @@ namespace Flashlight::VulkanWrapper {
         return features;
     }
 
-    QueueFamilyIndices Device::FindQueueFamilies(const VkPhysicalDevice physicalDevice) {
+    QueueFamilyIndices Device::FindQueueFamilies(const VkPhysicalDevice physicalDevice) const {
         QueueFamilyIndices indices;
 
         u32 queueFamilyCount = 0;
@@ -172,6 +179,14 @@ namespace Flashlight::VulkanWrapper {
             if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
                 indices.GraphicsFamily = i;
                 indices.FoundGraphicsFamily = true;
+            }
+
+            VkBool32 presentSupport = false;
+            vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, i, m_Surface, &presentSupport);
+
+            if (presentSupport) {
+                indices.PresentFamily = i;
+                indices.FoundPresentFamily = true;
             }
 
             if (indices.IsComplete()) {

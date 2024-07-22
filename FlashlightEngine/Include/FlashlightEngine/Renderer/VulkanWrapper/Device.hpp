@@ -10,6 +10,7 @@
 #pragma once
 
 #include "FlashlightEngine/Renderer/VulkanWrapper/Instance.hpp"
+#include "FlashlightEngine/Renderer/VulkanWrapper/Surface.hpp"
 
 #include "FlashlightEngine/pch.hpp"
 
@@ -19,10 +20,12 @@ namespace Flashlight::VulkanWrapper {
     struct QueueFamilyIndices {
         u32 GraphicsFamily;
         bool FoundGraphicsFamily;
+        u32 PresentFamily;
+        bool FoundPresentFamily;
 
         [[nodiscard]]
         bool IsComplete() const {
-            return FoundGraphicsFamily;
+            return FoundGraphicsFamily && FoundPresentFamily;
         }
     };
 
@@ -34,12 +37,14 @@ namespace Flashlight::VulkanWrapper {
 
         VkDevice m_Device = VK_NULL_HANDLE;
         VkQueue m_GraphicsQueue = VK_NULL_HANDLE;
+        VkQueue m_PresentQueue = VK_NULL_HANDLE;
 
         VkInstance m_Instance = VK_NULL_HANDLE;
         std::vector<const char*> m_ValidationLayers;
+        VkSurfaceKHR m_Surface = VK_NULL_HANDLE;
 
     public:
-        inline Device(const Instance& instance, const DebugLevel& debugLevel);
+        inline Device(const Instance& instance, const Surface& surface, const DebugLevel& debugLevel);
         inline ~Device();
 
         Device(const Device&) = delete;
@@ -62,12 +67,12 @@ namespace Flashlight::VulkanWrapper {
         inline void Destroy() const;
 
         // Physical device utility functions.
-        [[nodiscard]] static int RateDeviceSuitability(VkPhysicalDevice physicalDevice);
-        [[nodiscard]] static bool IsDeviceSuitable(VkPhysicalDevice physicalDevice);
+        [[nodiscard]] int RateDeviceSuitability(VkPhysicalDevice physicalDevice) const;
+        [[nodiscard]] bool IsDeviceSuitable(VkPhysicalDevice physicalDevice) const;
         [[nodiscard]] static VkPhysicalDeviceProperties
         GetPhysicalDeviceProperties(VkPhysicalDevice physicalDevice);
         [[nodiscard]] static VkPhysicalDeviceFeatures GetPhysicalDeviceFeatures(VkPhysicalDevice physicalDevice);
-        [[nodiscard]] static QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice physicalDevice);
+        [[nodiscard]] QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice physicalDevice) const;
 
         // Logical device utility functions.
     };
