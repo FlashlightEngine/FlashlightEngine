@@ -97,8 +97,10 @@ namespace Flashlight::VulkanWrapper {
         return score;
     }
 
-    bool Device::IsDeviceSuitable(VkPhysicalDevice physicalDevice) {
-        return true;
+    bool Device::IsDeviceSuitable(const VkPhysicalDevice physicalDevice) {
+        const QueueFamilyIndices indices = FindQueueFamilies(physicalDevice);
+
+        return indices.IsComplete();
     }
 
     VkPhysicalDeviceProperties Device::GetPhysicalDeviceProperties(const VkPhysicalDevice physicalDevice) {
