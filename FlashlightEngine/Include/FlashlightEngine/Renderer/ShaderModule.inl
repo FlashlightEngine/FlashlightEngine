@@ -8,8 +8,9 @@
 #pragma once
 
 inline ShaderModule::ShaderModule(const VkDevice device, const std::filesystem::path& shaderPath,
-                                  const ShaderType& shaderType, const bool optimizeShaders) : m_Device(device) {
-    Create(shaderPath, shaderType, optimizeShaders);
+                                  const ShaderType& shaderType) : m_Device(device) {
+    CreateShaderModule(shaderPath);
+    CreateShaderStage(shaderType);
 }
 
 inline ShaderModule::~ShaderModule() {
@@ -18,6 +19,10 @@ inline ShaderModule::~ShaderModule() {
 
 inline VkShaderModule ShaderModule::GetNativeShaderModule() const {
     return m_ShaderModule;
+}
+
+inline VkPipelineShaderStageCreateInfo ShaderModule::GetNativeShaderStageInfo() const {
+    return m_ShaderStageInfo;
 }
 
 inline void ShaderModule::Destroy() const {

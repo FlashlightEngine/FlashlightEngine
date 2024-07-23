@@ -14,19 +14,19 @@
 
 namespace Flashlight {
     // Only vertex and fragment shaders supported for now. 
-    enum class ShaderType {
-        Vertex = shaderc_vertex_shader,
-        Fragment = shaderc_fragment_shader
+    enum class ShaderType : VkShaderStageFlags {
+        Vertex = VK_SHADER_STAGE_VERTEX_BIT,
+        Fragment = VK_SHADER_STAGE_FRAGMENT_BIT
     };
 
     class ShaderModule {
         VkShaderModule m_ShaderModule;
+        VkPipelineShaderStageCreateInfo m_ShaderStageInfo;
 
         VkDevice m_Device = VK_NULL_HANDLE;
 
     public:
-        inline ShaderModule(VkDevice device, const std::filesystem::path& shaderPath,
-                            const ShaderType& shaderType, bool optimizeShaders = false);
+        inline ShaderModule(VkDevice device, const std::filesystem::path& shaderPath, const ShaderType& shaderType);
         inline ~ShaderModule();
 
         ShaderModule(const ShaderModule&) = delete;
@@ -36,16 +36,14 @@ namespace Flashlight {
         ShaderModule& operator=(ShaderModule&&) = delete;
 
         [[nodiscard]] inline VkShaderModule GetNativeShaderModule() const;
+        [[nodiscard]] inline VkPipelineShaderStageCreateInfo GetNativeShaderStageInfo() const;
 
     private:
-        void Create(const std::filesystem::path& shaderPath, const ShaderType& shaderType,
-                    bool optimizeShaders = false);
+        void CreateShaderModule(const std::filesystem::path& shaderPath);
+        void CreateShaderStage(const ShaderType& shaderType);
         inline void Destroy() const;
 
-        [[nodiscard]] static std::string ReadShaderFile(const std::filesystem::path& shaderPath);
-        [[nodiscard]] static std::vector<u32> CompileShader(const std::string& sourceName,
-                                                            const ShaderType& shaderType,
-                                                            const std::string& source, bool optimize = false);
+        [[nodiscard]] static std::vector<char> ReadShaderFile(const std::filesystem::path& shaderPath);
     };
 
 #include "ShaderModule.inl"
