@@ -55,7 +55,7 @@ target("FlashlightEngine")
   -- public dependencies
   add_packages("volk", "glfw", "glm", "spdlog", {public = true})
   -- private dependencies
-  add_packages("magic_enum", "shaderc")
+  add_packages("magic_enum")
 
 target("TestApplication")
     set_kind("binary")
