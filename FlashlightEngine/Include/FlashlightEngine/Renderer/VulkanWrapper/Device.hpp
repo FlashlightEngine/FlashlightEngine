@@ -62,14 +62,19 @@ namespace Flashlight::VulkanWrapper {
         Device& operator=(const Device&) = delete;
         Device& operator=(Device&&) = delete;
 
+#pragma region Physical Device
         [[nodiscard]] inline VkPhysicalDevice GetNativePhysicalDevice() const;
-        [[nodiscard]] inline VkDevice GetNativeDevice() const;
         [[nodiscard]] inline VkPhysicalDeviceProperties GetPhysicalDeviceProperties() const;
         [[nodiscard]] inline VkPhysicalDeviceFeatures GetPhysicalDeviceFeatures() const;
         [[nodiscard]] inline QueueFamilyIndices GetQueueFamilies() const;
         [[nodiscard]] inline SwapChainSupportDetails GetSwapChainSupport() const;
+#pragma endregion
+
+#pragma region Logical Device 
+        [[nodiscard]] inline VkDevice GetNativeDevice() const;
         [[nodiscard]] inline VkQueue GetGraphicsQueue() const;
         [[nodiscard]] inline VkQueue GetPresentQueue() const;
+#pragma endregion 
 
     private:
         void PickPhysicalDevice();
@@ -77,7 +82,7 @@ namespace Flashlight::VulkanWrapper {
 
         inline void Destroy() const;
 
-        // Physical device utility functions.
+#pragma region Physical Device Utility
         [[nodiscard]] int RateDeviceSuitability(VkPhysicalDevice physicalDevice);
         [[nodiscard]] bool IsDeviceSuitable(VkPhysicalDevice physicalDevice);
         [[nodiscard]] static VkPhysicalDeviceProperties
@@ -87,6 +92,7 @@ namespace Flashlight::VulkanWrapper {
         [[nodiscard]] bool CheckDeviceExtensionsSupport(VkPhysicalDevice physicalDevice);
         [[nodiscard]] static std::vector<VkExtensionProperties> GetAvailableDeviceExtensions(VkPhysicalDevice physicalDevice);
         [[nodiscard]] SwapChainSupportDetails QuerySwapChainSupport(VkPhysicalDevice physicalDevice) const;
+#pragma endregion
         
         // Logical device utility functions.
     };

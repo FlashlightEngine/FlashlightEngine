@@ -138,6 +138,7 @@ namespace Flashlight::VulkanWrapper {
         vkGetDeviceQueue(m_Device, m_QueueFamilies.PresentFamily, 0, &m_PresentQueue);
     }
 
+#pragma region Physical Device Utility
     int Device::RateDeviceSuitability(const VkPhysicalDevice physicalDevice) {
         if (!IsDeviceSuitable(physicalDevice)) {
             return 0;
@@ -263,4 +264,5 @@ namespace Flashlight::VulkanWrapper {
         
         return details;
     }
+#pragma endregion
 }

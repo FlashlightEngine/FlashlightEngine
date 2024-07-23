@@ -20,12 +20,9 @@ inline Device::~Device() {
     Destroy();
 }
 
+#pragma region Physical Device
 inline VkPhysicalDevice Device::GetNativePhysicalDevice() const {
     return m_PhysicalDevice;
-}
-
-inline VkDevice Device::GetNativeDevice() const {
-    return m_Device;
 }
 
 inline VkPhysicalDeviceProperties Device::GetPhysicalDeviceProperties() const {
@@ -43,6 +40,12 @@ inline QueueFamilyIndices Device::GetQueueFamilies() const {
 inline SwapChainSupportDetails Device::GetSwapChainSupport() const {
     return m_SwapChainSupport;
 }
+#pragma endregion
+
+#pragma region Logical Device
+inline VkDevice Device::GetNativeDevice() const {
+    return m_Device;
+}
 
 inline VkQueue Device::GetGraphicsQueue() const {
     return m_GraphicsQueue;
@@ -51,6 +54,7 @@ inline VkQueue Device::GetGraphicsQueue() const {
 inline VkQueue Device::GetPresentQueue() const {
     return m_PresentQueue;
 }
+#pragma endregion
 
 inline void Device::Destroy() const {
     if (m_Device) {
