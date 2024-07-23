@@ -10,8 +10,6 @@
 
 #include "FlashlightEngine/Renderer/VulkanWrapper/Device.hpp"
 
-#include <shaderc/shaderc.hpp>
-
 namespace Flashlight {
     // Only vertex and fragment shaders supported for now. 
     enum class ShaderType : VkShaderStageFlags {

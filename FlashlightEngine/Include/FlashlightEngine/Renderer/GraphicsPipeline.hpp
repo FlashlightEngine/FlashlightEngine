@@ -11,15 +11,30 @@
 #include "FlashlightEngine/Renderer/VulkanWrapper/Device.hpp"
 
 namespace Flashlight {
+    struct PipelineInfos {
+        VkPipelineVertexInputStateCreateInfo VertexInputInfo;
+        VkPipelineInputAssemblyStateCreateInfo InputAssemblyInfo;
+        std::vector<VkDynamicState> DynamicStates;
+        VkPipelineDynamicStateCreateInfo DynamicStatesInfo;
+        VkPipelineViewportStateCreateInfo ViewportStateInfo;
+        VkPipelineRasterizationStateCreateInfo RasterizationInfo;
+        VkPipelineMultisampleStateCreateInfo MultisamplingInfo;
+        VkPipelineColorBlendAttachmentState ColorBlendAttachment;
+        VkPipelineColorBlendStateCreateInfo ColorBlendingInfo;
+        VkPipelineLayoutCreateInfo PipelineLayoutInfo;
+    };
+    
     class GraphicsPipeline {
-        VkPipeline m_GraphicsPipeline = VK_NULL_HANDLE;
+        VkPipeline m_Pipeline = VK_NULL_HANDLE;
+        VkPipelineLayout m_PipelineLayout = VK_NULL_HANDLE;
 
         VkDevice m_Device = VK_NULL_HANDLE;
 
     public:
         inline GraphicsPipeline(const VulkanWrapper::Device& device,
                                 const std::filesystem::path& vertexShaderPath,
-                                const std::filesystem::path& fragmentShaderPath);
+                                const std::filesystem::path& fragmentShaderPath,
+                                const PipelineInfos& pipelineInfos);
         inline ~GraphicsPipeline();
 
         GraphicsPipeline(const GraphicsPipeline&) = delete;
@@ -29,9 +44,13 @@ namespace Flashlight {
         GraphicsPipeline& operator=(GraphicsPipeline&&) = delete;
 
         [[nodiscard]] inline VkPipeline GetNativePipeline() const;
+        [[nodiscard]] inline VkPipelineLayout GetNativePipelineLayout() const;
+
+        static void UseDefaultPipelineInfos(PipelineInfos& pipelineInfos);
 
     private:
-        void Create(const std::filesystem::path& vertexShaderPath, const std::filesystem::path& fragmentShaderPath);
+        void Create(const std::filesystem::path& vertexShaderPath, const std::filesystem::path& fragmentShaderPath,
+                    const PipelineInfos& pipelineInfos);
         inline void Destroy() const;
     };
 

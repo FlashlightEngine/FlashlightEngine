@@ -2,7 +2,9 @@
 
 
 bool TestApplication::Init() {
-    m_GraphicsPipeline = m_Renderer->CreatePipeline("Shaders/basic.vert", "Shaders/basic.frag");
+    Flashlight::PipelineInfos pipelineInfos{};
+    Flashlight::GraphicsPipeline::UseDefaultPipelineInfos(pipelineInfos);
+    m_GraphicsPipeline = m_Renderer->CreatePipeline("Shaders/basic.vert", "Shaders/basic.frag", pipelineInfos);
 
     m_IsRunning = true;
 
