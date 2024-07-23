@@ -58,12 +58,13 @@ target("FlashlightEngine")
 
 target("TestApplication")
     set_kind("binary")
+    add_rules("cp-resources")
 
     set_targetdir("build/" .. outputdir .. "/TestApplication/bin")
     set_objectdir("build/" .. outputdir .. "/TestApplication/obj")
 
     add_files("TestApplication/Source/**.cpp")
-    add_headerfiles("TestApplication/Shaders/**") -- A little trick to make them show in the VS/Rider solution.
+    add_headerfiles("TestApplication/Resources/Shaders/**") -- A little trick to make them show in the VS/Rider solution.
     add_headerfiles("TestApplication/Include/**.hpp", "TestApplication/Include/**.h", "TestApplication/Include/**.inl")
     add_includedirs("TestApplication/Include")
 
