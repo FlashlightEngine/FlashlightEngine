@@ -22,7 +22,7 @@ end
 add_defines("VK_NO_PROTOTYPES", "GLFW_INCLUDE_VULKAN")
 
 -- Define packages to download.
-add_requires("volk 1.3.283+0", "glfw 3.4", "glm 1.0.1", "spdlog v1.9.0", "magic_enum v0.9.5")
+add_requires("volk 1.3.283+0", "glfw 3.4", "glm 1.0.1", "spdlog v1.9.0", "magic_enum v0.9.5", "shaderc v2024.1")
 
 local outputdir = "$(mode)-$(os)-$(arch)"
 
@@ -54,7 +54,7 @@ target("FlashlightEngine")
   -- public dependencies
   add_packages("volk", "glfw", "glm", "spdlog", {public = true})
   -- private dependencies
-  add_packages("magic_enum")
+  add_packages("magic_enum", "shaderc")
 
 target("TestApplication")
     set_kind("binary")
