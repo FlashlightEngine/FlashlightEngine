@@ -13,6 +13,7 @@
 #include "FlashlightEngine/Renderer/VulkanWrapper/Surface.hpp"
 #include "FlashlightEngine/Renderer/VulkanWrapper/Device.hpp"
 #include "FlashlightEngine/Renderer/VulkanWrapper/SwapChain.hpp"
+#include "FlashlightEngine/Renderer/GraphicsPipeline.hpp"
 
 namespace Flashlight {
     class Renderer {
@@ -21,9 +22,9 @@ namespace Flashlight {
         std::unique_ptr<VulkanWrapper::Surface> m_Surface;
         std::unique_ptr<VulkanWrapper::Device> m_Device;
         std::unique_ptr<VulkanWrapper::SwapChain> m_SwapChain;
-        
+
     public:
-        inline Renderer(const DebugLevel &debugLevel, const Window& window);
+        inline Renderer(const DebugLevel& debugLevel, const Window& window);
         ~Renderer() = default;
 
         Renderer(const Renderer&) = delete;
@@ -31,8 +32,13 @@ namespace Flashlight {
 
         Renderer& operator=(const Renderer&) = delete;
         Renderer& operator=(Renderer&&) = delete;
+
+        [[nodiscard]] std::unique_ptr<GraphicsPipeline> CreatePipeline(
+            const std::filesystem::path& vertexShaderPath,
+            const std::filesystem::path& fragmentShaderPath) const;
+
     private:
-        void Create(const DebugLevel &debugLevel, const Window& window);
+        void Create(const DebugLevel& debugLevel, const Window& window);
     };
 
 #include "Renderer.inl"
