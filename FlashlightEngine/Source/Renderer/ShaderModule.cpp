@@ -26,10 +26,10 @@ namespace Flashlight {
     }
 
     std::string ShaderModule::ReadShaderFile(const std::filesystem::path& shaderPath) {
-        std::ifstream shaderFile(shaderPath, std::ios::ate);
+        std::ifstream shaderFile(shaderPath, std::ios::ate | std::ios::binary);
 
         if (!shaderFile.is_open()) {
-            Log::EngineError("Failed to open file at path: {0}", shaderPath);
+            Log::EngineError("Failed to open file at path: {0}", shaderPath.string());
         }
 
         const size fileSize = shaderFile.tellg();
@@ -58,7 +58,9 @@ namespace Flashlight {
             options.SetOptimizationLevel(shaderc_optimization_level_size);
         }
 
-        shaderc::SpvCompilationResult module =
+        options.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_0);
+
+        const shaderc::SpvCompilationResult module =
             compiler.CompileGlslToSpv(source, static_cast<shaderc_shader_kind>(shaderType), sourceName.c_str(),
                                       options);
 

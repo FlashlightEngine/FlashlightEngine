@@ -7,9 +7,8 @@
  */
 #pragma once
 
-inline ShaderModule::ShaderModule(const VulkanWrapper::Device& device, const std::filesystem::path& shaderPath,
-                                  const ShaderType& shaderType, const bool optimizeShaders) : m_Device(
-    device.GetNativeDevice()) {
+inline ShaderModule::ShaderModule(const VkDevice device, const std::filesystem::path& shaderPath,
+                                  const ShaderType& shaderType, const bool optimizeShaders) : m_Device(device) {
     Create(shaderPath, shaderType, optimizeShaders);
 }
 

@@ -20,12 +20,12 @@ namespace Flashlight {
     };
 
     class ShaderModule {
-        VkShaderModule m_ShaderModule = VK_NULL_HANDLE;
+        VkShaderModule m_ShaderModule;
 
         VkDevice m_Device = VK_NULL_HANDLE;
 
     public:
-        inline ShaderModule(const VulkanWrapper::Device& device, const std::filesystem::path& shaderPath,
+        inline ShaderModule(VkDevice device, const std::filesystem::path& shaderPath,
                             const ShaderType& shaderType, bool optimizeShaders = false);
         inline ~ShaderModule();
 
