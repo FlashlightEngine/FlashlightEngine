@@ -21,10 +21,10 @@ namespace Flashlight::VulkanWrapper {
     class RenderPass {
         VkRenderPass m_RenderPass = VK_NULL_HANDLE;
 
-        Device& m_Device;
+        const Device& m_Device;
 
     public:
-        RenderPass(Device& device, const RenderPassDescription& description);
+        RenderPass(const Device& device, const RenderPassDescription& description);
         inline ~RenderPass();
 
         RenderPass(const RenderPass&) = delete;

@@ -38,7 +38,6 @@ namespace Flashlight::VulkanWrapper {
         VkPhysicalDeviceProperties m_PhysicalDeviceProperties;
         VkPhysicalDeviceFeatures m_PhysicalDeviceFeatures;
         QueueFamilyIndices m_QueueFamilies;
-        SwapChainSupportDetails m_SwapChainSupport;
 
         VkDevice m_Device = VK_NULL_HANDLE;
         VkQueue m_GraphicsQueue = VK_NULL_HANDLE;

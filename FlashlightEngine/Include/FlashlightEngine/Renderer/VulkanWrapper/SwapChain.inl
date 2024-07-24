@@ -22,7 +22,11 @@ inline SwapChain::~SwapChain() {
 }
 
 inline VkSwapchainKHR SwapChain::GetNativeSwapChain() const {
-    return m_SwapChain;
+    if (m_SwapChain) {
+        return m_SwapChain;
+    }
+
+    return VK_NULL_HANDLE;
 }
 
 inline std::vector<VkImage> SwapChain::GetSwapChainImages() const {

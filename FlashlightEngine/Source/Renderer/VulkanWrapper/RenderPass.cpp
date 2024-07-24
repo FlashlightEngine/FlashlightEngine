@@ -8,7 +8,7 @@
 #include "FlashlightEngine/Renderer/VulkanWrapper/RenderPass.hpp"
 
 namespace Flashlight::VulkanWrapper {
-    RenderPass::RenderPass(Device& device, const RenderPassDescription& description) : m_Device(device) {
+    RenderPass::RenderPass(const Device& device, const RenderPassDescription& description) : m_Device(device) {
         VkRenderPassCreateInfo renderPassInfo{};
         renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
         renderPassInfo.attachmentCount = static_cast<u32>(description.Attachments.size());

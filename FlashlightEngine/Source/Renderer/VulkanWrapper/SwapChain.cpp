@@ -15,27 +15,30 @@
 #include "FlashlightEngine/Renderer/Renderer.hpp"
 
 namespace Flashlight::VulkanWrapper {
-    SwapChain::SwapChain(Device& device, const Window& window,
-                         const Surface& surface) : m_Device(device),
-                                                   m_Surface(surface.GetNativeSurface()),
-                                                   m_QueueFamilies(device.GetQueueFamilies()),
-                                                   m_SwapChainSupport(device.GetSwapChainSupport()),
-                                                   m_Window(window.GetGlfwWindow()) {
+    SwapChain::SwapChain(const Device& device,
+                         SwapChainDescription& description) : m_Device(device),
+                                                              m_Description{std::move(description)},
+                                                              m_QueueFamilies(device.GetQueueFamilies()),
+                                                              m_SwapChainSupport(device.GetSwapChainSupport()) {
         CreateSwapChain();
         CreateSwapChainImageViews();
         CreateRenderPass();
         CreateFramebuffers();
+        m_Description.OldSwapChain = nullptr;
     }
 
-    void SwapChain::AcquireNextImageIndex(const FrameObjects& renderObjects, u32& imageIndex) const {
+    VkResult SwapChain::AcquireNextImageIndex(const FrameObjects& renderObjects, u32& imageIndex) const {
         vkWaitForFences(m_Device.GetNativeDevice(), 1, &renderObjects.InFlightFence, VK_TRUE,
                         std::numeric_limits<u64>::max());
+
         vkResetFences(m_Device.GetNativeDevice(), 1, &renderObjects.InFlightFence);
-        vkAcquireNextImageKHR(m_Device.GetNativeDevice(), m_SwapChain, std::numeric_limits<u64>::max(),
-                              renderObjects.ImageAvailableSemaphore, VK_NULL_HANDLE, &imageIndex);
+
+        return vkAcquireNextImageKHR(m_Device.GetNativeDevice(), m_SwapChain, std::numeric_limits<u64>::max(),
+                                     renderObjects.ImageAvailableSemaphore, VK_NULL_HANDLE, &imageIndex);
     }
 
-    void SwapChain::SubmitCommandBufferAndPresent(const FrameObjects& renderObjects, const u32& imageIndex) const {
+    VkResult SwapChain::SubmitCommandBufferAndPresent(const FrameObjects& renderObjects,
+                                                      const u32& imageIndex) const {
         VkSubmitInfo submitInfo{};
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
@@ -69,7 +72,7 @@ namespace Flashlight::VulkanWrapper {
 
         presentInfo.pResults = nullptr;
 
-        vkQueuePresentKHR(m_Device.GetPresentQueue(), &presentInfo);
+        return vkQueuePresentKHR(m_Device.GetPresentQueue(), &presentInfo);
     }
 
     void SwapChain::CreateSwapChain() {
@@ -87,7 +90,7 @@ namespace Flashlight::VulkanWrapper {
 
         VkSwapchainCreateInfoKHR swapChainCreateInfo{};
         swapChainCreateInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-        swapChainCreateInfo.surface = m_Surface;
+        swapChainCreateInfo.surface = m_Description.Surface;
         swapChainCreateInfo.minImageCount = imageCount;
         swapChainCreateInfo.imageFormat = surfaceFormat.format;
         swapChainCreateInfo.imageColorSpace = surfaceFormat.colorSpace;
@@ -114,7 +117,9 @@ namespace Flashlight::VulkanWrapper {
         swapChainCreateInfo.presentMode = presentMode;
         swapChainCreateInfo.clipped = VK_TRUE;
 
-        swapChainCreateInfo.oldSwapchain = nullptr;
+        swapChainCreateInfo.oldSwapchain = m_Description.OldSwapChain == nullptr
+                                               ? VK_NULL_HANDLE
+                                               : m_Description.OldSwapChain->m_SwapChain;
 
         Log::EngineTrace("Creating Vulkan swap chain...");
         if (vkCreateSwapchainKHR(m_Device.GetNativeDevice(), &swapChainCreateInfo, nullptr, &m_SwapChain) !=
@@ -199,7 +204,7 @@ namespace Flashlight::VulkanWrapper {
 
         dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
         dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-        
+
         RenderPassDescription description;
         description.Attachments = {colorAttachment};
         description.Subpasses = {subpass};
@@ -247,22 +252,16 @@ namespace Flashlight::VulkanWrapper {
     VkExtent2D SwapChain::ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities) const {
         // The current extent already contains the extent that matches the best the window. However, if the members
         // of the current extent are set to the max value of uint32_t, that means the window manager lets us differ.
-        if (capabilities.currentExtent.width != std::numeric_limits<u32>::max()) {
+        if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max())
             return capabilities.currentExtent;
-        }
-
-        int width, height;
-        glfwGetFramebufferSize(m_Window, &width, &height);
-
-        VkExtent2D actualExtent = {
-            static_cast<u32>(width),
-            static_cast<u32>(height)
-        };
-
-        actualExtent.width = std::clamp(actualExtent.width, capabilities.minImageExtent.width,
-                                        capabilities.maxImageExtent.width);
-        actualExtent.height = std::clamp(actualExtent.height, capabilities.minImageExtent.height,
-                                         capabilities.maxImageExtent.height);
+			
+        VkExtent2D actualExtent = m_Description.WindowExtent;
+        actualExtent.width = std::max(
+                capabilities.minImageExtent.width,
+                std::min(capabilities.maxImageExtent.width, actualExtent.width));
+        actualExtent.height = std::max(
+                capabilities.minImageExtent.height,
+                std::min(capabilities.maxImageExtent.height, actualExtent.height));
 
         return actualExtent;
     }

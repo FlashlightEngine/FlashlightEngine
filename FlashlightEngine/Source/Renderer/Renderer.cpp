@@ -10,8 +10,9 @@
 #include "FlashlightEngine/Renderer/VulkanWrapper/Instance.hpp"
 
 namespace Flashlight {
-    Renderer::Renderer(const DebugLevel& debugLevel, const Window& window) {
+    Renderer::Renderer(const DebugLevel& debugLevel, Window& window) : m_Window(window) {
         InitializeVulkan(debugLevel, window);
+        RecreateSwapChain();
         CreatePipeline();
         CreateCommandPool();
         AllocateCommandBuffers();
@@ -37,8 +38,16 @@ namespace Flashlight {
 
     VkCommandBuffer Renderer::BeginFrame() {
         m_CurrentFrameNumber++;
-        const auto frame = GetCurrentFrameObjects();
-        m_SwapChain->AcquireNextImageIndex(frame, m_CurrentFrameIndex);
+        const auto& frame = GetCurrentFrameObjects();
+        const auto result = m_SwapChain->AcquireNextImageIndex(frame, m_CurrentFrameIndex);
+
+        if (result == VK_ERROR_OUT_OF_DATE_KHR) {
+            RecreateSwapChain();
+            m_Window.SwapChainInvalidated();
+        }
+        if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
+            Log::EngineError("Failed to present swap chain image.");
+        }
 
         vkResetCommandBuffer(frame.FrameCommandBuffer, 0);
 
@@ -83,14 +92,21 @@ namespace Flashlight {
         vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
     }
 
-    void Renderer::EndFrame() const {
-        const auto frame = GetCurrentFrameObjects();
-        
+    void Renderer::EndFrame() {
+        const auto& frame = GetCurrentFrameObjects();
         if (vkEndCommandBuffer(frame.FrameCommandBuffer) != VK_SUCCESS) {
-            Log::EngineError("Failed to end command buffer.");
+            Log::EngineError("Failed to record command buffer.");
         }
+        const auto result = m_SwapChain->SubmitCommandBufferAndPresent(frame, m_CurrentFrameIndex);
 
-        m_SwapChain->SubmitCommandBufferAndPresent(frame, m_CurrentFrameIndex);
+        if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || m_Window.
+            ShouldInvalidateSwapChain()) {
+            RecreateSwapChain();
+            m_Window.SwapChainInvalidated();
+        }
+        if (result != VK_SUCCESS) {
+            Log::EngineError("Failed to present swap chain image.");
+        }
     }
 
     void Renderer::InitializeVulkan(const DebugLevel& debugLevel, const Window& window) {
@@ -103,8 +119,6 @@ namespace Flashlight {
         m_Surface = std::make_unique<VulkanWrapper::Surface>(*m_Instance, window);
 
         m_Device = std::make_unique<VulkanWrapper::Device>(*m_Instance, *m_Surface, debugLevel);
-
-        m_SwapChain = std::make_unique<VulkanWrapper::SwapChain>(*m_Device, window, *m_Surface);
     }
 
     void Renderer::CreatePipeline() {
@@ -143,11 +157,11 @@ namespace Flashlight {
     }
 
     void Renderer::AllocateCommandBuffers() {
-            VkCommandBufferAllocateInfo allocateInfo{};
-            allocateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-            allocateInfo.commandPool = m_CommandPool;
-            allocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-            allocateInfo.commandBufferCount = 1;
+        VkCommandBufferAllocateInfo allocateInfo{};
+        allocateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+        allocateInfo.commandPool = m_CommandPool;
+        allocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        allocateInfo.commandBufferCount = 1;
 
         for (auto& frame : m_FrameObjects) {
             if (vkAllocateCommandBuffers(m_Device->GetNativeDevice(), &allocateInfo,
@@ -176,5 +190,23 @@ namespace Flashlight {
                 Log::EngineFatal({0x01, 0x10}, "Failed to create synchronisation primitives.");
             }
         }
+    }
+
+    void Renderer::RecreateSwapChain() {
+        i32 width = 0, height = 0;
+        glfwGetFramebufferSize(m_Window.GetGlfwWindow(), &width, &height);
+        while (width == 0 || height == 0) {
+            glfwGetFramebufferSize(m_Window.GetGlfwWindow(), &width, &height);
+            glfwWaitEvents();
+        }
+
+        vkDeviceWaitIdle(m_Device->GetNativeDevice());
+
+        VulkanWrapper::SwapChainDescription description{};
+        description.Surface = m_Surface->GetNativeSurface();
+        description.WindowExtent = {static_cast<u32>(width), static_cast<u32>(height)};
+        description.OldSwapChain = std::move(m_SwapChain);
+
+        m_SwapChain = std::make_unique<VulkanWrapper::SwapChain>(*m_Device, description);
     }
 }

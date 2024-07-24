@@ -12,13 +12,12 @@
 #include "FlashlightEngine/pch.hpp"
 
 namespace Flashlight {
-    void Window::Create(const WindowProperties& windowProperties) {
+    Window::Window(const WindowProperties& windowProperties) {
         if (!glfwInit()) {
             Log::EngineFatal({0x02, 0x00}, "Failed to initialize GLFW.");
         }
 
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-        glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
         Log::EngineTrace("Creating window.");
 
@@ -30,14 +29,14 @@ namespace Flashlight {
         } else {
             Log::EngineTrace("Window created.");
         }
-    }
 
-    void Window::Destroy() const {
-        if (m_Window) {
-            Log::EngineTrace("Destroying window.");
-            glfwDestroyWindow(m_Window);
-        }
+        glfwSetWindowUserPointer(m_Window, &m_Data);
 
-        glfwTerminate();
+        glfwSetWindowSizeCallback(m_Window, [](GLFWwindow* window, int width, int height) {
+            const auto data = static_cast<WindowData*>(glfwGetWindowUserPointer(window));
+            data->Width = width;
+            data->Height = height;
+            data->ShouldInvalidateSwapChain = true;
+        });
     }
 }

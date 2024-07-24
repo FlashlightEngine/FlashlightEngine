@@ -8,6 +8,8 @@
  */
 #pragma once
 
+#include "FlashlightEngine/Core/Window.hpp"
+
 #include "FlashlightEngine/Renderer/VulkanWrapper/Instance.hpp"
 #include "FlashlightEngine/Renderer/VulkanWrapper/DebugMessenger.hpp"
 #include "FlashlightEngine/Renderer/VulkanWrapper/Surface.hpp"
@@ -41,8 +43,10 @@ namespace Flashlight {
         u32 m_CurrentFrameIndex = 0;
         u32 m_CurrentFrameNumber = 0;
 
+        Window& m_Window;
+
     public:
-        Renderer(const DebugLevel& debugLevel, const Window& window);
+        Renderer(const DebugLevel& debugLevel, Window& window);
         ~Renderer();
 
         Renderer(const Renderer&) = delete;
@@ -54,7 +58,7 @@ namespace Flashlight {
         [[nodiscard]] VkCommandBuffer BeginFrame();
         void BeginRenderPass(VkCommandBuffer commandBuffer) const;
         static inline void EndRenderPass(VkCommandBuffer commandBuffer);
-        void EndFrame() const;
+        void EndFrame();
 
         [[nodiscard]] inline VulkanWrapper::GraphicsPipeline& GetPipeline() const;
 
@@ -64,6 +68,8 @@ namespace Flashlight {
         void CreateCommandPool();
         void AllocateCommandBuffers();
         void CreateSynchronisationPrimitives();
+
+        void RecreateSwapChain();
 
         [[nodiscard]] inline const FrameObjects& GetCurrentFrameObjects() const;
     };

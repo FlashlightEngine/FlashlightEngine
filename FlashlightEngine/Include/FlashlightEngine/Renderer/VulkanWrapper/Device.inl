@@ -40,7 +40,7 @@ inline QueueFamilyIndices Device::GetQueueFamilies() const {
 }
 
 inline SwapChainSupportDetails Device::GetSwapChainSupport() const {
-    return m_SwapChainSupport;
+    return QuerySwapChainSupport(m_PhysicalDevice);
 }
 #pragma endregion
 

@@ -23,11 +23,17 @@ namespace Flashlight {
         }
     };
 
+    struct WindowData {
+        i32 Width, Height;
+        bool ShouldInvalidateSwapChain = false;
+    };
+
     class Window {
         GLFWwindow* m_Window;
-
+        WindowData m_Data;
+        
     public:
-        explicit inline Window(const WindowProperties& windowProperties);
+        explicit Window(const WindowProperties& windowProperties);
         inline ~Window();
 
         Window(const Window&) = delete;
@@ -38,13 +44,14 @@ namespace Flashlight {
 
         [[nodiscard]] inline GLFWwindow* GetGlfwWindow() const;
         [[nodiscard]] inline bool ShouldClose() const;
+        [[nodiscard]] inline i32 GetWidth() const;
+        [[nodiscard]] inline i32 GetHeight() const;
+        [[nodiscard]] inline VkExtent2D GetWindowExtent() const;
+        [[nodiscard]] inline bool ShouldInvalidateSwapChain() const;
+        inline void SwapChainInvalidated();
 
         static inline void Update();
         inline void Close() const;
-
-    private:
-        void Create(const WindowProperties& windowProperties);
-        void Destroy() const;
     };
 
 #include "Window.inl"

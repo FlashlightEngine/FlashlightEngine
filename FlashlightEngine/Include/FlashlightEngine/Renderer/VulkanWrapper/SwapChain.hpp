@@ -17,25 +17,33 @@ namespace Flashlight {
     struct FrameObjects;
 
     namespace VulkanWrapper {
+        class SwapChain;
+        
+        struct SwapChainDescription {
+            VkExtent2D WindowExtent;
+            VkSurfaceKHR Surface;
+            std::shared_ptr<SwapChain> OldSwapChain = nullptr;
+        };
+
         class SwapChain {
             VkSwapchainKHR m_SwapChain = VK_NULL_HANDLE;
             std::vector<VkImage> m_SwapChainImages;
             std::vector<VkImageView> m_SwapChainImageViews;
             VkFormat m_SwapChainImageFormat = VK_FORMAT_UNDEFINED;
             VkExtent2D m_SwapChainExtent;
-        
+
             std::unique_ptr<RenderPass> m_RenderPass;
 
             std::vector<Framebuffer> m_Framebuffers;
 
-            Device& m_Device;
-            VkSurfaceKHR m_Surface = VK_NULL_HANDLE;
+            const Device& m_Device;
+            SwapChainDescription m_Description;
+            
             QueueFamilyIndices m_QueueFamilies;
             SwapChainSupportDetails m_SwapChainSupport;
-            GLFWwindow* m_Window = nullptr;
 
         public:
-            SwapChain(Device& device, const Window& window, const Surface& surface);
+            SwapChain(const Device& device, SwapChainDescription& description);
             inline ~SwapChain();
 
             SwapChain(const SwapChain&) = delete;
@@ -54,9 +62,10 @@ namespace Flashlight {
 
             [[nodiscard]] inline VkFramebuffer GetFramebufferAtIndex(u32 index) const;
 
-            void AcquireNextImageIndex(const FrameObjects& renderObjects, u32& imageIndex) const;
+            [[nodiscard]] VkResult AcquireNextImageIndex(const FrameObjects& renderObjects, u32& imageIndex) const;
 
-            void SubmitCommandBufferAndPresent(const FrameObjects& renderObjects, const u32 &imageIndex) const;
+            [[nodiscard]] VkResult SubmitCommandBufferAndPresent(const FrameObjects& renderObjects,
+                                                                 const u32& imageIndex) const;
 
         private:
             void CreateSwapChain();
@@ -70,9 +79,9 @@ namespace Flashlight {
                 const std::vector<VkPresentModeKHR>& availablePresentModes);
             [[nodiscard]] VkExtent2D ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities) const;
         };
-    
+
 
 #include "SwapChain.inl"
-        
+
     }
 }

@@ -39,7 +39,6 @@ namespace Flashlight::VulkanWrapper {
         m_PhysicalDeviceProperties = GetPhysicalDeviceProperties(m_PhysicalDevice);
         m_PhysicalDeviceFeatures = GetPhysicalDeviceFeatures(m_PhysicalDevice);
         m_QueueFamilies = FindQueueFamilies(m_PhysicalDevice);
-        m_SwapChainSupport = QuerySwapChainSupport(m_PhysicalDevice);
 
         Log::EngineTrace("Physical device properties:");
         Log::EngineTrace("\t - Device name:           {0}", m_PhysicalDeviceProperties.deviceName);

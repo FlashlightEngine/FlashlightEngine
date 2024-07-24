@@ -7,8 +7,6 @@
  */
 #pragma once
 
-#include "FlashlightEngine/Core/Window.hpp"
-
 #include "FlashlightEngine/Renderer/Renderer.hpp"
 
 #include "FlashlightEngine/pch.hpp"
