@@ -14,18 +14,19 @@ namespace Flashlight {
         InitializeVulkan(debugLevel, window);
         CreatePipeline();
         CreateCommandPool();
-        AllocateCommandBuffer();
+        AllocateCommandBuffers();
         CreateSynchronisationPrimitives();
     }
 
     Renderer::~Renderer() {
         vkDeviceWaitIdle(m_Device->GetNativeDevice());
-        
-        if (m_RenderObjects.ImageAvailableSemaphore &&m_RenderObjects.RenderFinishedSemaphore &&
-            m_RenderObjects.InFlightFence) {
-            vkDestroySemaphore(m_Device->GetNativeDevice(), m_RenderObjects.ImageAvailableSemaphore, nullptr);
-            vkDestroySemaphore(m_Device->GetNativeDevice(), m_RenderObjects.RenderFinishedSemaphore, nullptr);
-            vkDestroyFence(m_Device->GetNativeDevice(), m_RenderObjects.InFlightFence, nullptr);
+
+        for (const auto frame : m_FrameObjects) {
+            if (frame.ImageAvailableSemaphore && frame.RenderFinishedSemaphore && frame.InFlightFence) {
+                vkDestroySemaphore(m_Device->GetNativeDevice(), frame.ImageAvailableSemaphore, nullptr);
+                vkDestroySemaphore(m_Device->GetNativeDevice(), frame.RenderFinishedSemaphore, nullptr);
+                vkDestroyFence(m_Device->GetNativeDevice(), frame.InFlightFence, nullptr);
+            }
         }
 
         if (m_CommandPool) {
@@ -35,20 +36,22 @@ namespace Flashlight {
     }
 
     VkCommandBuffer Renderer::BeginFrame() {
-        m_SwapChain->AcquireNextImageIndex(m_RenderObjects, m_CurrentFrameIndex);
+        m_CurrentFrameNumber++;
+        const auto frame = GetCurrentFrameObjects();
+        m_SwapChain->AcquireNextImageIndex(frame, m_CurrentFrameIndex);
 
-        vkResetCommandBuffer(m_RenderObjects.FrameCommandBuffer, 0);
-        
+        vkResetCommandBuffer(frame.FrameCommandBuffer, 0);
+
         VkCommandBufferBeginInfo beginInfo{};
         beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
         beginInfo.flags = 0;
         beginInfo.pInheritanceInfo = nullptr;
 
-        if (vkBeginCommandBuffer(m_RenderObjects.FrameCommandBuffer, &beginInfo) != VK_SUCCESS) {
+        if (vkBeginCommandBuffer(frame.FrameCommandBuffer, &beginInfo) != VK_SUCCESS) {
             Log::EngineError("Failed to begin command buffer recording.");
         }
 
-        return m_RenderObjects.FrameCommandBuffer;
+        return frame.FrameCommandBuffer;
     }
 
     void Renderer::BeginRenderPass(const VkCommandBuffer commandBuffer) const {
@@ -80,12 +83,14 @@ namespace Flashlight {
         vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
     }
 
-    void Renderer::EndFrame(const VkCommandBuffer commandBuffer) const {
-        if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
+    void Renderer::EndFrame() const {
+        const auto frame = GetCurrentFrameObjects();
+        
+        if (vkEndCommandBuffer(frame.FrameCommandBuffer) != VK_SUCCESS) {
             Log::EngineError("Failed to end command buffer.");
         }
 
-        m_SwapChain->SubmitCommandBufferAndPresent(m_RenderObjects, m_CurrentFrameIndex);
+        m_SwapChain->SubmitCommandBufferAndPresent(frame, m_CurrentFrameIndex);
     }
 
     void Renderer::InitializeVulkan(const DebugLevel& debugLevel, const Window& window) {
@@ -137,17 +142,19 @@ namespace Flashlight {
         Log::EngineTrace("Vulkan command pool created");
     }
 
-    void Renderer::AllocateCommandBuffer() {
-        VkCommandBufferAllocateInfo allocateInfo{};
-        allocateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-        allocateInfo.commandPool = m_CommandPool;
-        allocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-        allocateInfo.commandBufferCount = 1;
+    void Renderer::AllocateCommandBuffers() {
+            VkCommandBufferAllocateInfo allocateInfo{};
+            allocateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+            allocateInfo.commandPool = m_CommandPool;
+            allocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+            allocateInfo.commandBufferCount = 1;
 
-        if (vkAllocateCommandBuffers(m_Device->GetNativeDevice(), &allocateInfo,
-                                     &m_RenderObjects.FrameCommandBuffer)
-            != VK_SUCCESS) {
-            Log::EngineFatal({0x01, 0x0F}, "Failed to allocate command buffer.");
+        for (auto& frame : m_FrameObjects) {
+            if (vkAllocateCommandBuffers(m_Device->GetNativeDevice(), &allocateInfo,
+                                         &frame.FrameCommandBuffer)
+                != VK_SUCCESS) {
+                Log::EngineFatal({0x01, 0x0F}, "Failed to allocate command buffer.");
+            }
         }
     }
 
@@ -159,13 +166,15 @@ namespace Flashlight {
         fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
         fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
-        if (vkCreateSemaphore(m_Device->GetNativeDevice(), &semaphoreInfo, nullptr,
-                              &m_RenderObjects.ImageAvailableSemaphore) ||
-            vkCreateSemaphore(m_Device->GetNativeDevice(), &semaphoreInfo, nullptr,
-                              &m_RenderObjects.RenderFinishedSemaphore) ||
-            vkCreateFence(m_Device->GetNativeDevice(), &fenceInfo, nullptr, &m_RenderObjects.InFlightFence)
-            != VK_SUCCESS) {
-            Log::EngineFatal({0x01, 0x10}, "Failed to create synchronisation primitives.");
+        for (auto& frame : m_FrameObjects) {
+            if (vkCreateSemaphore(m_Device->GetNativeDevice(), &semaphoreInfo, nullptr,
+                                  &frame.ImageAvailableSemaphore) ||
+                vkCreateSemaphore(m_Device->GetNativeDevice(), &semaphoreInfo, nullptr,
+                                  &frame.RenderFinishedSemaphore) ||
+                vkCreateFence(m_Device->GetNativeDevice(), &fenceInfo, nullptr, &frame.InFlightFence)
+                != VK_SUCCESS) {
+                Log::EngineFatal({0x01, 0x10}, "Failed to create synchronisation primitives.");
+            }
         }
     }
 }

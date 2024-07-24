@@ -14,7 +14,7 @@
 #include "FlashlightEngine/Core/Window.hpp"
 
 namespace Flashlight {
-    struct RenderObjects;
+    struct FrameObjects;
 
     namespace VulkanWrapper {
         class SwapChain {
@@ -54,9 +54,9 @@ namespace Flashlight {
 
             [[nodiscard]] inline VkFramebuffer GetFramebufferAtIndex(u32 index) const;
 
-            void AcquireNextImageIndex(const RenderObjects& renderObjects, u32& imageIndex) const;
+            void AcquireNextImageIndex(const FrameObjects& renderObjects, u32& imageIndex) const;
 
-            void SubmitCommandBufferAndPresent(const RenderObjects& renderObjects, const u32 &imageIndex) const;
+            void SubmitCommandBufferAndPresent(const FrameObjects& renderObjects, const u32 &imageIndex) const;
 
         private:
             void CreateSwapChain();

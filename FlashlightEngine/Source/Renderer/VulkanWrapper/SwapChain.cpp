@@ -27,7 +27,7 @@ namespace Flashlight::VulkanWrapper {
         CreateFramebuffers();
     }
 
-    void SwapChain::AcquireNextImageIndex(const RenderObjects& renderObjects, u32& imageIndex) const {
+    void SwapChain::AcquireNextImageIndex(const FrameObjects& renderObjects, u32& imageIndex) const {
         vkWaitForFences(m_Device.GetNativeDevice(), 1, &renderObjects.InFlightFence, VK_TRUE,
                         std::numeric_limits<u64>::max());
         vkResetFences(m_Device.GetNativeDevice(), 1, &renderObjects.InFlightFence);
@@ -35,7 +35,7 @@ namespace Flashlight::VulkanWrapper {
                               renderObjects.ImageAvailableSemaphore, VK_NULL_HANDLE, &imageIndex);
     }
 
-    void SwapChain::SubmitCommandBufferAndPresent(const RenderObjects& renderObjects, const u32& imageIndex) const {
+    void SwapChain::SubmitCommandBufferAndPresent(const FrameObjects& renderObjects, const u32& imageIndex) const {
         VkSubmitInfo submitInfo{};
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 

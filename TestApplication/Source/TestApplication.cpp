@@ -21,7 +21,7 @@ void TestApplication::Render() {
 
     m_Renderer->EndRenderPass(commandBuffer);
 
-    m_Renderer->EndFrame(commandBuffer);
+    m_Renderer->EndFrame();
 }
 
 void TestApplication::Cleanup() {

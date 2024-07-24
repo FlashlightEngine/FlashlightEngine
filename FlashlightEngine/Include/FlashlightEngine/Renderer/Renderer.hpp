@@ -16,15 +16,17 @@
 #include "FlashlightEngine/Renderer/VulkanWrapper/GraphicsPipeline.hpp"
 
 namespace Flashlight {
-    struct RenderObjects {
+    struct FrameObjects {
         VkCommandBuffer FrameCommandBuffer;
 
-        VkSemaphore ImageAvailableSemaphore;
-        VkSemaphore RenderFinishedSemaphore;
-        VkFence InFlightFence;
+        VkSemaphore ImageAvailableSemaphore{};
+        VkSemaphore RenderFinishedSemaphore{};
+        VkFence InFlightFence{};
     };
-    
+
     class Renderer {
+        u8 m_MaxFramesInFlight = 2;
+
         std::unique_ptr<VulkanWrapper::Instance> m_Instance;
         std::unique_ptr<VulkanWrapper::DebugMessenger> m_DebugMessenger;
         std::unique_ptr<VulkanWrapper::Surface> m_Surface;
@@ -34,7 +36,10 @@ namespace Flashlight {
 
         VkCommandPool m_CommandPool = VK_NULL_HANDLE;
 
-        u32 m_CurrentFrameIndex;
+        std::vector<FrameObjects> m_FrameObjects{m_MaxFramesInFlight};
+        
+        u32 m_CurrentFrameIndex = 0;
+        u32 m_CurrentFrameNumber = 0;
 
     public:
         Renderer(const DebugLevel& debugLevel, const Window& window);
@@ -49,18 +54,18 @@ namespace Flashlight {
         [[nodiscard]] VkCommandBuffer BeginFrame();
         void BeginRenderPass(VkCommandBuffer commandBuffer) const;
         static inline void EndRenderPass(VkCommandBuffer commandBuffer);
-        void EndFrame(VkCommandBuffer commandBuffer) const;
+        void EndFrame() const;
 
         [[nodiscard]] inline VulkanWrapper::GraphicsPipeline& GetPipeline() const;
 
     private:
-        RenderObjects m_RenderObjects;
-        
         void InitializeVulkan(const DebugLevel& debugLevel, const Window& window);
         void CreatePipeline();
         void CreateCommandPool();
-        void AllocateCommandBuffer();
+        void AllocateCommandBuffers();
         void CreateSynchronisationPrimitives();
+
+        [[nodiscard]] inline const FrameObjects& GetCurrentFrameObjects() const;
     };
 
 #include "Renderer.inl"

@@ -15,3 +15,7 @@ inline void Renderer::EndRenderPass(const VkCommandBuffer commandBuffer) {
 inline VulkanWrapper::GraphicsPipeline& Renderer::GetPipeline() const {
     return *m_GraphicsPipeline;
 }
+
+inline const FrameObjects& Renderer::GetCurrentFrameObjects() const {
+    return m_FrameObjects[m_CurrentFrameNumber % m_MaxFramesInFlight];
+}
