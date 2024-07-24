@@ -10,7 +10,6 @@
 #pragma once
 
 #include "FlashlightEngine/Renderer/VulkanWrapper/Device.hpp"
-#include "FlashlightEngine/Renderer/VulkanWrapper/SwapChain.hpp"
 
 namespace Flashlight {
     struct RenderPassInfo {
