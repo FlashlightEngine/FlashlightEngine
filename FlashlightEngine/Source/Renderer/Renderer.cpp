@@ -23,12 +23,24 @@ namespace Flashlight {
 
         m_SwapChain = std::make_unique<VulkanWrapper::SwapChain>(*m_Device, window, *m_Surface);
 
-        VulkanWrapper::PipelineInfos pipelineInfos;
-        VulkanWrapper::GraphicsPipeline::UseDefaultPipelineInfos(pipelineInfos, m_SwapChain->GetRenderPass());
+        VulkanWrapper::ShaderModule vertexShaderModule{
+            *m_Device, "Shaders/basic.vert", VulkanWrapper::ShaderType::Vertex
+        };
+        VulkanWrapper::ShaderModule fragmentShaderModule{
+            *m_Device, "Shaders/basic.frag", VulkanWrapper::ShaderType::Fragment
+        };
 
-        pipelineInfos.VertexShaderPath = "Shaders/basic.vert";
-        pipelineInfos.FragmentShaderPath = "Shaders/basic.frag";
-        
-        m_GraphicsPipeline = std::make_unique<VulkanWrapper::GraphicsPipeline>(*m_Device, pipelineInfos);
+        VulkanWrapper::GraphicsPipeline::Builder pipelineBuilder{*m_Device};
+        pipelineBuilder.VertexShader(vertexShaderModule);
+        pipelineBuilder.FragmentShader(fragmentShaderModule);
+        pipelineBuilder.VertexInputState({}, {});
+        pipelineBuilder.InputAssemblyState(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, false);
+        pipelineBuilder.Viewport(m_SwapChain->GetSwapChainExtent());
+        pipelineBuilder.RasterizeState(VK_POLYGON_MODE_FILL, VK_CULL_MODE_BACK_BIT);
+        pipelineBuilder.MultisampleState();
+        pipelineBuilder.ColorBlendState(false, VK_BLEND_OP_ADD, VK_BLEND_OP_ADD, false, VK_LOGIC_OP_COPY);
+        pipelineBuilder.PipelineLayout({}, {});
+
+        m_GraphicsPipeline = pipelineBuilder.Build(m_SwapChain->GetRenderPass());
     }
 }

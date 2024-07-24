@@ -7,6 +7,8 @@
  */
 #pragma once
 
+inline GraphicsPipeline::Builder::Builder(Device& device) : m_Device(device) {}
+
 inline GraphicsPipeline::~GraphicsPipeline() {
     if (m_Pipeline) {
         vkDestroyPipeline(m_Device.GetNativeDevice(), m_Pipeline, nullptr);
