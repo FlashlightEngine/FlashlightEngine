@@ -15,6 +15,7 @@ namespace Flashlight::VulkanWrapper {
     struct RenderPassDescription {
         std::vector<VkAttachmentDescription> Attachments;
         std::vector<VkSubpassDescription> Subpasses;
+        std::vector<VkSubpassDependency> Dependencies;
     };
     
     class RenderPass {

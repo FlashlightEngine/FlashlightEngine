@@ -12,6 +12,8 @@
 #include <limits>
 #include <magic_enum.hpp>
 
+#include "FlashlightEngine/Renderer/Renderer.hpp"
+
 namespace Flashlight::VulkanWrapper {
     SwapChain::SwapChain(Device& device, const Window& window,
                          const Surface& surface) : m_Device(device),
@@ -23,6 +25,51 @@ namespace Flashlight::VulkanWrapper {
         CreateSwapChainImageViews();
         CreateRenderPass();
         CreateFramebuffers();
+    }
+
+    void SwapChain::AcquireNextImageIndex(const RenderObjects& renderObjects, u32& imageIndex) const {
+        vkWaitForFences(m_Device.GetNativeDevice(), 1, &renderObjects.InFlightFence, VK_TRUE,
+                        std::numeric_limits<u64>::max());
+        vkResetFences(m_Device.GetNativeDevice(), 1, &renderObjects.InFlightFence);
+        vkAcquireNextImageKHR(m_Device.GetNativeDevice(), m_SwapChain, std::numeric_limits<u64>::max(),
+                              renderObjects.ImageAvailableSemaphore, VK_NULL_HANDLE, &imageIndex);
+    }
+
+    void SwapChain::SubmitCommandBufferAndPresent(const RenderObjects& renderObjects, const u32& imageIndex) const {
+        VkSubmitInfo submitInfo{};
+        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+
+        const VkSemaphore waitSemaphores[] = {renderObjects.ImageAvailableSemaphore};
+        constexpr VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
+        submitInfo.waitSemaphoreCount = 1;
+        submitInfo.pWaitSemaphores = waitSemaphores;
+        submitInfo.pWaitDstStageMask = waitStages;
+
+        submitInfo.commandBufferCount = 1;
+        submitInfo.pCommandBuffers = &renderObjects.FrameCommandBuffer;
+
+        const VkSemaphore signalSemaphores[] = {renderObjects.RenderFinishedSemaphore};
+        submitInfo.signalSemaphoreCount = 1;
+        submitInfo.pSignalSemaphores = signalSemaphores;
+
+        if (vkQueueSubmit(m_Device.GetGraphicsQueue(), 1, &submitInfo, renderObjects.InFlightFence) != VK_SUCCESS) {
+            Log::EngineError("Failed to submit work to graphics queue.");
+        }
+
+        VkPresentInfoKHR presentInfo{};
+        presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+
+        presentInfo.waitSemaphoreCount = 1;
+        presentInfo.pWaitSemaphores = signalSemaphores;
+
+        const VkSwapchainKHR swapChains[] = {m_SwapChain};
+        presentInfo.swapchainCount = 1;
+        presentInfo.pSwapchains = swapChains;
+        presentInfo.pImageIndices = &imageIndex;
+
+        presentInfo.pResults = nullptr;
+
+        vkQueuePresentKHR(m_Device.GetPresentQueue(), &presentInfo);
     }
 
     void SwapChain::CreateSwapChain() {
@@ -79,7 +126,7 @@ namespace Flashlight::VulkanWrapper {
 
         Log::EngineTrace("Vulkan swap chain properties:");
         Log::EngineTrace("\t - Format & color space: {0}; {1}", magic_enum::enum_name(surfaceFormat.format),
-                                                                magic_enum::enum_name(surfaceFormat.colorSpace));
+                         magic_enum::enum_name(surfaceFormat.colorSpace));
         Log::EngineTrace("\t - Present mode: {0}", magic_enum::enum_name(presentMode));
         Log::EngineTrace("\t - Extent (resolution): {0}x{1}", extent.width, extent.height);
 
@@ -143,9 +190,20 @@ namespace Flashlight::VulkanWrapper {
         subpass.colorAttachmentCount = 1;
         subpass.pColorAttachments = &colorAttachmentReference;
 
+        VkSubpassDependency dependency{};
+        dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+        dependency.dstSubpass = 0;
+
+        dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        dependency.srcAccessMask = 0;
+
+        dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        
         RenderPassDescription description;
         description.Attachments = {colorAttachment};
         description.Subpasses = {subpass};
+        description.Dependencies = {dependency};
 
         Log::EngineTrace("Creating Vulkan swap chain render pass...");
         m_RenderPass = std::make_unique<RenderPass>(m_Device, description);

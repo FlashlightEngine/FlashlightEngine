@@ -15,16 +15,30 @@ namespace Flashlight {
         CreatePipeline();
         CreateCommandPool();
         AllocateCommandBuffer();
+        CreateSynchronisationPrimitives();
     }
 
     Renderer::~Renderer() {
-        Log::EngineTrace("Destroying Vulkan command pool.");
+        vkDeviceWaitIdle(m_Device->GetNativeDevice());
+        
+        if (m_RenderObjects.ImageAvailableSemaphore &&m_RenderObjects.RenderFinishedSemaphore &&
+            m_RenderObjects.InFlightFence) {
+            vkDestroySemaphore(m_Device->GetNativeDevice(), m_RenderObjects.ImageAvailableSemaphore, nullptr);
+            vkDestroySemaphore(m_Device->GetNativeDevice(), m_RenderObjects.RenderFinishedSemaphore, nullptr);
+            vkDestroyFence(m_Device->GetNativeDevice(), m_RenderObjects.InFlightFence, nullptr);
+        }
+
         if (m_CommandPool) {
+            Log::EngineTrace("Destroying Vulkan command pool.");
             vkDestroyCommandPool(m_Device->GetNativeDevice(), m_CommandPool, nullptr);
         }
     }
 
-    VkCommandBuffer Renderer::BeginFrame() const {
+    VkCommandBuffer Renderer::BeginFrame() {
+        m_SwapChain->AcquireNextImageIndex(m_RenderObjects, m_CurrentFrameIndex);
+
+        vkResetCommandBuffer(m_RenderObjects.FrameCommandBuffer, 0);
+        
         VkCommandBufferBeginInfo beginInfo{};
         beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
         beginInfo.flags = 0;
@@ -41,7 +55,7 @@ namespace Flashlight {
         VkRenderPassBeginInfo beginInfo{};
         beginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
         beginInfo.renderPass = m_SwapChain->GetRenderPass().GetNativeRenderPass();
-        beginInfo.framebuffer = m_SwapChain->GetFramebufferAtIndex(m_CurrentFrame);
+        beginInfo.framebuffer = m_SwapChain->GetFramebufferAtIndex(m_CurrentFrameIndex);
         beginInfo.renderArea.offset = {0, 0};
         beginInfo.renderArea.extent = m_SwapChain->GetSwapChainExtent();
 
@@ -66,10 +80,12 @@ namespace Flashlight {
         vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
     }
 
-    void Renderer::EndFrame(const VkCommandBuffer commandBuffer) {
+    void Renderer::EndFrame(const VkCommandBuffer commandBuffer) const {
         if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
             Log::EngineError("Failed to end command buffer.");
         }
+
+        m_SwapChain->SubmitCommandBufferAndPresent(m_RenderObjects, m_CurrentFrameIndex);
     }
 
     void Renderer::InitializeVulkan(const DebugLevel& debugLevel, const Window& window) {
@@ -128,9 +144,28 @@ namespace Flashlight {
         allocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
         allocateInfo.commandBufferCount = 1;
 
-        if (vkAllocateCommandBuffers(m_Device->GetNativeDevice(), &allocateInfo, &m_RenderObjects.FrameCommandBuffer)
+        if (vkAllocateCommandBuffers(m_Device->GetNativeDevice(), &allocateInfo,
+                                     &m_RenderObjects.FrameCommandBuffer)
             != VK_SUCCESS) {
             Log::EngineFatal({0x01, 0x0F}, "Failed to allocate command buffer.");
+        }
+    }
+
+    void Renderer::CreateSynchronisationPrimitives() {
+        VkSemaphoreCreateInfo semaphoreInfo{};
+        semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+
+        VkFenceCreateInfo fenceInfo{};
+        fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+        fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+
+        if (vkCreateSemaphore(m_Device->GetNativeDevice(), &semaphoreInfo, nullptr,
+                              &m_RenderObjects.ImageAvailableSemaphore) ||
+            vkCreateSemaphore(m_Device->GetNativeDevice(), &semaphoreInfo, nullptr,
+                              &m_RenderObjects.RenderFinishedSemaphore) ||
+            vkCreateFence(m_Device->GetNativeDevice(), &fenceInfo, nullptr, &m_RenderObjects.InFlightFence)
+            != VK_SUCCESS) {
+            Log::EngineFatal({0x01, 0x10}, "Failed to create synchronisation primitives.");
         }
     }
 }

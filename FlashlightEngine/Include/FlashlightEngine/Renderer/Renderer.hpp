@@ -18,6 +18,10 @@
 namespace Flashlight {
     struct RenderObjects {
         VkCommandBuffer FrameCommandBuffer;
+
+        VkSemaphore ImageAvailableSemaphore;
+        VkSemaphore RenderFinishedSemaphore;
+        VkFence InFlightFence;
     };
     
     class Renderer {
@@ -30,7 +34,7 @@ namespace Flashlight {
 
         VkCommandPool m_CommandPool = VK_NULL_HANDLE;
 
-        u32 m_CurrentFrame;
+        u32 m_CurrentFrameIndex;
 
     public:
         Renderer(const DebugLevel& debugLevel, const Window& window);
@@ -42,10 +46,10 @@ namespace Flashlight {
         Renderer& operator=(const Renderer&) = delete;
         Renderer& operator=(Renderer&&) = delete;
 
-        [[nodiscard]] VkCommandBuffer BeginFrame() const;
+        [[nodiscard]] VkCommandBuffer BeginFrame();
         void BeginRenderPass(VkCommandBuffer commandBuffer) const;
         static inline void EndRenderPass(VkCommandBuffer commandBuffer);
-        static void EndFrame(VkCommandBuffer commandBuffer);
+        void EndFrame(VkCommandBuffer commandBuffer) const;
 
         [[nodiscard]] inline VulkanWrapper::GraphicsPipeline& GetPipeline() const;
 
@@ -56,6 +60,7 @@ namespace Flashlight {
         void CreatePipeline();
         void CreateCommandPool();
         void AllocateCommandBuffer();
+        void CreateSynchronisationPrimitives();
     };
 
 #include "Renderer.inl"
