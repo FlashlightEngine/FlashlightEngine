@@ -53,4 +53,29 @@ namespace Flashlight {
     void Logger::AddApplicationCallback(const customLogCallback& callback) {
         m_ApplicationLogger->sinks().push_back(std::make_shared<CallbackSink<std::mutex>>(callback));
     }
+
+    namespace Log {
+        std::string EvaluateEngineErrorCode(const ErrorCode& errorCode) {
+            std::stringstream message;
+            switch (errorCode.ModuleId) {
+            case 0x00:
+                message << "[APPLICATION INITIALIZATION] ";
+                break;
+                
+            case 0x01:
+                message << "[RENDERER] ";
+                break;
+                
+            case 0x02:
+                message << "[CORE] ";
+                break;
+
+            default:
+                message << "[INVALID/UNKNOWN MODULE ID] ";
+                break;
+            }
+
+            return message.str();
+        }
+    }
 }

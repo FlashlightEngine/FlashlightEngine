@@ -43,6 +43,8 @@ namespace Flashlight {
 
 
     namespace Log {
+        std::string EvaluateEngineErrorCode(const ErrorCode& errorCode); 
+        
         template <typename... Args>
         constexpr void EngineTrace(Args&&... args);
 
