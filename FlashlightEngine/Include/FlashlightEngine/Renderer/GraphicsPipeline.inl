@@ -25,11 +25,11 @@ inline VkPipeline GraphicsPipeline::GetNativePipeline() const {
 }
 
 inline void GraphicsPipeline::Destroy() const {
-    if (m_PipelineLayout) {
-        vkDestroyPipelineLayout(m_Device, m_PipelineLayout, nullptr);
-    }
-
     if (m_Pipeline) {
         vkDestroyPipeline(m_Device, m_Pipeline, nullptr);
+    }
+    
+    if (m_PipelineLayout) {
+        vkDestroyPipelineLayout(m_Device, m_PipelineLayout, nullptr);
     }
 }

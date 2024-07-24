@@ -18,7 +18,7 @@ namespace Flashlight {
         const auto fragShaderModule = std::make_unique<ShaderModule>(m_Device, fragmentShaderPath,
                                                                      ShaderType::Fragment);
 
-        VkPipelineShaderStageCreateInfo shaderStages[] = {
+        const VkPipelineShaderStageCreateInfo shaderStages[] = {
             vertShaderModule->GetNativeShaderStageInfo(),
             fragShaderModule->GetNativeShaderStageInfo()
         };
@@ -28,7 +28,32 @@ namespace Flashlight {
             Log::EngineError("Failed to create pipeline layout.");
         }
 
-        
+        VkGraphicsPipelineCreateInfo pipelineCreateInfo{};
+        pipelineCreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+        pipelineCreateInfo.stageCount = 2;
+        pipelineCreateInfo.pStages = shaderStages;
+
+        pipelineCreateInfo.pVertexInputState = &pipelineInfos.VertexInputInfo;
+        pipelineCreateInfo.pInputAssemblyState = &pipelineInfos.InputAssemblyInfo;
+        pipelineCreateInfo.pViewportState = &pipelineInfos.ViewportStateInfo;
+        pipelineCreateInfo.pRasterizationState = &pipelineInfos.RasterizationInfo;
+        pipelineCreateInfo.pMultisampleState = &pipelineInfos.MultisamplingInfo;
+        pipelineCreateInfo.pDepthStencilState = nullptr;
+        pipelineCreateInfo.pColorBlendState = &pipelineInfos.ColorBlendingInfo;
+        pipelineCreateInfo.pDynamicState = &pipelineInfos.DynamicStatesInfo;
+
+        pipelineCreateInfo.layout = m_PipelineLayout;
+
+        pipelineCreateInfo.renderPass = m_RenderPass;
+        pipelineCreateInfo.subpass = 0;
+
+        pipelineCreateInfo.basePipelineHandle = VK_NULL_HANDLE;
+        pipelineCreateInfo.basePipelineIndex = -1;
+
+        if (vkCreateGraphicsPipelines(m_Device, VK_NULL_HANDLE, 1, &pipelineCreateInfo, nullptr, &m_Pipeline)
+            != VK_SUCCESS) {
+            Log::EngineError("Failed to create graphics pipeline.");
+        }
     }
 
     void GraphicsPipeline::UseDefaultPipelineInfos(PipelineInfos& pipelineInfos) {
