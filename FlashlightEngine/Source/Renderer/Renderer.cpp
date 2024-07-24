@@ -44,6 +44,7 @@ namespace Flashlight {
         if (result == VK_ERROR_OUT_OF_DATE_KHR) {
             RecreateSwapChain();
             m_Window.SwapChainInvalidated();
+            return nullptr;
         }
         if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
             Log::EngineError("Failed to present swap chain image.");
@@ -99,10 +100,11 @@ namespace Flashlight {
         }
         const auto result = m_SwapChain->SubmitCommandBufferAndPresent(frame, m_CurrentFrameIndex);
 
-        if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || m_Window.
-            ShouldInvalidateSwapChain()) {
+        if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR ||
+            m_Window.ShouldInvalidateSwapChain()) {
             RecreateSwapChain();
             m_Window.SwapChainInvalidated();
+            return;
         }
         if (result != VK_SUCCESS) {
             Log::EngineError("Failed to present swap chain image.");
@@ -193,10 +195,9 @@ namespace Flashlight {
     }
 
     void Renderer::RecreateSwapChain() {
-        i32 width = 0, height = 0;
-        glfwGetFramebufferSize(m_Window.GetGlfwWindow(), &width, &height);
-        while (width == 0 || height == 0) {
-            glfwGetFramebufferSize(m_Window.GetGlfwWindow(), &width, &height);
+        auto extent = m_Window.GetWindowExtent();
+        while (extent.width == 0 || extent.height == 0) {
+            extent = m_Window.GetWindowExtent();
             glfwWaitEvents();
         }
 
@@ -204,7 +205,7 @@ namespace Flashlight {
 
         VulkanWrapper::SwapChainDescription description{};
         description.Surface = m_Surface->GetNativeSurface();
-        description.WindowExtent = {static_cast<u32>(width), static_cast<u32>(height)};
+        description.WindowExtent = extent;
         description.OldSwapChain = std::move(m_SwapChain);
 
         m_SwapChain = std::make_unique<VulkanWrapper::SwapChain>(*m_Device, description);
