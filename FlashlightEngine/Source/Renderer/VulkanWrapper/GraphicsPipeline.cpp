@@ -8,6 +8,7 @@
 #include "FlashlightEngine/Renderer/VulkanWrapper/GraphicsPipeline.hpp"
 
 #include "FlashlightEngine/Renderer/VulkanWrapper/ShaderModule.hpp"
+#include "FlashlightEngine/Renderer/VulkanWrapper/RenderPass.hpp"
 
 namespace Flashlight::VulkanWrapper {
     GraphicsPipeline::GraphicsPipeline(Device& device, const PipelineInfos& pipelineInfos) : m_Device(device) {
@@ -56,7 +57,7 @@ namespace Flashlight::VulkanWrapper {
         }
     }
 
-    void GraphicsPipeline::UseDefaultPipelineInfos(PipelineInfos& pipelineInfos, const VkRenderPass renderPass) {
+    void GraphicsPipeline::UseDefaultPipelineInfos(PipelineInfos& pipelineInfos, const RenderPass& renderPass) {
         // -------------------------------------
         // Vertex input state info
         // Defines the layout of the vertex data
@@ -168,7 +169,7 @@ namespace Flashlight::VulkanWrapper {
         // -----------
         // Render pass
         // -----------
-        pipelineInfos.RenderPass = renderPass;
+        pipelineInfos.RenderPass = renderPass.GetNativeRenderPass();
         pipelineInfos.SubpassIndex = 0;
     }
 }

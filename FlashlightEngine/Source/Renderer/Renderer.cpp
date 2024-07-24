@@ -22,5 +22,13 @@ namespace Flashlight {
         m_Device = std::make_unique<VulkanWrapper::Device>(*m_Instance, *m_Surface, debugLevel);
 
         m_SwapChain = std::make_unique<VulkanWrapper::SwapChain>(*m_Device, window, *m_Surface);
+
+        VulkanWrapper::PipelineInfos pipelineInfos;
+        VulkanWrapper::GraphicsPipeline::UseDefaultPipelineInfos(pipelineInfos, m_SwapChain->GetRenderPass());
+
+        pipelineInfos.VertexShaderPath = "Shaders/basic.vert";
+        pipelineInfos.FragmentShaderPath = "Shaders/basic.frag";
+        
+        m_GraphicsPipeline = std::make_unique<VulkanWrapper::GraphicsPipeline>(*m_Device, pipelineInfos);
     }
 }

@@ -9,6 +9,7 @@
 #pragma once
 
 #include "FlashlightEngine/Renderer/VulkanWrapper/Device.hpp"
+#include "FlashlightEngine/Renderer/VulkanWrapper/RenderPass.hpp"
 
 namespace Flashlight::VulkanWrapper {
     struct PipelineInfos {
@@ -49,7 +50,7 @@ namespace Flashlight::VulkanWrapper {
         [[nodiscard]] inline VkPipeline GetNativePipeline() const;
         [[nodiscard]] inline VkPipelineLayout GetNativePipelineLayout() const;
 
-        static void UseDefaultPipelineInfos(PipelineInfos& pipelineInfos, VkRenderPass renderPass);
+        static void UseDefaultPipelineInfos(PipelineInfos& pipelineInfos, const RenderPass& renderPass);
     };
 
 #include "GraphicsPipeline.inl"
