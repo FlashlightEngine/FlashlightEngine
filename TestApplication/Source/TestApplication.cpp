@@ -21,11 +21,6 @@ bool TestApplication::Init() {
 }
 
 void TestApplication::Update() {
-    m_Window->Update();
-
-    if (m_Window->ShouldClose()) {
-        m_IsRunning = false;
-    }
 }
 
 void TestApplication::Render() {
