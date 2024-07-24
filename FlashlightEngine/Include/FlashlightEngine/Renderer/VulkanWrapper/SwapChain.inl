@@ -44,3 +44,7 @@ inline VkExtent2D SwapChain::GetSwapChainExtent() const {
 inline RenderPass& SwapChain::GetRenderPass() const {
     return *m_RenderPass;
 }
+
+inline VkFramebuffer SwapChain::GetFramebufferAtIndex(const u32 index) const {
+    return m_Framebuffers[index].GetNativeFramebuffer();
+}

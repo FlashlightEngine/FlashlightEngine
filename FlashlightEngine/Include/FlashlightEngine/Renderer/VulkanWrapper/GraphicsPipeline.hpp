@@ -87,6 +87,8 @@ namespace Flashlight::VulkanWrapper {
 
         [[nodiscard]] inline VkPipeline GetNativePipeline() const;
         [[nodiscard]] inline VkPipelineLayout GetNativePipelineLayout() const;
+
+        inline void Bind(VkCommandBuffer commandBuffer) const;
     };
 
 #include "GraphicsPipeline.inl"

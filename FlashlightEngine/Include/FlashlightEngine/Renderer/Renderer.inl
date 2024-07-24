@@ -6,3 +6,12 @@
  * Description : Definitions of inline methods from the Renderer class.
  */
 #pragma once
+
+inline void Renderer::EndRenderPass(const VkCommandBuffer commandBuffer) {
+    vkCmdEndRenderPass(commandBuffer);
+}
+
+
+inline VulkanWrapper::GraphicsPipeline& Renderer::GetPipeline() const {
+    return *m_GraphicsPipeline;
+}

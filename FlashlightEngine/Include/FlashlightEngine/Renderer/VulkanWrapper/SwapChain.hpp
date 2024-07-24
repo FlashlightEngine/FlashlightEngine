@@ -23,7 +23,7 @@ namespace Flashlight::VulkanWrapper {
         
         std::unique_ptr<RenderPass> m_RenderPass;
 
-        std::vector<Flashlight::VulkanWrapper::Framebuffer> m_Framebuffers;
+        std::vector<Framebuffer> m_Framebuffers;
 
         Device& m_Device;
         VkSurfaceKHR m_Surface = VK_NULL_HANDLE;
@@ -48,6 +48,8 @@ namespace Flashlight::VulkanWrapper {
         [[nodiscard]] inline VkExtent2D GetSwapChainExtent() const;
 
         [[nodiscard]] inline RenderPass& GetRenderPass() const;
+
+        [[nodiscard]] inline VkFramebuffer GetFramebufferAtIndex(u32 index) const;
 
     private:
         void CreateSwapChain();

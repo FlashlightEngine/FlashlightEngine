@@ -24,6 +24,54 @@ namespace Flashlight {
         }
     }
 
+    VkCommandBuffer Renderer::BeginFrame() const {
+        VkCommandBufferBeginInfo beginInfo{};
+        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        beginInfo.flags = 0;
+        beginInfo.pInheritanceInfo = nullptr;
+
+        if (vkBeginCommandBuffer(m_RenderObjects.FrameCommandBuffer, &beginInfo) != VK_SUCCESS) {
+            Log::EngineError("Failed to begin command buffer recording.");
+        }
+
+        return m_RenderObjects.FrameCommandBuffer;
+    }
+
+    void Renderer::BeginRenderPass(const VkCommandBuffer commandBuffer) const {
+        VkRenderPassBeginInfo beginInfo{};
+        beginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        beginInfo.renderPass = m_SwapChain->GetRenderPass().GetNativeRenderPass();
+        beginInfo.framebuffer = m_SwapChain->GetFramebufferAtIndex(m_CurrentFrame);
+        beginInfo.renderArea.offset = {0, 0};
+        beginInfo.renderArea.extent = m_SwapChain->GetSwapChainExtent();
+
+        constexpr VkClearValue clearColor = {{{0.01f, 0.01f, 0.01f, 1.0f}}};
+        beginInfo.clearValueCount = 1;
+        beginInfo.pClearValues = &clearColor;
+
+        vkCmdBeginRenderPass(commandBuffer, &beginInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+        VkViewport viewport;
+        viewport.x = 0;
+        viewport.y = 0;
+        viewport.width = static_cast<float>(m_SwapChain->GetSwapChainExtent().width);
+        viewport.height = static_cast<float>(m_SwapChain->GetSwapChainExtent().height);
+        viewport.minDepth = 0.0f;
+        viewport.maxDepth = 1.0f;
+        vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+
+        VkRect2D scissor;
+        scissor.offset = {0, 0};
+        scissor.extent = m_SwapChain->GetSwapChainExtent();
+        vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+    }
+
+    void Renderer::EndFrame(const VkCommandBuffer commandBuffer) {
+        if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
+            Log::EngineError("Failed to end command buffer.");
+        }
+    }
+
     void Renderer::InitializeVulkan(const DebugLevel& debugLevel, const Window& window) {
         m_Instance = std::make_unique<VulkanWrapper::Instance>(debugLevel);
 

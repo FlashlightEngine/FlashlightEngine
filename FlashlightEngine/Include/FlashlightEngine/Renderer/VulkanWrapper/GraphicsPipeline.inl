@@ -27,3 +27,7 @@ inline VkPipeline GraphicsPipeline::GetNativePipeline() const {
 inline VkPipelineLayout GraphicsPipeline::GetNativePipelineLayout() const {
     return m_PipelineLayout;
 }
+
+inline void GraphicsPipeline::Bind(const VkCommandBuffer commandBuffer) const {
+    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_Pipeline);
+}

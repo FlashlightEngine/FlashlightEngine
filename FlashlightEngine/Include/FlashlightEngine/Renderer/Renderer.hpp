@@ -30,6 +30,8 @@ namespace Flashlight {
 
         VkCommandPool m_CommandPool = VK_NULL_HANDLE;
 
+        u32 m_CurrentFrame;
+
     public:
         Renderer(const DebugLevel& debugLevel, const Window& window);
         ~Renderer();
@@ -40,7 +42,12 @@ namespace Flashlight {
         Renderer& operator=(const Renderer&) = delete;
         Renderer& operator=(Renderer&&) = delete;
 
-        
+        [[nodiscard]] VkCommandBuffer BeginFrame() const;
+        void BeginRenderPass(VkCommandBuffer commandBuffer) const;
+        static inline void EndRenderPass(VkCommandBuffer commandBuffer);
+        static void EndFrame(VkCommandBuffer commandBuffer);
+
+        [[nodiscard]] inline VulkanWrapper::GraphicsPipeline& GetPipeline() const;
 
     private:
         RenderObjects m_RenderObjects;
