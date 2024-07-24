@@ -14,6 +14,7 @@ namespace Flashlight {
         InitializeVulkan(debugLevel, window);
         CreatePipeline();
         CreateCommandPool();
+        AllocateCommandBuffer();
     }
 
     Renderer::~Renderer() {
@@ -70,5 +71,18 @@ namespace Flashlight {
             Log::EngineFatal({0x01, 0x0E}, "Failed to create command pool.");
         }
         Log::EngineTrace("Vulkan command pool created");
+    }
+
+    void Renderer::AllocateCommandBuffer() {
+        VkCommandBufferAllocateInfo allocateInfo{};
+        allocateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+        allocateInfo.commandPool = m_CommandPool;
+        allocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        allocateInfo.commandBufferCount = 1;
+
+        if (vkAllocateCommandBuffers(m_Device->GetNativeDevice(), &allocateInfo, &m_RenderObjects.FrameCommandBuffer)
+            != VK_SUCCESS) {
+            Log::EngineFatal({0x01, 0x0F}, "Failed to allocate command buffer.");
+        }
     }
 }

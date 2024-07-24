@@ -17,7 +17,7 @@
 
 namespace Flashlight {
     struct RenderObjects {
-        
+        VkCommandBuffer FrameCommandBuffer;
     };
     
     class Renderer {
@@ -40,10 +40,15 @@ namespace Flashlight {
         Renderer& operator=(const Renderer&) = delete;
         Renderer& operator=(Renderer&&) = delete;
 
+        
+
     private:
+        RenderObjects m_RenderObjects;
+        
         void InitializeVulkan(const DebugLevel& debugLevel, const Window& window);
         void CreatePipeline();
         void CreateCommandPool();
+        void AllocateCommandBuffer();
     };
 
 #include "Renderer.inl"
