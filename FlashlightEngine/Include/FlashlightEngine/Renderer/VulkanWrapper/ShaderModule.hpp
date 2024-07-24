@@ -39,7 +39,6 @@ namespace Flashlight::VulkanWrapper {
     private:
         void CreateShaderModule(const std::filesystem::path& shaderPath);
         void CreateShaderStage(const ShaderType& shaderType);
-        inline void Destroy() const;
 
         [[nodiscard]] static std::vector<char> ReadShaderFile(const std::filesystem::path& shaderPath);
     };

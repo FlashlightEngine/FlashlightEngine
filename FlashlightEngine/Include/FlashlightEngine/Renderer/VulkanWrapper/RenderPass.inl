@@ -9,6 +9,7 @@
 
 inline RenderPass::~RenderPass() {
     if (m_RenderPass) {
+        Log::EngineTrace("Destroying Vulkan render pass.");
         vkDestroyRenderPass(m_Device.GetNativeDevice(), m_RenderPass, nullptr);
     }
 }

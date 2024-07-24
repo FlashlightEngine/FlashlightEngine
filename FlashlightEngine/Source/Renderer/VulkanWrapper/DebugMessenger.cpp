@@ -15,10 +15,10 @@ namespace Flashlight::VulkanWrapper {
         VkDebugUtilsMessengerCreateInfoEXT debugMessengerCreateInfo{};
         Instance::PopulateDebugMessengerCreateInfo(debugMessengerCreateInfo, debugLevel);
 
-        Log::EngineTrace("Creating Vulkan debug messenger.");
+        Log::EngineTrace("Creating Vulkan debug messenger...");
         if (vkCreateDebugUtilsMessengerEXT(m_Instance.GetNativeInstance(), &debugMessengerCreateInfo, nullptr,
                                            &m_DebugMessenger) != VK_SUCCESS) {
-            Log::EngineError("Failed to create Vulkan debug messenger.");
+            Log::EngineFatal({0x01, 0x02}, "Failed to create Vulkan debug messenger.");
         } else {
             Log::EngineTrace("Vulkan debug messenger created.");
         }

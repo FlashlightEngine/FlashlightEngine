@@ -131,7 +131,7 @@ namespace Flashlight::VulkanWrapper {
         VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
         if (vkCreatePipelineLayout(m_Device.GetNativeDevice(), &m_PipelineLayoutCreateInfo, nullptr,
                                    &pipelineLayout) != VK_SUCCESS) {
-            Log::EngineError("Failed to create pipeline layout.");
+            Log::EngineFatal({0x01, 0x0C}, "Failed to create pipeline layout.");
         }
 
         const std::vector<VkDynamicState> dynamicStates = {
@@ -170,9 +170,12 @@ namespace Flashlight::VulkanWrapper {
         pipelineInfo.basePipelineIndex = -1;
 
         VkPipeline pipeline = VK_NULL_HANDLE;
+        Log::EngineTrace("Creating Vulkan pipeline...");
         if (vkCreateGraphicsPipelines(m_Device.GetNativeDevice(), nullptr, 1, &pipelineInfo, nullptr, &pipeline)
             != VK_SUCCESS) {
-            Log::EngineFatal({0x01, 0x04}, "Failed to create pipeline.");
+            Log::EngineFatal({0x01, 0x0D}, "Failed to create pipeline.");
+        } else {
+            Log::EngineTrace("Vulkan pipeline created.");
         }
 
         return std::make_unique<GraphicsPipeline>(m_Device, pipeline, pipelineLayout);

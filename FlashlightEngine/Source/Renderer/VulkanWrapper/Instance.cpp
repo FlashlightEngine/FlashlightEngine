@@ -28,7 +28,7 @@ namespace Flashlight::VulkanWrapper {
             if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT) {
                 message << "[INFO] ";
             }
-            
+
             if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT) {
                 message << "[VERBOSE] ";
             }
@@ -112,7 +112,7 @@ namespace Flashlight::VulkanWrapper {
             instanceCreateInfo.pNext = nullptr;
         }
 
-        Log::EngineTrace("Creating Vulkan instance.");
+        Log::EngineTrace("Creating Vulkan instance...");
         if (vkCreateInstance(&instanceCreateInfo, nullptr, &m_Instance) != VK_SUCCESS) {
             Log::EngineFatal({0x01, 0x00}, "Failed to create Vulkan instance.");
         } else {
@@ -147,8 +147,8 @@ namespace Flashlight::VulkanWrapper {
         }
 
         createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
-                                 VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
-                                 VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+            VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
+            VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
         createInfo.pfnUserCallback = DebugCallback;
         createInfo.pUserData = nullptr;
     }
@@ -186,7 +186,7 @@ namespace Flashlight::VulkanWrapper {
             Log::EngineTrace("\t - {0}", required);
 
             if (!availableExtensions.contains(required)) {
-                Log::EngineError("Instance extension {0} is required but not available.", required);
+                Log::EngineFatal({0x01, 0x01}, "Instance extension {0} is required but not available.", required);
             }
         }
     }

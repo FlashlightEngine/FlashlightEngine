@@ -19,9 +19,12 @@ namespace Flashlight::VulkanWrapper {
         framebufferCreateInfo.height = extent.height;
         framebufferCreateInfo.layers = 1;
 
+        Log::EngineTrace("Creating Vulkan framebuffer...");
         if (vkCreateFramebuffer(m_Device.GetNativeDevice(), &framebufferCreateInfo, nullptr, &m_Framebuffer)
             != VK_SUCCESS) {
-            Log::EngineError("Failed to create framebuffer.");
+            Log::EngineFatal({0x01, 0x0A}, "Failed to create framebuffer.");
+        } else {
+            Log::EngineTrace("Vulkan framebuffer created.");
         }
     }
 }

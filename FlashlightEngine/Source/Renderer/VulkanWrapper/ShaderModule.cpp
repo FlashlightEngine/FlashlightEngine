@@ -16,9 +16,12 @@ namespace Flashlight::VulkanWrapper {
         shaderModuleCreateInfo.codeSize = shaderSource.size();
         shaderModuleCreateInfo.pCode = reinterpret_cast<const uint32_t*>(shaderSource.data());
 
+        Log::EngineTrace("Creating Vulkan shader module...");
         if (vkCreateShaderModule(m_Device.GetNativeDevice(), &shaderModuleCreateInfo, nullptr, &m_ShaderModule)
             != VK_SUCCESS) {
-            Log::EngineError("Failed to create shader module.");
+            Log::EngineFatal({0x01, 0x0B}, "Failed to create shader module.");
+        } else {
+            Log::EngineTrace("Vulkan shader module created.");
         }
     }
 

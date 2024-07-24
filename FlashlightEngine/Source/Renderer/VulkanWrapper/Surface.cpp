@@ -11,10 +11,10 @@
 namespace Flashlight::VulkanWrapper {
     Surface::Surface(Instance& instance, const Window& window) : m_Instance(instance) {
         Log::EngineTrace("Creating window surface...");
-
+        
         if (glfwCreateWindowSurface(m_Instance.GetNativeInstance(), window.GetGlfwWindow(), nullptr, &m_Surface)
             != VK_SUCCESS) {
-            Log::EngineError("Failed to create window surface.");
+            Log::EngineFatal({0x01, 0x03}, "Failed to create window surface.");
         } else {
             Log::EngineTrace("Window surface created.");
         }

@@ -16,8 +16,11 @@ namespace Flashlight::VulkanWrapper {
         renderPassInfo.subpassCount = static_cast<u32>(description.Subpasses.size());
         renderPassInfo.pSubpasses = description.Subpasses.data();
 
+        Log::EngineTrace("Creating Vulkan render pass...");
         if (vkCreateRenderPass(m_Device.GetNativeDevice(), &renderPassInfo, nullptr, &m_RenderPass) != VK_SUCCESS) {
-            Log::EngineError("Failed to create render pass.");
+            Log::EngineFatal({0x01, 0x09}, "Failed to create render pass.");
+        } else {
+            Log::EngineTrace("Vulkan render pass created.");
         }
     }
 }

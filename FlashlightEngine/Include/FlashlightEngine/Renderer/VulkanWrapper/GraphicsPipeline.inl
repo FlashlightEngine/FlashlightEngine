@@ -11,6 +11,7 @@ inline GraphicsPipeline::Builder::Builder(Device& device) : m_Device(device) {}
 
 inline GraphicsPipeline::~GraphicsPipeline() {
     if (m_Pipeline) {
+        Log::EngineTrace("Destroying Vulkan pipeline.");
         vkDestroyPipeline(m_Device.GetNativeDevice(), m_Pipeline, nullptr);
     }
     

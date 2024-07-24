@@ -10,20 +10,21 @@
 #include <algorithm>
 #include <cstdint>
 #include <limits>
+#include <magic_enum.hpp>
 
 namespace Flashlight::VulkanWrapper {
     SwapChain::SwapChain(Device& device, const Window& window,
-                                const Surface& surface) : m_Device(device),
-                                                          m_Surface(surface.GetNativeSurface()),
-                                                          m_QueueFamilies(device.GetQueueFamilies()),
-                                                          m_SwapChainSupport(device.GetSwapChainSupport()),
-                                                          m_Window(window.GetGlfwWindow()) {
+                         const Surface& surface) : m_Device(device),
+                                                   m_Surface(surface.GetNativeSurface()),
+                                                   m_QueueFamilies(device.GetQueueFamilies()),
+                                                   m_SwapChainSupport(device.GetSwapChainSupport()),
+                                                   m_Window(window.GetGlfwWindow()) {
         CreateSwapChain();
         CreateSwapChainImageViews();
         CreateRenderPass();
         CreateFramebuffers();
     }
-    
+
     void SwapChain::CreateSwapChain() {
         const VkSurfaceFormatKHR surfaceFormat = ChooseSwapSurfaceFormat(m_SwapChainSupport.Formats);
         const VkPresentModeKHR presentMode = ChooseSwapPresentMode(m_SwapChainSupport.PresentModes);
@@ -69,11 +70,18 @@ namespace Flashlight::VulkanWrapper {
         swapChainCreateInfo.oldSwapchain = nullptr;
 
         Log::EngineTrace("Creating Vulkan swap chain...");
-        if (vkCreateSwapchainKHR(m_Device.GetNativeDevice(), &swapChainCreateInfo, nullptr, &m_SwapChain) != VK_SUCCESS) {
-            Log::EngineError("Failed to create Vulkan swap chain.");
+        if (vkCreateSwapchainKHR(m_Device.GetNativeDevice(), &swapChainCreateInfo, nullptr, &m_SwapChain) !=
+            VK_SUCCESS) {
+            Log::EngineFatal({0x01, 0x07}, "Failed to create Vulkan swap chain.");
         } else {
             Log::EngineTrace("Vulkan swap chain created.");
         }
+
+        Log::EngineTrace("Vulkan swap chain properties:");
+        Log::EngineTrace("\t - Format & color space: {0}; {1}", magic_enum::enum_name(surfaceFormat.format),
+                                                                magic_enum::enum_name(surfaceFormat.colorSpace));
+        Log::EngineTrace("\t - Present mode: {0}", magic_enum::enum_name(presentMode));
+        Log::EngineTrace("\t - Extent (resolution): {0}x{1}", extent.width, extent.height);
 
         vkGetSwapchainImagesKHR(m_Device.GetNativeDevice(), m_SwapChain, &imageCount, nullptr);
         m_SwapChainImages.resize(imageCount);
@@ -106,14 +114,17 @@ namespace Flashlight::VulkanWrapper {
             createInfo.subresourceRange.baseArrayLayer = 0;
             createInfo.subresourceRange.layerCount = 1;
 
-            if (vkCreateImageView(m_Device.GetNativeDevice(), &createInfo, nullptr, &m_SwapChainImageViews[i]) != VK_SUCCESS) {
-                Log::EngineError("Failed to create Vulkan swap chain image views.");
+            if (vkCreateImageView(m_Device.GetNativeDevice(), &createInfo, nullptr, &m_SwapChainImageViews[i]) !=
+                VK_SUCCESS) {
+                Log::EngineFatal({0x01, 0x08}, "Failed to create Vulkan swap chain image views.");
+            } else {
+                Log::EngineTrace("\t - Created Vulkan swap chain image view #{0}.", i);
             }
         }
     }
 
     void SwapChain::CreateRenderPass() {
-        VkAttachmentDescription colorAttachment{};        
+        VkAttachmentDescription colorAttachment{};
         colorAttachment.format = m_SwapChainImageFormat;
         colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
         colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
@@ -136,17 +147,21 @@ namespace Flashlight::VulkanWrapper {
         description.Attachments = {colorAttachment};
         description.Subpasses = {subpass};
 
+        Log::EngineTrace("Creating Vulkan swap chain render pass...");
         m_RenderPass = std::make_unique<RenderPass>(m_Device, description);
+        Log::EngineTrace("Vulkan swap chain render pass created.");
     }
 
     void SwapChain::CreateFramebuffers() {
         m_Framebuffers.reserve(m_SwapChainImageViews.size());
-        
+
+        Log::EngineTrace("Creating Vulkan swap chain framebuffers...");
         for (size i = 0; i < m_SwapChainImageViews.size(); i++) {
             const std::vector<VkImageView> attachments = {
                 m_SwapChainImageViews[i]
             };
-            m_Framebuffers.emplace_back(m_Device, attachments, *m_RenderPass, m_SwapChainExtent);      
+            m_Framebuffers.emplace_back(m_Device, attachments, *m_RenderPass, m_SwapChainExtent);
+            Log::EngineTrace("Created Vulkan swap chain framebuffer #{0}.", i);
         }
     }
 

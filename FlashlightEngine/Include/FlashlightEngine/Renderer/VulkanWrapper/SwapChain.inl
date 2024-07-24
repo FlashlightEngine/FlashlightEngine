@@ -10,12 +10,13 @@
 inline SwapChain::~SwapChain() {    
     for (const auto imageView : m_SwapChainImageViews) {
         if (imageView) {
+            Log::EngineTrace("Destroying Vulkan swap chain image view.");
             vkDestroyImageView(m_Device.GetNativeDevice(), imageView, nullptr);
         }
     }
     
     if (m_SwapChain) {
-        Log::EngineTrace("Destroying Vulkan swap chain.");
+        Log::EngineTrace("Destroying Vulkan swap chain and images.");
         vkDestroySwapchainKHR(m_Device.GetNativeDevice(), m_SwapChain, nullptr);
     }
 }

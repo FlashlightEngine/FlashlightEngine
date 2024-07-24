@@ -16,6 +16,10 @@
 #include "FlashlightEngine/Renderer/VulkanWrapper/GraphicsPipeline.hpp"
 
 namespace Flashlight {
+    struct RenderObjects {
+        
+    };
+    
     class Renderer {
         std::unique_ptr<VulkanWrapper::Instance> m_Instance;
         std::unique_ptr<VulkanWrapper::DebugMessenger> m_DebugMessenger;
@@ -24,15 +28,22 @@ namespace Flashlight {
         std::unique_ptr<VulkanWrapper::SwapChain> m_SwapChain;
         std::unique_ptr<VulkanWrapper::GraphicsPipeline> m_GraphicsPipeline;
 
+        VkCommandPool m_CommandPool = VK_NULL_HANDLE;
+
     public:
         Renderer(const DebugLevel& debugLevel, const Window& window);
-        ~Renderer() = default;
+        ~Renderer();
 
         Renderer(const Renderer&) = delete;
         Renderer(Renderer&&) = delete;
 
         Renderer& operator=(const Renderer&) = delete;
         Renderer& operator=(Renderer&&) = delete;
+
+    private:
+        void InitializeVulkan(const DebugLevel& debugLevel, const Window& window);
+        void CreatePipeline();
+        void CreateCommandPool();
     };
 
 #include "Renderer.inl"

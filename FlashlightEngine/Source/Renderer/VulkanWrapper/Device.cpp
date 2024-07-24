@@ -17,7 +17,7 @@ namespace Flashlight::VulkanWrapper {
         vkEnumeratePhysicalDevices(m_Instance.GetNativeInstance(), &deviceCount, nullptr);
 
         if (deviceCount == 0) {
-            Log::EngineFatal({0x01, 0x01}, "Failed to find GPUs with Vulkan support.");
+            Log::EngineFatal({0x01, 0x04}, "Failed to find GPUs with Vulkan support.");
         }
 
         std::vector<VkPhysicalDevice> devices(deviceCount);
@@ -33,7 +33,7 @@ namespace Flashlight::VulkanWrapper {
         if (candidates.rbegin()->first > 0) {
             m_PhysicalDevice = candidates.rbegin()->second;
         } else {
-            Log::EngineFatal({0x01, 0x02}, "Failed to find a suitable GPU.");
+            Log::EngineFatal({0x01, 0x05}, "Failed to find a suitable GPU.");
         }
 
         m_PhysicalDeviceProperties = GetPhysicalDeviceProperties(m_PhysicalDevice);
@@ -115,8 +115,9 @@ namespace Flashlight::VulkanWrapper {
             deviceCreateInfo.ppEnabledLayerNames = nullptr;
         }
 
+        Log::EngineTrace("Creating Vulkan logical device...");
         if (vkCreateDevice(m_PhysicalDevice, &deviceCreateInfo, nullptr, &m_Device) != VK_SUCCESS) {
-            Log::EngineFatal({0x01, 0x03}, "Failed to create logical device.");
+            Log::EngineFatal({0x01, 0x06}, "Failed to create logical device.");
         } else {
             Log::EngineTrace("Logical device created.");
         }

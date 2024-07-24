@@ -11,6 +11,19 @@
 
 namespace Flashlight {
     Renderer::Renderer(const DebugLevel& debugLevel, const Window& window) {
+        InitializeVulkan(debugLevel, window);
+        CreatePipeline();
+        CreateCommandPool();
+    }
+
+    Renderer::~Renderer() {
+        Log::EngineTrace("Destroying Vulkan command pool.");
+        if (m_CommandPool) {
+            vkDestroyCommandPool(m_Device->GetNativeDevice(), m_CommandPool, nullptr);
+        }
+    }
+
+    void Renderer::InitializeVulkan(const DebugLevel& debugLevel, const Window& window) {
         m_Instance = std::make_unique<VulkanWrapper::Instance>(debugLevel);
 
         if (debugLevel > DebugLevel::None) {
@@ -22,7 +35,9 @@ namespace Flashlight {
         m_Device = std::make_unique<VulkanWrapper::Device>(*m_Instance, *m_Surface, debugLevel);
 
         m_SwapChain = std::make_unique<VulkanWrapper::SwapChain>(*m_Device, window, *m_Surface);
+    }
 
+    void Renderer::CreatePipeline() {
         VulkanWrapper::ShaderModule vertexShaderModule{
             *m_Device, "Shaders/basic.vert", VulkanWrapper::ShaderType::Vertex
         };
@@ -42,5 +57,18 @@ namespace Flashlight {
         pipelineBuilder.PipelineLayout({}, {});
 
         m_GraphicsPipeline = pipelineBuilder.Build(m_SwapChain->GetRenderPass());
+    }
+
+    void Renderer::CreateCommandPool() {
+        VkCommandPoolCreateInfo poolInfo{};
+        poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+        poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+        poolInfo.queueFamilyIndex = m_Device->GetQueueFamilies().GraphicsFamily;
+
+        Log::EngineTrace("Creating Vulkan command pool.");
+        if (vkCreateCommandPool(m_Device->GetNativeDevice(), &poolInfo, nullptr, &m_CommandPool) != VK_SUCCESS) {
+            Log::EngineFatal({0x01, 0x0E}, "Failed to create command pool.");
+        }
+        Log::EngineTrace("Vulkan command pool created");
     }
 }

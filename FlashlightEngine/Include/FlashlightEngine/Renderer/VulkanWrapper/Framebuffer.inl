@@ -9,6 +9,7 @@
 
 inline Framebuffer::~Framebuffer() {
     if (m_Framebuffer) {
+        Log::EngineTrace("Destroying Vulkan framebuffer.");
         vkDestroyFramebuffer(m_Device.GetNativeDevice(), m_Framebuffer, nullptr);
     }
 }

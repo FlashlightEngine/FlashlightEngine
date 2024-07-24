@@ -14,7 +14,10 @@ inline ShaderModule::ShaderModule(Device& device, const std::filesystem::path& s
 }
 
 inline ShaderModule::~ShaderModule() {
-    Destroy();
+    if (m_ShaderModule) {
+        Log::EngineTrace("Destroying Vulkan shader module.");
+        vkDestroyShaderModule(m_Device.GetNativeDevice(), m_ShaderModule, nullptr);
+    }
 }
 
 inline VkShaderModule ShaderModule::GetNativeShaderModule() const {
@@ -23,10 +26,4 @@ inline VkShaderModule ShaderModule::GetNativeShaderModule() const {
 
 inline VkPipelineShaderStageCreateInfo ShaderModule::GetNativeShaderStageInfo() const {
     return m_ShaderStageInfo;
-}
-
-inline void ShaderModule::Destroy() const {
-    if (m_ShaderModule) {
-        vkDestroyShaderModule(m_Device.GetNativeDevice(), m_ShaderModule, nullptr);
-    }
 }
