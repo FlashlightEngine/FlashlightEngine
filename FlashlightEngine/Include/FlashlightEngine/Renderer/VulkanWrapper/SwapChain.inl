@@ -7,17 +7,6 @@
  */
 #pragma once
 
-inline SwapChain::SwapChain(Device& device, const Window& window,
-                            const Surface& surface) : m_Device(device),
-                                                      m_Surface(surface.GetNativeSurface()),
-                                                      m_QueueFamilies(device.GetQueueFamilies()),
-                                                      m_SwapChainSupport(device.GetSwapChainSupport()),
-                                                      m_Window(window.GetGlfwWindow()) {
-    CreateSwapChain();
-    CreateSwapChainImageViews();
-    CreateRenderPass();
-}
-
 inline SwapChain::~SwapChain() {    
     for (const auto imageView : m_SwapChainImageViews) {
         if (imageView) {

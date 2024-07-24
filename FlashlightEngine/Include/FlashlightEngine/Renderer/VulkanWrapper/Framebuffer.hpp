@@ -8,25 +8,24 @@
 #pragma once
 
 #include "FlashlightEngine/Renderer/VulkanWrapper/Device.hpp"
-#include "FlashlightEngine/Renderer/VulkanWrapper/SwapChain.hpp"
 #include "FlashlightEngine/Renderer/VulkanWrapper/RenderPass.hpp"
 
 namespace Flashlight::VulkanWrapper {
     class Framebuffer {
         VkFramebuffer m_Framebuffer = VK_NULL_HANDLE;
 
-        Device& m_Device;
+        const Device& m_Device;
 
     public:
-        Framebuffer(Device& device, const std::vector<VkImageView>& attachedImageViews, const RenderPass& renderPass,
+        Framebuffer(const Device& device, const std::vector<VkImageView>& attachedImageViews, const RenderPass& renderPass,
                     VkExtent2D extent);
         inline ~Framebuffer();
 
         Framebuffer(const Framebuffer&) = delete;
-        Framebuffer(Framebuffer&&) = delete;
+        inline Framebuffer(Framebuffer&& rhs) noexcept;
 
         Framebuffer& operator=(const Framebuffer&) = delete;
-        Framebuffer& operator=(Framebuffer&&) = delete;
+        inline Framebuffer& operator=(Framebuffer&& rhs) noexcept;
 
         [[nodiscard]] inline VkFramebuffer GetNativeFramebuffer() const;
     };

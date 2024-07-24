@@ -12,6 +12,18 @@
 #include <limits>
 
 namespace Flashlight::VulkanWrapper {
+    SwapChain::SwapChain(Device& device, const Window& window,
+                                const Surface& surface) : m_Device(device),
+                                                          m_Surface(surface.GetNativeSurface()),
+                                                          m_QueueFamilies(device.GetQueueFamilies()),
+                                                          m_SwapChainSupport(device.GetSwapChainSupport()),
+                                                          m_Window(window.GetGlfwWindow()) {
+        CreateSwapChain();
+        CreateSwapChainImageViews();
+        CreateRenderPass();
+        CreateFramebuffers();
+    }
+    
     void SwapChain::CreateSwapChain() {
         const VkSurfaceFormatKHR surfaceFormat = ChooseSwapSurfaceFormat(m_SwapChainSupport.Formats);
         const VkPresentModeKHR presentMode = ChooseSwapPresentMode(m_SwapChainSupport.PresentModes);
@@ -127,6 +139,16 @@ namespace Flashlight::VulkanWrapper {
         m_RenderPass = std::make_unique<RenderPass>(m_Device, description);
     }
 
+    void SwapChain::CreateFramebuffers() {
+        m_Framebuffers.reserve(m_SwapChainImageViews.size());
+        
+        for (size i = 0; i < m_SwapChainImageViews.size(); i++) {
+            const std::vector<VkImageView> attachments = {
+                m_SwapChainImageViews[i]
+            };
+            m_Framebuffers.emplace_back(m_Device, attachments, *m_RenderPass, m_SwapChainExtent);      
+        }
+    }
 
     VkSurfaceFormatKHR SwapChain::ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats) {
         for (const auto& availableFormat : availableFormats) {

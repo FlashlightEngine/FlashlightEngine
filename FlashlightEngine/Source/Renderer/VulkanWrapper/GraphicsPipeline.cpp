@@ -11,10 +11,10 @@
 
 namespace Flashlight::VulkanWrapper {
     GraphicsPipeline::GraphicsPipeline(Device& device, const PipelineInfos& pipelineInfos) : m_Device(device) {
-        const auto vertShaderModule = std::make_unique<ShaderModule>(m_Device.GetNativeDevice(),
+        const auto vertShaderModule = std::make_unique<ShaderModule>(m_Device,
                                                                      pipelineInfos.VertexShaderPath,
                                                                      ShaderType::Vertex);
-        const auto fragShaderModule = std::make_unique<ShaderModule>(m_Device.GetNativeDevice(),
+        const auto fragShaderModule = std::make_unique<ShaderModule>(m_Device,
                                                                      pipelineInfos.FragmentShaderPath,
                                                                      ShaderType::Fragment);
 

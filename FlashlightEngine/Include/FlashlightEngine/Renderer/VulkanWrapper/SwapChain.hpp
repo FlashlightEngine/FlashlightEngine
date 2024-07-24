@@ -9,6 +9,7 @@
 
 #include "FlashlightEngine/Renderer/VulkanWrapper/Device.hpp"
 #include "FlashlightEngine/Renderer/VulkanWrapper/RenderPass.hpp"
+#include "FlashlightEngine/Renderer/VulkanWrapper/Framebuffer.hpp"
 
 #include "FlashlightEngine/Core/Window.hpp"
 
@@ -22,6 +23,8 @@ namespace Flashlight::VulkanWrapper {
         
         std::unique_ptr<RenderPass> m_RenderPass;
 
+        std::vector<Flashlight::VulkanWrapper::Framebuffer> m_Framebuffers;
+
         Device& m_Device;
         VkSurfaceKHR m_Surface = VK_NULL_HANDLE;
         QueueFamilyIndices m_QueueFamilies;
@@ -29,7 +32,7 @@ namespace Flashlight::VulkanWrapper {
         GLFWwindow* m_Window = nullptr;
 
     public:
-        inline SwapChain(Device& device, const Window& window, const Surface& surface);
+        SwapChain(Device& device, const Window& window, const Surface& surface);
         inline ~SwapChain();
 
         SwapChain(const SwapChain&) = delete;
@@ -50,6 +53,7 @@ namespace Flashlight::VulkanWrapper {
         void CreateSwapChain();
         void CreateSwapChainImageViews();
         void CreateRenderPass();
+        void CreateFramebuffers();
 
         [[nodiscard]] static VkSurfaceFormatKHR ChooseSwapSurfaceFormat(
             const std::vector<VkSurfaceFormatKHR>& availableFormats);

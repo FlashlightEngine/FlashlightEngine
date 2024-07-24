@@ -10,7 +10,7 @@
 inline DebugMessenger::~DebugMessenger() {
     if (m_DebugMessenger) {
         Log::EngineTrace("Destroying Vulkan debug messenger.");
-        vkDestroyDebugUtilsMessengerEXT(m_Instance, m_DebugMessenger, nullptr);
+        vkDestroyDebugUtilsMessengerEXT(m_Instance.GetNativeInstance(), m_DebugMessenger, nullptr);
     }
 }
 

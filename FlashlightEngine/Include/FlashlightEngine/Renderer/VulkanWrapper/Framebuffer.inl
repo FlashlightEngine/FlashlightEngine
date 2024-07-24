@@ -13,6 +13,18 @@ inline Framebuffer::~Framebuffer() {
     }
 }
 
+inline Framebuffer::Framebuffer(Framebuffer && rhs) noexcept : m_Device(rhs.m_Device) {
+    m_Framebuffer = rhs.m_Framebuffer;
+    rhs.m_Framebuffer = VK_NULL_HANDLE;
+}
+
+inline Framebuffer& Framebuffer::operator=(Framebuffer&& rhs) noexcept {
+    m_Framebuffer = rhs.m_Framebuffer;
+    rhs.m_Framebuffer = VK_NULL_HANDLE;
+    return *this;
+}
+
+
 inline VkFramebuffer Framebuffer::GetNativeFramebuffer() const {
     return m_Framebuffer;
 }

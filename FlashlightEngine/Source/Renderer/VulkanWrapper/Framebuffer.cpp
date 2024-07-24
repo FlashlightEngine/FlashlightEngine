@@ -8,10 +8,10 @@
 #include "FlashlightEngine/Renderer/VulkanWrapper/Framebuffer.hpp"
 
 namespace Flashlight::VulkanWrapper {
-    Framebuffer::Framebuffer(Device& device, const std::vector<VkImageView>& attachedImageViews,
+    Framebuffer::Framebuffer(const Device& device, const std::vector<VkImageView>& attachedImageViews,
                              const RenderPass& renderPass, const VkExtent2D extent) : m_Device(device) {
         VkFramebufferCreateInfo framebufferCreateInfo{};
-        framebufferCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+        framebufferCreateInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
         framebufferCreateInfo.renderPass = renderPass.GetNativeRenderPass();
         framebufferCreateInfo.attachmentCount = static_cast<u32>(attachedImageViews.size());
         framebufferCreateInfo.pAttachments = attachedImageViews.data();
