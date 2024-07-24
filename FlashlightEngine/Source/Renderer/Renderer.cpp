@@ -29,13 +29,8 @@ namespace Flashlight {
     }
 
 
-    std::unique_ptr<GraphicsPipeline> Renderer::CreatePipeline(
-        const std::filesystem::path& vertexShaderPath,
-        const std::filesystem::path& fragmentShaderPath,
-        const PipelineInfos& pipelineInfos,
-        const RenderPass& renderPass) const {
-        return std::make_unique<GraphicsPipeline>(*m_Device, vertexShaderPath, fragmentShaderPath, pipelineInfos,
-                                                  renderPass);
+    std::unique_ptr<GraphicsPipeline> Renderer::CreatePipeline(const PipelineInfos& pipelineInfos) const {
+        return std::make_unique<GraphicsPipeline>(*m_Device, pipelineInfos);
     }
 
 }

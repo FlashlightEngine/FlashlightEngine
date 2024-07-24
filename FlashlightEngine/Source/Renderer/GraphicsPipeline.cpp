@@ -10,12 +10,10 @@
 #include "FlashlightEngine/Renderer/ShaderModule.hpp"
 
 namespace Flashlight {
-    void GraphicsPipeline::Create(const std::filesystem::path& vertexShaderPath,
-                                  const std::filesystem::path& fragmentShaderPath,
-                                  const PipelineInfos& pipelineInfos) {
-        const auto vertShaderModule = std::make_unique<
-            ShaderModule>(m_Device, vertexShaderPath, ShaderType::Vertex);
-        const auto fragShaderModule = std::make_unique<ShaderModule>(m_Device, fragmentShaderPath,
+    void GraphicsPipeline::Create(const PipelineInfos& pipelineInfos) {
+        const auto vertShaderModule = std::make_unique<ShaderModule>(m_Device, pipelineInfos.VertexShaderPath,
+                                                                     ShaderType::Vertex);
+        const auto fragShaderModule = std::make_unique<ShaderModule>(m_Device, pipelineInfos.FragmentShaderPath,
                                                                      ShaderType::Fragment);
 
         const VkPipelineShaderStageCreateInfo shaderStages[] = {
@@ -44,8 +42,8 @@ namespace Flashlight {
 
         pipelineCreateInfo.layout = m_PipelineLayout;
 
-        pipelineCreateInfo.renderPass = m_RenderPass;
-        pipelineCreateInfo.subpass = 0;
+        pipelineCreateInfo.renderPass = pipelineInfos.RenderPass;
+        pipelineCreateInfo.subpass = pipelineInfos.SubpassIndex;
 
         pipelineCreateInfo.basePipelineHandle = VK_NULL_HANDLE;
         pipelineCreateInfo.basePipelineIndex = -1;
@@ -56,7 +54,7 @@ namespace Flashlight {
         }
     }
 
-    void GraphicsPipeline::UseDefaultPipelineInfos(PipelineInfos& pipelineInfos) {
+    void GraphicsPipeline::UseDefaultPipelineInfos(PipelineInfos& pipelineInfos, const RenderPass& renderPass) {
         // -------------------------------------
         // Vertex input state info
         // Defines the layout of the vertex data
@@ -164,5 +162,11 @@ namespace Flashlight {
         pipelineInfos.PipelineLayoutInfo.pSetLayouts = nullptr;
         pipelineInfos.PipelineLayoutInfo.pushConstantRangeCount = 0;
         pipelineInfos.PipelineLayoutInfo.pPushConstantRanges = nullptr;
+
+        // -----------
+        // Render pass
+        // -----------
+        pipelineInfos.RenderPass = renderPass.GetNativeRenderPass();
+        pipelineInfos.SubpassIndex = 0;
     }
 }

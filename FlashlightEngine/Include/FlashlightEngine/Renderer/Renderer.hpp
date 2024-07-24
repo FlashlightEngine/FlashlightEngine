@@ -37,11 +37,7 @@ namespace Flashlight {
         [[nodiscard]] inline VkFormat GetSwapChainImageFormat() const;
 
         [[nodiscard]] std::unique_ptr<RenderPass> CreateRenderPass(const RenderPassInfo& renderPassInfo) const;
-        [[nodiscard]] std::unique_ptr<GraphicsPipeline> CreatePipeline(
-            const std::filesystem::path& vertexShaderPath,
-            const std::filesystem::path& fragmentShaderPath,
-            const PipelineInfos& pipelineInfos,
-            const RenderPass& renderPass) const;
+        [[nodiscard]] std::unique_ptr<GraphicsPipeline> CreatePipeline(const PipelineInfos& pipelineInfos) const;
 
     private:
         void Create(const DebugLevel& debugLevel, const Window& window);

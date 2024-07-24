@@ -13,6 +13,9 @@
 
 namespace Flashlight {
     struct PipelineInfos {
+        std::filesystem::path VertexShaderPath;
+        std::filesystem::path FragmentShaderPath;
+        
         VkPipelineVertexInputStateCreateInfo VertexInputInfo;
         VkPipelineInputAssemblyStateCreateInfo InputAssemblyInfo;
         std::vector<VkDynamicState> DynamicStates;
@@ -23,6 +26,9 @@ namespace Flashlight {
         VkPipelineColorBlendAttachmentState ColorBlendAttachment;
         VkPipelineColorBlendStateCreateInfo ColorBlendingInfo;
         VkPipelineLayoutCreateInfo PipelineLayoutInfo;
+
+        VkRenderPass RenderPass;
+        u32 SubpassIndex = 0; // The subpass index for the pipeline is 0 when using the default settings.
     };
     
     class GraphicsPipeline {
@@ -30,14 +36,9 @@ namespace Flashlight {
         VkPipelineLayout m_PipelineLayout = VK_NULL_HANDLE;
 
         VkDevice m_Device = VK_NULL_HANDLE;
-        VkRenderPass m_RenderPass = VK_NULL_HANDLE;
 
     public:
-        inline GraphicsPipeline(const VulkanWrapper::Device& device,
-                                const std::filesystem::path& vertexShaderPath,
-                                const std::filesystem::path& fragmentShaderPath,
-                                const PipelineInfos& pipelineInfos,
-                                const RenderPass& renderPass);
+        inline GraphicsPipeline(const VulkanWrapper::Device& device, const PipelineInfos& pipelineInfos);
         inline ~GraphicsPipeline();
 
         GraphicsPipeline(const GraphicsPipeline&) = delete;
@@ -49,11 +50,10 @@ namespace Flashlight {
         [[nodiscard]] inline VkPipeline GetNativePipeline() const;
         [[nodiscard]] inline VkPipelineLayout GetNativePipelineLayout() const;
 
-        static void UseDefaultPipelineInfos(PipelineInfos& pipelineInfos);
+        static void UseDefaultPipelineInfos(PipelineInfos& pipelineInfos, const RenderPass& renderPass);
 
     private:
-        void Create(const std::filesystem::path& vertexShaderPath, const std::filesystem::path& fragmentShaderPath,
-                    const PipelineInfos& pipelineInfos);
+        void Create(const PipelineInfos& pipelineInfos);
         inline void Destroy() const;
     };
 

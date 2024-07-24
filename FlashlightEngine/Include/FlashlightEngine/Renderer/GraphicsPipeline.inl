@@ -7,13 +7,9 @@
  */
 #pragma once
 
-inline GraphicsPipeline::GraphicsPipeline(const VulkanWrapper::Device& device,
-                                          const std::filesystem::path& vertexShaderPath,
-                                          const std::filesystem::path& fragmentShaderPath,
-                                          const PipelineInfos& pipelineInfos,
-                                          const RenderPass& renderPass)
-    : m_Device(device.GetNativeDevice()), m_RenderPass(renderPass.GetNativeRenderPass()) {
-    Create(vertexShaderPath, fragmentShaderPath, pipelineInfos);
+inline GraphicsPipeline::GraphicsPipeline(const VulkanWrapper::Device& device, const PipelineInfos& pipelineInfos)
+    : m_Device(device.GetNativeDevice()) {
+    Create(pipelineInfos);
 }
 
 inline GraphicsPipeline::~GraphicsPipeline() {
@@ -23,6 +19,11 @@ inline GraphicsPipeline::~GraphicsPipeline() {
 inline VkPipeline GraphicsPipeline::GetNativePipeline() const {
     return m_Pipeline;
 }
+
+inline VkPipelineLayout GraphicsPipeline::GetNativePipelineLayout() const {
+    return m_PipelineLayout;
+}
+
 
 inline void GraphicsPipeline::Destroy() const {
     if (m_Pipeline) {

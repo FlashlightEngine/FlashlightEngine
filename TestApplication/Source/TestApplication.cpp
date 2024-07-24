@@ -7,9 +7,13 @@ bool TestApplication::Init() {
     m_RenderPass = m_Renderer->CreateRenderPass(renderPassInfo);
 
     Flashlight::PipelineInfos pipelineInfos{};
-    Flashlight::GraphicsPipeline::UseDefaultPipelineInfos(pipelineInfos);
-    m_GraphicsPipeline = m_Renderer->CreatePipeline("Shaders/basic.vert", "Shaders/basic.frag", pipelineInfos,
-                                                    *m_RenderPass);
+    Flashlight::GraphicsPipeline::UseDefaultPipelineInfos(pipelineInfos, *m_RenderPass);
+
+    // Shader paths still need to be configured manually.
+    pipelineInfos.VertexShaderPath = "Shaders/basic.vert";
+    pipelineInfos.FragmentShaderPath = "Shaders/basic.frag";
+    
+    m_GraphicsPipeline = m_Renderer->CreatePipeline(pipelineInfos);
 
     m_IsRunning = true;
 
