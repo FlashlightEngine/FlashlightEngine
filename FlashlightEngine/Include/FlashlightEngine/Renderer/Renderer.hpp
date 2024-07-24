@@ -14,6 +14,7 @@
 #include "FlashlightEngine/Renderer/VulkanWrapper/Device.hpp"
 #include "FlashlightEngine/Renderer/VulkanWrapper/SwapChain.hpp"
 #include "FlashlightEngine/Renderer/GraphicsPipeline.hpp"
+#include "FlashlightEngine/Renderer/RenderPass.hpp"
 
 namespace Flashlight {
     class Renderer {
@@ -33,10 +34,14 @@ namespace Flashlight {
         Renderer& operator=(const Renderer&) = delete;
         Renderer& operator=(Renderer&&) = delete;
 
+        [[nodiscard]] inline VkFormat GetSwapChainImageFormat() const;
+
+        [[nodiscard]] std::unique_ptr<RenderPass> CreateRenderPass(const RenderPassInfo& renderPassInfo) const;
         [[nodiscard]] std::unique_ptr<GraphicsPipeline> CreatePipeline(
             const std::filesystem::path& vertexShaderPath,
             const std::filesystem::path& fragmentShaderPath,
-            const PipelineInfos& pipelineInfos) const;
+            const PipelineInfos& pipelineInfos,
+            const RenderPass& renderPass) const;
 
     private:
         void Create(const DebugLevel& debugLevel, const Window& window);

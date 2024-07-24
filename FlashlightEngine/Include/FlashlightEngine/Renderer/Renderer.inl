@@ -10,3 +10,7 @@
 inline Renderer::Renderer(const DebugLevel &debugLevel, const Window& window) {
     Create(debugLevel, window);
 }
+
+inline VkFormat Renderer::GetSwapChainImageFormat() const {
+    return m_SwapChain->GetSwapChainImageFormat();
+}

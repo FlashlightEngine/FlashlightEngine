@@ -9,6 +9,7 @@
 #pragma once
 
 #include "FlashlightEngine/Renderer/VulkanWrapper/Device.hpp"
+#include "FlashlightEngine/Renderer/RenderPass.hpp"
 
 namespace Flashlight {
     struct PipelineInfos {
@@ -29,12 +30,14 @@ namespace Flashlight {
         VkPipelineLayout m_PipelineLayout = VK_NULL_HANDLE;
 
         VkDevice m_Device = VK_NULL_HANDLE;
+        VkRenderPass m_RenderPass = VK_NULL_HANDLE;
 
     public:
         inline GraphicsPipeline(const VulkanWrapper::Device& device,
                                 const std::filesystem::path& vertexShaderPath,
                                 const std::filesystem::path& fragmentShaderPath,
-                                const PipelineInfos& pipelineInfos);
+                                const PipelineInfos& pipelineInfos,
+                                const RenderPass& renderPass);
         inline ~GraphicsPipeline();
 
         GraphicsPipeline(const GraphicsPipeline&) = delete;

@@ -24,11 +24,18 @@ namespace Flashlight {
         m_SwapChain = std::make_unique<VulkanWrapper::SwapChain>(*m_Device, window, *m_Surface);
     }
 
+    std::unique_ptr<RenderPass> Renderer::CreateRenderPass(const RenderPassInfo& renderPassInfo) const {
+        return std::make_unique<RenderPass>(*m_Device, renderPassInfo);
+    }
+
+
     std::unique_ptr<GraphicsPipeline> Renderer::CreatePipeline(
         const std::filesystem::path& vertexShaderPath,
         const std::filesystem::path& fragmentShaderPath,
-        const PipelineInfos& pipelineInfos) const {
-        return std::make_unique<GraphicsPipeline>(*m_Device, vertexShaderPath, fragmentShaderPath, pipelineInfos);
+        const PipelineInfos& pipelineInfos,
+        const RenderPass& renderPass) const {
+        return std::make_unique<GraphicsPipeline>(*m_Device, vertexShaderPath, fragmentShaderPath, pipelineInfos,
+                                                  renderPass);
     }
 
 }

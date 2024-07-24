@@ -3,6 +3,7 @@
 #include "FlashlightEngine/Application.hpp"
 
 class TestApplication final : public Flashlight::Application {
+    std::unique_ptr<Flashlight::RenderPass> m_RenderPass;
     std::unique_ptr<Flashlight::GraphicsPipeline> m_GraphicsPipeline;
     
 public:

@@ -21,30 +21,31 @@ namespace Flashlight {
         }
     }
 
-    void RenderPass::UseDefaultRenderPassInfo(RenderPassInfo& renderPassInfo, const VulkanWrapper::SwapChain& swapChain) {
-        VkAttachmentDescription colorAttachment{};
-        colorAttachment.format = swapChain.GetSwapChainImageFormat();
-        colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
-        colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-        colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+    RenderPassInfo RenderPass::UseDefaultRenderPassInfo(const VkFormat swapChainImageFormat) {
+        RenderPassInfo renderPassInfo;
 
-        renderPassInfo.Attachments = {colorAttachment};
+        renderPassInfo.Attachments.resize(1);
+        
+        renderPassInfo.Attachments[0].format = swapChainImageFormat;
+        renderPassInfo.Attachments[0].samples = VK_SAMPLE_COUNT_1_BIT;
+        renderPassInfo.Attachments[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        renderPassInfo.Attachments[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        renderPassInfo.Attachments[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        renderPassInfo.Attachments[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        renderPassInfo.Attachments[0].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        renderPassInfo.Attachments[0].finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
-        VkAttachmentReference colorAttachmentRef{};
-        colorAttachmentRef.attachment = 0; // The first (and only) attachment (the color attachment) index, used for the location.
-        colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        renderPassInfo.AttachmentReferences.resize(1);
+        
+        renderPassInfo.AttachmentReferences[0].attachment = 0;
+        renderPassInfo.AttachmentReferences[0].layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
-        renderPassInfo.AttachmentReferences = {colorAttachmentRef};
+        renderPassInfo.Subpasses.resize(1);
+        
+        renderPassInfo.Subpasses[0].pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+        renderPassInfo.Subpasses[0].colorAttachmentCount = 1;
+        renderPassInfo.Subpasses[0].pColorAttachments = &renderPassInfo.AttachmentReferences[0];
 
-        VkSubpassDescription subpass{};
-        subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-        subpass.colorAttachmentCount = 1;
-        subpass.pColorAttachments = &colorAttachmentRef;
-
-        renderPassInfo.Subpasses = {subpass};
+        return renderPassInfo;
     }
 }

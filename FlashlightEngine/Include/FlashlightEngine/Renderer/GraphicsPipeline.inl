@@ -10,8 +10,9 @@
 inline GraphicsPipeline::GraphicsPipeline(const VulkanWrapper::Device& device,
                                           const std::filesystem::path& vertexShaderPath,
                                           const std::filesystem::path& fragmentShaderPath,
-                                          const PipelineInfos& pipelineInfos) : m_Device(
-    device.GetNativeDevice()) {
+                                          const PipelineInfos& pipelineInfos,
+                                          const RenderPass& renderPass)
+    : m_Device(device.GetNativeDevice()), m_RenderPass(renderPass.GetNativeRenderPass()) {
     Create(vertexShaderPath, fragmentShaderPath, pipelineInfos);
 }
 
@@ -27,7 +28,7 @@ inline void GraphicsPipeline::Destroy() const {
     if (m_PipelineLayout) {
         vkDestroyPipelineLayout(m_Device, m_PipelineLayout, nullptr);
     }
-    
+
     if (m_Pipeline) {
         vkDestroyPipeline(m_Device, m_Pipeline, nullptr);
     }

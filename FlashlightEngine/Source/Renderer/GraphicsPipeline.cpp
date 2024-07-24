@@ -27,6 +27,8 @@ namespace Flashlight {
             != VK_SUCCESS) {
             Log::EngineError("Failed to create pipeline layout.");
         }
+
+        
     }
 
     void GraphicsPipeline::UseDefaultPipelineInfos(PipelineInfos& pipelineInfos) {

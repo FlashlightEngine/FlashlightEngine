@@ -36,7 +36,7 @@ namespace Flashlight {
 
         [[nodiscard]] VkRenderPass GetNativeRenderPass() const;
 
-        static void UseDefaultRenderPassInfo(RenderPassInfo& renderPassInfo, const VulkanWrapper::SwapChain& swapChain);
+        static RenderPassInfo UseDefaultRenderPassInfo(VkFormat swapChainImageFormat);
 
     private:
         void Create(const RenderPassInfo& renderPassInfo);
