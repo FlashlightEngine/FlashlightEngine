@@ -48,12 +48,12 @@ namespace Flashlight::VulkanWrapper {
             VK_KHR_SWAPCHAIN_EXTENSION_NAME
         };
 
-        VkInstance m_Instance = VK_NULL_HANDLE;
+        Instance& m_Instance;
         std::vector<const char*> m_ValidationLayers;
-        VkSurfaceKHR m_Surface = VK_NULL_HANDLE;
+        Surface& m_Surface;
     
     public:
-        inline Device(const Instance& instance, const Surface& surface, const DebugLevel& debugLevel);
+        inline Device(Instance& instance, Surface& surface, const DebugLevel& debugLevel);
         inline ~Device();
 
         Device(const Device&) = delete;
@@ -79,8 +79,6 @@ namespace Flashlight::VulkanWrapper {
     private:
         void PickPhysicalDevice();
         void CreateLogicalDevice(const DebugLevel& debugLevel);
-
-        inline void Destroy() const;
 
 #pragma region Physical Device Utility
         [[nodiscard]] int RateDeviceSuitability(VkPhysicalDevice physicalDevice);

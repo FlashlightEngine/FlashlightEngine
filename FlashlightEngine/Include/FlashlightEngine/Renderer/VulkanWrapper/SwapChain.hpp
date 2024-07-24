@@ -8,6 +8,7 @@
 #pragma once
 
 #include "FlashlightEngine/Renderer/VulkanWrapper/Device.hpp"
+#include "FlashlightEngine/Renderer/VulkanWrapper/RenderPass.hpp"
 
 #include "FlashlightEngine/Core/Window.hpp"
 
@@ -18,15 +19,17 @@ namespace Flashlight::VulkanWrapper {
         std::vector<VkImageView> m_SwapChainImageViews;
         VkFormat m_SwapChainImageFormat = VK_FORMAT_UNDEFINED;
         VkExtent2D m_SwapChainExtent;
+        
+        std::unique_ptr<RenderPass> m_RenderPass;
 
-        VkDevice m_Device = VK_NULL_HANDLE;
+        Device& m_Device;
         VkSurfaceKHR m_Surface = VK_NULL_HANDLE;
         QueueFamilyIndices m_QueueFamilies;
         SwapChainSupportDetails m_SwapChainSupport;
         GLFWwindow* m_Window = nullptr;
 
     public:
-        inline SwapChain(const Device& device, const Window& window, const Surface& surface);
+        inline SwapChain(Device& device, const Window& window, const Surface& surface);
         inline ~SwapChain();
 
         SwapChain(const SwapChain&) = delete;
@@ -41,10 +44,12 @@ namespace Flashlight::VulkanWrapper {
         [[nodiscard]] inline VkFormat GetSwapChainImageFormat() const;
         [[nodiscard]] inline VkExtent2D GetSwapChainExtent() const;
 
+        [[nodiscard]] inline RenderPass& GetRenderPass() const;
+
     private:
         void CreateSwapChain();
         void CreateSwapChainImageViews();
-        inline void Destroy() const;
+        void CreateRenderPass();
 
         [[nodiscard]] static VkSurfaceFormatKHR ChooseSwapSurfaceFormat(
             const std::vector<VkSurfaceFormatKHR>& availableFormats);

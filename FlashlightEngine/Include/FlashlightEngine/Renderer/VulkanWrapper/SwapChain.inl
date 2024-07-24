@@ -7,18 +7,28 @@
  */
 #pragma once
 
-inline SwapChain::SwapChain(const Device& device, const Window& window,
-                            const Surface& surface) : m_Device(device.GetNativeDevice()),
+inline SwapChain::SwapChain(Device& device, const Window& window,
+                            const Surface& surface) : m_Device(device),
                                                       m_Surface(surface.GetNativeSurface()),
                                                       m_QueueFamilies(device.GetQueueFamilies()),
                                                       m_SwapChainSupport(device.GetSwapChainSupport()),
                                                       m_Window(window.GetGlfwWindow()) {
     CreateSwapChain();
     CreateSwapChainImageViews();
+    CreateRenderPass();
 }
 
 inline SwapChain::~SwapChain() {    
-    Destroy();
+    for (const auto imageView : m_SwapChainImageViews) {
+        if (imageView) {
+            vkDestroyImageView(m_Device.GetNativeDevice(), imageView, nullptr);
+        }
+    }
+    
+    if (m_SwapChain) {
+        Log::EngineTrace("Destroying Vulkan swap chain.");
+        vkDestroySwapchainKHR(m_Device.GetNativeDevice(), m_SwapChain, nullptr);
+    }
 }
 
 inline VkSwapchainKHR SwapChain::GetNativeSwapChain() const {
@@ -41,15 +51,6 @@ inline VkExtent2D SwapChain::GetSwapChainExtent() const {
     return m_SwapChainExtent; 
 }
 
-inline void SwapChain::Destroy() const {
-    for (const auto imageView : m_SwapChainImageViews) {
-        if (imageView) {
-            vkDestroyImageView(m_Device, imageView, nullptr);
-        }
-    }
-    
-    if (m_SwapChain) {
-        Log::EngineTrace("Destroying Vulkan swap chain.");
-        vkDestroySwapchainKHR(m_Device, m_SwapChain, nullptr);
-    }
+inline RenderPass& SwapChain::GetRenderPass() const {
+    return *m_RenderPass;
 }

@@ -15,11 +15,10 @@ namespace Flashlight::VulkanWrapper {
     class Surface {
         VkSurfaceKHR m_Surface = VK_NULL_HANDLE;
 
-        VkInstance m_Instance = VK_NULL_HANDLE;
-        GLFWwindow* m_Window = nullptr;
+        Instance& m_Instance;
 
     public:
-        explicit inline Surface(const Instance& instance, const Window& window);
+        Surface(Instance& instance, const Window& window);
         inline ~Surface();
 
         Surface(const Surface&) = delete;
@@ -29,10 +28,6 @@ namespace Flashlight::VulkanWrapper {
         Surface& operator=(Surface&&) = delete;
 
         [[nodiscard]] inline VkSurfaceKHR GetNativeSurface() const;
-
-    private:
-        void Create();
-        inline void Destroy() const;
     };
 
 #include "Surface.inl"

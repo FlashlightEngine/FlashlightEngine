@@ -31,7 +31,7 @@ namespace Flashlight {
             };
 
         public:
-            explicit inline Instance(const DebugLevel& debugLevel);
+            explicit Instance(const DebugLevel& debugLevel);
             inline ~Instance();
 
             Instance(const Instance&) = delete;
@@ -47,8 +47,6 @@ namespace Flashlight {
                                                          const DebugLevel& debugLevel);
 
         private:
-            void Create(const DebugLevel& debugLevel);
-            inline void Destroy() const;
 
             [[nodiscard]] static std::vector<const char*> GetRequiredInstanceExtensions(
                 const DebugLevel& debugLevel);

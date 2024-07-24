@@ -9,18 +9,17 @@
 
 #include "FlashlightEngine/Renderer/VulkanWrapper/Device.hpp"
 #include "FlashlightEngine/Renderer/VulkanWrapper/SwapChain.hpp"
-#include "FlashlightEngine/Renderer/RenderPass.hpp"
+#include "FlashlightEngine/Renderer/VulkanWrapper/RenderPass.hpp"
 
 namespace Flashlight::VulkanWrapper {
     class Framebuffer {
         VkFramebuffer m_Framebuffer = VK_NULL_HANDLE;
 
-        VkDevice m_Device = VK_NULL_HANDLE;
+        Device& m_Device;
 
     public:
-        inline Framebuffer(const Device& device, const std::vector<VkImageView>& attachedImageViews,
-                           const SwapChain& swapChain,
-                           const RenderPass& renderPass);
+        Framebuffer(Device& device, const std::vector<VkImageView>& attachedImageViews, const RenderPass& renderPass,
+                    VkExtent2D extent);
         inline ~Framebuffer();
 
         Framebuffer(const Framebuffer&) = delete;
@@ -30,10 +29,6 @@ namespace Flashlight::VulkanWrapper {
         Framebuffer& operator=(Framebuffer&&) = delete;
 
         [[nodiscard]] inline VkFramebuffer GetNativeFramebuffer() const;
-
-    private:
-        void Create(VkRenderPass renderPass, const std::vector<VkImageView>& attachedImageViews, VkExtent2D extent);
-        inline void Destroy() const;
     };
 
 #include "Framebuffer.inl"

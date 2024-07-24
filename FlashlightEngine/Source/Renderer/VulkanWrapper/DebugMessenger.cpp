@@ -8,7 +8,7 @@
 #include "FlashlightEngine/Renderer/VulkanWrapper/DebugMessenger.hpp"
 
 namespace Flashlight::VulkanWrapper {
-    void DebugMessenger::Create(const DebugLevel& debugLevel) {
+    DebugMessenger::DebugMessenger(Instance& instance, const DebugLevel& debugLevel) : m_Instance(instance) {
         if (debugLevel == DebugLevel::None)
             return;
 
@@ -16,12 +16,11 @@ namespace Flashlight::VulkanWrapper {
         Instance::PopulateDebugMessengerCreateInfo(debugMessengerCreateInfo, debugLevel);
 
         Log::EngineTrace("Creating Vulkan debug messenger.");
-        if (vkCreateDebugUtilsMessengerEXT(m_Instance, &debugMessengerCreateInfo, nullptr, &m_DebugMessenger) !=
-            VK_SUCCESS) {
+        if (vkCreateDebugUtilsMessengerEXT(m_Instance.GetNativeInstance(), &debugMessengerCreateInfo, nullptr,
+                                           &m_DebugMessenger) != VK_SUCCESS) {
             Log::EngineError("Failed to create Vulkan debug messenger.");
         } else {
             Log::EngineTrace("Vulkan debug messenger created.");
         }
     }
-
 }

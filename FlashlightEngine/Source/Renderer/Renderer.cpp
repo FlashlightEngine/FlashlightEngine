@@ -10,7 +10,7 @@
 #include "FlashlightEngine/Renderer/VulkanWrapper/Instance.hpp"
 
 namespace Flashlight {
-    void Renderer::Create(const DebugLevel& debugLevel, const Window& window) {
+    Renderer::Renderer(const DebugLevel& debugLevel, const Window& window) {
         m_Instance = std::make_unique<VulkanWrapper::Instance>(debugLevel);
 
         if (debugLevel > DebugLevel::None) {
@@ -23,14 +23,4 @@ namespace Flashlight {
 
         m_SwapChain = std::make_unique<VulkanWrapper::SwapChain>(*m_Device, window, *m_Surface);
     }
-
-    std::unique_ptr<RenderPass> Renderer::CreateRenderPass(const RenderPassInfo& renderPassInfo) const {
-        return std::make_unique<RenderPass>(*m_Device, renderPassInfo);
-    }
-
-
-    std::unique_ptr<GraphicsPipeline> Renderer::CreatePipeline(const PipelineInfos& pipelineInfos) const {
-        return std::make_unique<GraphicsPipeline>(*m_Device, pipelineInfos);
-    }
-
 }

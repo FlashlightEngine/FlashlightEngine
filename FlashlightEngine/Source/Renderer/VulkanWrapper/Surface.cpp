@@ -9,10 +9,11 @@
 #include "FlashlightEngine/Renderer/VulkanWrapper/Surface.hpp"
 
 namespace Flashlight::VulkanWrapper {
-    void Surface::Create() {
+    Surface::Surface(Instance& instance, const Window& window) : m_Instance(instance) {
         Log::EngineTrace("Creating window surface...");
-        
-        if (glfwCreateWindowSurface(m_Instance, m_Window, nullptr, &m_Surface) != VK_SUCCESS) {
+
+        if (glfwCreateWindowSurface(m_Instance.GetNativeInstance(), window.GetGlfwWindow(), nullptr, &m_Surface)
+            != VK_SUCCESS) {
             Log::EngineError("Failed to create window surface.");
         } else {
             Log::EngineTrace("Window surface created.");

@@ -7,13 +7,14 @@
  */
 #pragma once
 
-inline GraphicsPipeline::GraphicsPipeline(const VulkanWrapper::Device& device, const PipelineInfos& pipelineInfos)
-    : m_Device(device.GetNativeDevice()) {
-    Create(pipelineInfos);
-}
-
 inline GraphicsPipeline::~GraphicsPipeline() {
-    Destroy();
+    if (m_Pipeline) {
+        vkDestroyPipeline(m_Device.GetNativeDevice(), m_Pipeline, nullptr);
+    }
+    
+    if (m_PipelineLayout) {
+        vkDestroyPipelineLayout(m_Device.GetNativeDevice(), m_PipelineLayout, nullptr);
+    }
 }
 
 inline VkPipeline GraphicsPipeline::GetNativePipeline() const {
@@ -22,15 +23,4 @@ inline VkPipeline GraphicsPipeline::GetNativePipeline() const {
 
 inline VkPipelineLayout GraphicsPipeline::GetNativePipelineLayout() const {
     return m_PipelineLayout;
-}
-
-
-inline void GraphicsPipeline::Destroy() const {
-    if (m_Pipeline) {
-        vkDestroyPipeline(m_Device, m_Pipeline, nullptr);
-    }
-    
-    if (m_PipelineLayout) {
-        vkDestroyPipelineLayout(m_Device, m_PipelineLayout, nullptr);
-    }
 }

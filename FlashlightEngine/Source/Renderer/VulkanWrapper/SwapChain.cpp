@@ -35,7 +35,7 @@ namespace Flashlight::VulkanWrapper {
         swapChainCreateInfo.imageArrayLayers = 1;
         swapChainCreateInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-        u32 queueFamilyIndices[] = {m_QueueFamilies.GraphicsFamily, m_QueueFamilies.PresentFamily};
+        const u32 queueFamilyIndices[] = {m_QueueFamilies.GraphicsFamily, m_QueueFamilies.PresentFamily};
 
         if (m_QueueFamilies.GraphicsFamily != m_QueueFamilies.PresentFamily) {
             swapChainCreateInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
@@ -57,15 +57,15 @@ namespace Flashlight::VulkanWrapper {
         swapChainCreateInfo.oldSwapchain = nullptr;
 
         Log::EngineTrace("Creating Vulkan swap chain...");
-        if (vkCreateSwapchainKHR(m_Device, &swapChainCreateInfo, nullptr, &m_SwapChain) != VK_SUCCESS) {
+        if (vkCreateSwapchainKHR(m_Device.GetNativeDevice(), &swapChainCreateInfo, nullptr, &m_SwapChain) != VK_SUCCESS) {
             Log::EngineError("Failed to create Vulkan swap chain.");
         } else {
             Log::EngineTrace("Vulkan swap chain created.");
         }
 
-        vkGetSwapchainImagesKHR(m_Device, m_SwapChain, &imageCount, nullptr);
+        vkGetSwapchainImagesKHR(m_Device.GetNativeDevice(), m_SwapChain, &imageCount, nullptr);
         m_SwapChainImages.resize(imageCount);
-        vkGetSwapchainImagesKHR(m_Device, m_SwapChain, &imageCount, m_SwapChainImages.data());
+        vkGetSwapchainImagesKHR(m_Device.GetNativeDevice(), m_SwapChain, &imageCount, m_SwapChainImages.data());
 
         m_SwapChainImageFormat = surfaceFormat.format;
         m_SwapChainExtent = extent;
@@ -94,11 +94,39 @@ namespace Flashlight::VulkanWrapper {
             createInfo.subresourceRange.baseArrayLayer = 0;
             createInfo.subresourceRange.layerCount = 1;
 
-            if (vkCreateImageView(m_Device, &createInfo, nullptr, &m_SwapChainImageViews[i]) != VK_SUCCESS) {
+            if (vkCreateImageView(m_Device.GetNativeDevice(), &createInfo, nullptr, &m_SwapChainImageViews[i]) != VK_SUCCESS) {
                 Log::EngineError("Failed to create Vulkan swap chain image views.");
             }
         }
     }
+
+    void SwapChain::CreateRenderPass() {
+        VkAttachmentDescription colorAttachment{};        
+        colorAttachment.format = m_SwapChainImageFormat;
+        colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+        colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+
+        VkAttachmentReference colorAttachmentReference;
+        colorAttachmentReference.attachment = 0;
+        colorAttachmentReference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+        VkSubpassDescription subpass{};
+        subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+        subpass.colorAttachmentCount = 1;
+        subpass.pColorAttachments = &colorAttachmentReference;
+
+        RenderPassDescription description;
+        description.Attachments = {colorAttachment};
+        description.Subpasses = {subpass};
+
+        m_RenderPass = std::make_unique<RenderPass>(m_Device, description);
+    }
+
 
     VkSurfaceFormatKHR SwapChain::ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats) {
         for (const auto& availableFormat : availableFormats) {

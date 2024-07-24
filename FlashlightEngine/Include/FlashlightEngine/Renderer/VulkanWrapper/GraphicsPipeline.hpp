@@ -9,9 +9,8 @@
 #pragma once
 
 #include "FlashlightEngine/Renderer/VulkanWrapper/Device.hpp"
-#include "FlashlightEngine/Renderer/RenderPass.hpp"
 
-namespace Flashlight {
+namespace Flashlight::VulkanWrapper {
     struct PipelineInfos {
         std::filesystem::path VertexShaderPath;
         std::filesystem::path FragmentShaderPath;
@@ -35,10 +34,10 @@ namespace Flashlight {
         VkPipeline m_Pipeline = VK_NULL_HANDLE;
         VkPipelineLayout m_PipelineLayout = VK_NULL_HANDLE;
 
-        VkDevice m_Device = VK_NULL_HANDLE;
+        Device& m_Device;
 
     public:
-        inline GraphicsPipeline(const VulkanWrapper::Device& device, const PipelineInfos& pipelineInfos);
+        GraphicsPipeline(Device& device, const PipelineInfos& pipelineInfos);
         inline ~GraphicsPipeline();
 
         GraphicsPipeline(const GraphicsPipeline&) = delete;
@@ -50,11 +49,7 @@ namespace Flashlight {
         [[nodiscard]] inline VkPipeline GetNativePipeline() const;
         [[nodiscard]] inline VkPipelineLayout GetNativePipelineLayout() const;
 
-        static void UseDefaultPipelineInfos(PipelineInfos& pipelineInfos, const RenderPass& renderPass);
-
-    private:
-        void Create(const PipelineInfos& pipelineInfos);
-        inline void Destroy() const;
+        static void UseDefaultPipelineInfos(PipelineInfos& pipelineInfos, VkRenderPass renderPass);
     };
 
 #include "GraphicsPipeline.inl"

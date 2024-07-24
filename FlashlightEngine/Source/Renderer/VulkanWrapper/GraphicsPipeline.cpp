@@ -5,15 +5,17 @@
  * File : GraphicsPipeline.cpp
  * Description : Definitions of methods from the GraphicsPipeline class.
  */
-#include "FlashlightEngine/Renderer/GraphicsPipeline.hpp"
+#include "FlashlightEngine/Renderer/VulkanWrapper/GraphicsPipeline.hpp"
 
-#include "FlashlightEngine/Renderer/ShaderModule.hpp"
+#include "FlashlightEngine/Renderer/VulkanWrapper/ShaderModule.hpp"
 
-namespace Flashlight {
-    void GraphicsPipeline::Create(const PipelineInfos& pipelineInfos) {
-        const auto vertShaderModule = std::make_unique<ShaderModule>(m_Device, pipelineInfos.VertexShaderPath,
+namespace Flashlight::VulkanWrapper {
+    GraphicsPipeline::GraphicsPipeline(Device& device, const PipelineInfos& pipelineInfos) : m_Device(device) {
+        const auto vertShaderModule = std::make_unique<ShaderModule>(m_Device.GetNativeDevice(),
+                                                                     pipelineInfos.VertexShaderPath,
                                                                      ShaderType::Vertex);
-        const auto fragShaderModule = std::make_unique<ShaderModule>(m_Device, pipelineInfos.FragmentShaderPath,
+        const auto fragShaderModule = std::make_unique<ShaderModule>(m_Device.GetNativeDevice(),
+                                                                     pipelineInfos.FragmentShaderPath,
                                                                      ShaderType::Fragment);
 
         const VkPipelineShaderStageCreateInfo shaderStages[] = {
@@ -21,8 +23,8 @@ namespace Flashlight {
             fragShaderModule->GetNativeShaderStageInfo()
         };
 
-        if (vkCreatePipelineLayout(m_Device, &pipelineInfos.PipelineLayoutInfo, nullptr, &m_PipelineLayout)
-            != VK_SUCCESS) {
+        if (vkCreatePipelineLayout(m_Device.GetNativeDevice(), &pipelineInfos.PipelineLayoutInfo, nullptr,
+                                   &m_PipelineLayout) != VK_SUCCESS) {
             Log::EngineError("Failed to create pipeline layout.");
         }
 
@@ -48,13 +50,13 @@ namespace Flashlight {
         pipelineCreateInfo.basePipelineHandle = VK_NULL_HANDLE;
         pipelineCreateInfo.basePipelineIndex = -1;
 
-        if (vkCreateGraphicsPipelines(m_Device, VK_NULL_HANDLE, 1, &pipelineCreateInfo, nullptr, &m_Pipeline)
-            != VK_SUCCESS) {
+        if (vkCreateGraphicsPipelines(m_Device.GetNativeDevice(), VK_NULL_HANDLE, 1, &pipelineCreateInfo, nullptr,
+                                      &m_Pipeline) != VK_SUCCESS) {
             Log::EngineError("Failed to create graphics pipeline.");
         }
     }
 
-    void GraphicsPipeline::UseDefaultPipelineInfos(PipelineInfos& pipelineInfos, const RenderPass& renderPass) {
+    void GraphicsPipeline::UseDefaultPipelineInfos(PipelineInfos& pipelineInfos, const VkRenderPass renderPass) {
         // -------------------------------------
         // Vertex input state info
         // Defines the layout of the vertex data
@@ -166,7 +168,7 @@ namespace Flashlight {
         // -----------
         // Render pass
         // -----------
-        pipelineInfos.RenderPass = renderPass.GetNativeRenderPass();
+        pipelineInfos.RenderPass = renderPass;
         pipelineInfos.SubpassIndex = 0;
     }
 }

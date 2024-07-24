@@ -8,20 +8,20 @@
 #include "FlashlightEngine/Renderer/VulkanWrapper/Framebuffer.hpp"
 
 namespace Flashlight::VulkanWrapper {
-    void Framebuffer::Create(const VkRenderPass renderPass, const std::vector<VkImageView>& attachedImageViews,
-                             const VkExtent2D extent) {
+    Framebuffer::Framebuffer(Device& device, const std::vector<VkImageView>& attachedImageViews,
+                             const RenderPass& renderPass, const VkExtent2D extent) : m_Device(device) {
         VkFramebufferCreateInfo framebufferCreateInfo{};
         framebufferCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-        framebufferCreateInfo.renderPass = renderPass;
+        framebufferCreateInfo.renderPass = renderPass.GetNativeRenderPass();
         framebufferCreateInfo.attachmentCount = static_cast<u32>(attachedImageViews.size());
         framebufferCreateInfo.pAttachments = attachedImageViews.data();
         framebufferCreateInfo.width = extent.width;
         framebufferCreateInfo.height = extent.height;
         framebufferCreateInfo.layers = 1;
 
-        if (vkCreateFramebuffer(m_Device, &framebufferCreateInfo, nullptr, &m_Framebuffer) != VK_SUCCESS) {
+        if (vkCreateFramebuffer(m_Device.GetNativeDevice(), &framebufferCreateInfo, nullptr, &m_Framebuffer)
+            != VK_SUCCESS) {
             Log::EngineError("Failed to create framebuffer.");
         }
     }
-
 }

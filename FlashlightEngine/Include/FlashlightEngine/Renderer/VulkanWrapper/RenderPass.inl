@@ -7,21 +7,12 @@
  */
 #pragma once
 
-inline RenderPass::RenderPass(const VulkanWrapper::Device& device, const RenderPassInfo& renderPassInfo)
-    : m_Device(device.GetNativeDevice()) {
-    Create(renderPassInfo);
-}
-
 inline RenderPass::~RenderPass() {
-    Destroy();
+    if (m_RenderPass) {
+        vkDestroyRenderPass(m_Device.GetNativeDevice(), m_RenderPass, nullptr);
+    }
 }
 
 inline VkRenderPass RenderPass::GetNativeRenderPass() const {
     return m_RenderPass;
-}
-
-inline void RenderPass::Destroy() const {
-    if (m_RenderPass) {
-        vkDestroyRenderPass(m_Device, m_RenderPass, nullptr);
-    }
 }

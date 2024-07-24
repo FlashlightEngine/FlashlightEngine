@@ -5,9 +5,9 @@
  * File : ShaderModule.cpp
  * Description : Definitions of methods from the ShaderModule class.
  */
-#include "FlashlightEngine/Renderer/ShaderModule.hpp"
+#include "FlashlightEngine/Renderer/VulkanWrapper/ShaderModule.hpp"
 
-namespace Flashlight {
+namespace Flashlight::VulkanWrapper {
     void ShaderModule::CreateShaderModule(const std::filesystem::path& shaderPath) {
         const std::vector<char> shaderSource = ReadShaderFile(shaderPath);
 
@@ -16,7 +16,8 @@ namespace Flashlight {
         shaderModuleCreateInfo.codeSize = shaderSource.size();
         shaderModuleCreateInfo.pCode = reinterpret_cast<const uint32_t*>(shaderSource.data());
 
-        if (vkCreateShaderModule(m_Device, &shaderModuleCreateInfo, nullptr, &m_ShaderModule) != VK_SUCCESS) {
+        if (vkCreateShaderModule(m_Device.GetNativeDevice(), &shaderModuleCreateInfo, nullptr, &m_ShaderModule)
+            != VK_SUCCESS) {
             Log::EngineError("Failed to create shader module.");
         }
     }
@@ -34,7 +35,7 @@ namespace Flashlight {
     std::vector<char> ShaderModule::ReadShaderFile(const std::filesystem::path& shaderPath) {
         std::string path{shaderPath.string()};
         path.append(".spv");
-        
+
         std::ifstream shaderFile(path, std::ios::ate | std::ios::binary);
 
         if (!shaderFile.is_open()) {

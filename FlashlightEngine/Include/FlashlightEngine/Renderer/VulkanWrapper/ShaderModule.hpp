@@ -10,7 +10,7 @@
 
 #include "FlashlightEngine/Renderer/VulkanWrapper/Device.hpp"
 
-namespace Flashlight {
+namespace Flashlight::VulkanWrapper {
     // Only vertex and fragment shaders supported for now. 
     enum class ShaderType : VkShaderStageFlags {
         Vertex = VK_SHADER_STAGE_VERTEX_BIT,
@@ -21,10 +21,10 @@ namespace Flashlight {
         VkShaderModule m_ShaderModule;
         VkPipelineShaderStageCreateInfo m_ShaderStageInfo;
 
-        VkDevice m_Device = VK_NULL_HANDLE;
+        Device& m_Device;
 
     public:
-        inline ShaderModule(VkDevice device, const std::filesystem::path& shaderPath, const ShaderType& shaderType);
+        inline ShaderModule(Device& device, const std::filesystem::path& shaderPath, const ShaderType& shaderType);
         inline ~ShaderModule();
 
         ShaderModule(const ShaderModule&) = delete;

@@ -7,7 +7,7 @@
  */
 #pragma once
 
-inline ShaderModule::ShaderModule(const VkDevice device, const std::filesystem::path& shaderPath,
+inline ShaderModule::ShaderModule(Device& device, const std::filesystem::path& shaderPath,
                                   const ShaderType& shaderType) : m_Device(device) {
     CreateShaderModule(shaderPath);
     CreateShaderStage(shaderType);
@@ -27,6 +27,6 @@ inline VkPipelineShaderStageCreateInfo ShaderModule::GetNativeShaderStageInfo() 
 
 inline void ShaderModule::Destroy() const {
     if (m_ShaderModule) {
-        vkDestroyShaderModule(m_Device, m_ShaderModule, nullptr);
+        vkDestroyShaderModule(m_Device.GetNativeDevice(), m_ShaderModule, nullptr);
     }
 }

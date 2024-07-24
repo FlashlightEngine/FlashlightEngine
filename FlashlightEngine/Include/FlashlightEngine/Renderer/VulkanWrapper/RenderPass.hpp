@@ -11,20 +11,19 @@
 
 #include "FlashlightEngine/Renderer/VulkanWrapper/Device.hpp"
 
-namespace Flashlight {
-    struct RenderPassInfo {
-        std::vector<VkAttachmentDescription> Attachments{};
-        std::vector<VkAttachmentReference> AttachmentReferences{};
-        std::vector<VkSubpassDescription> Subpasses{};
+namespace Flashlight::VulkanWrapper {
+    struct RenderPassDescription {
+        std::vector<VkAttachmentDescription> Attachments;
+        std::vector<VkSubpassDescription> Subpasses;
     };
     
     class RenderPass {
         VkRenderPass m_RenderPass = VK_NULL_HANDLE;
 
-        VkDevice m_Device = VK_NULL_HANDLE;
-        
+        Device& m_Device;
+
     public:
-        inline RenderPass(const VulkanWrapper::Device& device, const RenderPassInfo& renderPassInfo);
+        RenderPass(Device& device, const RenderPassDescription& description);
         inline ~RenderPass();
 
         RenderPass(const RenderPass&) = delete;
@@ -33,13 +32,7 @@ namespace Flashlight {
         RenderPass& operator=(const RenderPass&) = delete;
         RenderPass& operator=(RenderPass&&) = delete;
 
-        [[nodiscard]] VkRenderPass GetNativeRenderPass() const;
-
-        static RenderPassInfo UseDefaultRenderPassInfo(VkFormat swapChainImageFormat);
-
-    private:
-        void Create(const RenderPassInfo& renderPassInfo);
-        inline void Destroy() const;
+        [[nodiscard]] inline VkRenderPass GetNativeRenderPass() const;
     };
 
 #include "RenderPass.inl"

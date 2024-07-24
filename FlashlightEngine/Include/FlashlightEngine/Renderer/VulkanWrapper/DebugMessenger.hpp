@@ -10,17 +10,16 @@
 
 #include "FlashlightEngine/Renderer/VulkanWrapper/Instance.hpp"
 
-#include "FlashlightEngine/Core/Logger.hpp"
-
 #include <volk.h>
 
 namespace Flashlight::VulkanWrapper {
     class DebugMessenger {
         VkDebugUtilsMessengerEXT m_DebugMessenger = VK_NULL_HANDLE;
-        VkInstance m_Instance = VK_NULL_HANDLE;
+        
+        Instance& m_Instance;
         
     public:
-        inline DebugMessenger(const Instance& instance, const DebugLevel& debugLevel);
+        DebugMessenger(Instance& instance, const DebugLevel& debugLevel);
         inline ~DebugMessenger();
 
         DebugMessenger(const DebugMessenger&) = delete;
@@ -30,10 +29,6 @@ namespace Flashlight::VulkanWrapper {
         DebugMessenger& operator=(DebugMessenger&&) = delete;
 
         [[nodiscard]] inline VkDebugUtilsMessengerEXT GetNativeDebugMessenger() const;
-
-    private:
-        void Create(const DebugLevel &debugLevel);
-        inline void Destroy() const;
     };
 
 #include "DebugMessenger.inl"

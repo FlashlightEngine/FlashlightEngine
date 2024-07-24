@@ -7,12 +7,11 @@
  */
 #pragma once
 
-inline Instance::Instance(const DebugLevel& debugLevel) {
-    Create(debugLevel);
-}
-
 inline Instance::~Instance() {
-    Destroy();
+    if (m_Instance) {
+        Log::EngineTrace("Destroying Vulkan instance.");
+        vkDestroyInstance(m_Instance, nullptr);
+    }
 }
 
 inline VkInstance Instance::GetNativeInstance() const {
@@ -21,11 +20,4 @@ inline VkInstance Instance::GetNativeInstance() const {
 
 inline std::vector<const char*> Instance::GetValidationLayers() const {
     return m_ValidationLayers;
-}
-
-inline void Instance::Destroy() const {
-    if (m_Instance) {
-        Log::EngineTrace("Destroying Vulkan instance.");
-        vkDestroyInstance(m_Instance, nullptr);
-    }
 }

@@ -14,14 +14,14 @@
 namespace Flashlight::VulkanWrapper {
     void Device::PickPhysicalDevice() {
         u32 deviceCount = 0;
-        vkEnumeratePhysicalDevices(m_Instance, &deviceCount, nullptr);
+        vkEnumeratePhysicalDevices(m_Instance.GetNativeInstance(), &deviceCount, nullptr);
 
         if (deviceCount == 0) {
             Log::EngineFatal({0x01, 0x01}, "Failed to find GPUs with Vulkan support.");
         }
 
         std::vector<VkPhysicalDevice> devices(deviceCount);
-        vkEnumeratePhysicalDevices(m_Instance, &deviceCount, devices.data());
+        vkEnumeratePhysicalDevices(m_Instance.GetNativeInstance(), &deviceCount, devices.data());
 
         std::multimap<int, VkPhysicalDevice> candidates;
 
@@ -123,7 +123,8 @@ namespace Flashlight::VulkanWrapper {
 
         volkLoadDevice(m_Device);
 
-        const std::vector<VkExtensionProperties> availableExtensions = GetAvailableDeviceExtensions(m_PhysicalDevice);
+        const std::vector<VkExtensionProperties> availableExtensions = GetAvailableDeviceExtensions(
+            m_PhysicalDevice);
         Log::EngineTrace("Available Vulkan device extensions:");
         for (const auto& extension : availableExtensions) {
             Log::EngineTrace("\t - {0}", extension.extensionName);
@@ -202,7 +203,7 @@ namespace Flashlight::VulkanWrapper {
             }
 
             VkBool32 presentSupport = false;
-            vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, i, m_Surface, &presentSupport);
+            vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, i, m_Surface.GetNativeSurface(), &presentSupport);
 
             if (presentSupport) {
                 indices.PresentFamily = i;
@@ -244,24 +245,28 @@ namespace Flashlight::VulkanWrapper {
     SwapChainSupportDetails Device::QuerySwapChainSupport(const VkPhysicalDevice physicalDevice) const {
         SwapChainSupportDetails details;
 
-        vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, m_Surface, &details.Capabilities);
+        vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, m_Surface.GetNativeSurface(),
+                                                  &details.Capabilities);
 
         u32 formatCount;
-        vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, m_Surface, &formatCount, nullptr);
+        vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, m_Surface.GetNativeSurface(), &formatCount, nullptr);
 
         if (formatCount != 0) {
             details.Formats.resize(formatCount);
-            vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, m_Surface, &formatCount, details.Formats.data());
+            vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, m_Surface.GetNativeSurface(), &formatCount,
+                                                 details.Formats.data());
         }
 
         u32 presentModeCount;
-        vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, m_Surface, &presentModeCount, nullptr);
+        vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, m_Surface.GetNativeSurface(), &presentModeCount,
+                                                  nullptr);
 
         if (presentModeCount != 0) {
             details.PresentModes.resize(presentModeCount);
-            vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, m_Surface, &presentModeCount, details.PresentModes.data());
+            vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, m_Surface.GetNativeSurface(),
+                                                      &presentModeCount, details.PresentModes.data());
         }
-        
+
         return details;
     }
 #pragma endregion

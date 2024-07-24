@@ -7,17 +7,19 @@
  */
 #pragma once
 
-inline
-Device::Device(const Instance& instance, const Surface& surface,
-               const DebugLevel& debugLevel) : m_Instance(instance.GetNativeInstance()),
-                                               m_ValidationLayers(instance.GetValidationLayers()),
-                                               m_Surface(surface.GetNativeSurface()) {
+inline Device::Device(Instance& instance, Surface& surface, const DebugLevel& debugLevel)
+                                                    : m_Instance(instance),
+                                                      m_ValidationLayers(instance.GetValidationLayers()),
+                                                      m_Surface(surface) {
     PickPhysicalDevice();
     CreateLogicalDevice(debugLevel);
 }
 
 inline Device::~Device() {
-    Destroy();
+    if (m_Device) {
+        Log::EngineTrace("Destroying Vulkan device.");
+        vkDestroyDevice(m_Device, nullptr);
+    }
 }
 
 #pragma region Physical Device
@@ -55,10 +57,3 @@ inline VkQueue Device::GetPresentQueue() const {
     return m_PresentQueue;
 }
 #pragma endregion
-
-inline void Device::Destroy() const {
-    if (m_Device) {
-        Log::EngineTrace("Destroying Vulkan device.");
-        vkDestroyDevice(m_Device, nullptr);
-    }
-}

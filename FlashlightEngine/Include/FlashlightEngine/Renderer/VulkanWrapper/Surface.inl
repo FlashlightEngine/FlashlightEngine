@@ -7,22 +7,13 @@
  */
 #pragma once
 
-inline Surface::Surface(const Instance& instance, const Window& window) : m_Instance(instance.GetNativeInstance()),
-                                                                          m_Window(window.GetGlfwWindow()) {
-    Create();
-}
-
 inline Surface::~Surface() {
-    Destroy();
+    if (m_Surface) {
+        Log::EngineTrace("Destroying window surface.");
+        vkDestroySurfaceKHR(m_Instance.GetNativeInstance(), m_Surface, nullptr);
+    }
 }
 
 inline VkSurfaceKHR Surface::GetNativeSurface() const {
     return m_Surface;
-}
-
-inline void Surface::Destroy() const {
-    if (m_Surface) {
-        Log::EngineTrace("Destroying window surface.");
-        vkDestroySurfaceKHR(m_Instance, m_Surface, nullptr);
-    }
 }

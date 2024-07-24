@@ -74,35 +74,7 @@ namespace Flashlight::VulkanWrapper {
         }
     }
 
-    void Instance::PopulateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo,
-                                                    const DebugLevel& debugLevel) {
-        createInfo = {};
-        createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
-
-        // DebugLevel::Errors being the lowest level after DebugLevel::None, we always show error messages when the
-        // level is above DebugLevel::None, since it already leaves the function when the debug level is DebugLevel::None.
-        createInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
-
-        if (debugLevel >= DebugLevel::Debug) {
-            createInfo.messageSeverity |= VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT;
-        }
-
-        if (debugLevel >= DebugLevel::Verbose) {
-            createInfo.messageSeverity |= VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT;
-        }
-
-        if (debugLevel >= DebugLevel::Warnings) {
-            createInfo.messageSeverity |= VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT;
-        }
-
-        createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
-                                 VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
-                                 VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
-        createInfo.pfnUserCallback = DebugCallback;
-        createInfo.pUserData = nullptr;
-    }
-
-    void Instance::Create(const DebugLevel& debugLevel) {
+    Instance::Instance(const DebugLevel& debugLevel) {
         volkInitialize();
 
         if (debugLevel > DebugLevel::None && !CheckValidationLayerSupport()) {
@@ -150,6 +122,35 @@ namespace Flashlight::VulkanWrapper {
         volkLoadInstanceOnly(m_Instance);
 
         CheckRequiredInstanceExtensionsSupport(debugLevel);
+    }
+
+
+    void Instance::PopulateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo,
+                                                    const DebugLevel& debugLevel) {
+        createInfo = {};
+        createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+
+        // DebugLevel::Errors being the lowest level after DebugLevel::None, we always show error messages when the
+        // level is above DebugLevel::None, since it already leaves the function when the debug level is DebugLevel::None.
+        createInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+
+        if (debugLevel >= DebugLevel::Debug) {
+            createInfo.messageSeverity |= VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT;
+        }
+
+        if (debugLevel >= DebugLevel::Verbose) {
+            createInfo.messageSeverity |= VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT;
+        }
+
+        if (debugLevel >= DebugLevel::Warnings) {
+            createInfo.messageSeverity |= VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT;
+        }
+
+        createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
+                                 VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
+                                 VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+        createInfo.pfnUserCallback = DebugCallback;
+        createInfo.pUserData = nullptr;
     }
 
     std::vector<const char*> Instance::GetRequiredInstanceExtensions(const DebugLevel& debugLevel) {
