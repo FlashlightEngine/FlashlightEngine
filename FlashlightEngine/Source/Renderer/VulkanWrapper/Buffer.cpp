@@ -27,11 +27,17 @@ namespace Flashlight::VulkanWrapper {
 
         vkBindBufferMemory(m_Device.GetNativeDevice(), m_Buffer, m_BufferMemory, 0);
     }
-    
-    void Buffer::SendData(const VkDeviceSize size, const void* data, const VkDeviceSize offset) {
+
+    void Buffer::Map(const VkDeviceSize size, const VkDeviceSize offset) {
         vkMapMemory(m_Device.GetNativeDevice(), m_BufferMemory, offset, size, 0, &m_MappedMemory);
-            memcpy(m_MappedMemory, data, size);
+    }
+    
+    void Buffer::SendData(const VkDeviceSize size, const void* data) const {
+        memcpy(m_MappedMemory, data, size);
+    }
+    void Buffer::Unmap() const {
         vkUnmapMemory(m_Device.GetNativeDevice(), m_BufferMemory);
     }
+
 
 }

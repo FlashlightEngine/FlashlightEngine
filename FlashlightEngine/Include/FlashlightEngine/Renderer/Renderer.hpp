@@ -10,21 +10,16 @@
 
 #include "FlashlightEngine/Core/Window.hpp"
 
+#include "FlashlightEngine/Renderer/RendererStructures.hpp"
 #include "FlashlightEngine/Renderer/VulkanWrapper/Instance.hpp"
 #include "FlashlightEngine/Renderer/VulkanWrapper/DebugMessenger.hpp"
 #include "FlashlightEngine/Renderer/VulkanWrapper/Surface.hpp"
 #include "FlashlightEngine/Renderer/VulkanWrapper/Device.hpp"
 #include "FlashlightEngine/Renderer/VulkanWrapper/SwapChain.hpp"
+#include "FlashlightEngine/Renderer/VulkanWrapper/DescriptorSet.hpp"
 #include "FlashlightEngine/Renderer/VulkanWrapper/GraphicsPipeline.hpp"
 
 namespace Flashlight {
-    struct FrameObjects {
-        VkCommandBuffer FrameCommandBuffer;
-
-        VkSemaphore ImageAvailableSemaphore{};
-        VkSemaphore RenderFinishedSemaphore{};
-        VkFence InFlightFence{};
-    };
 
     class Renderer {
         u8 m_MaxFramesInFlight = 2;
@@ -34,6 +29,7 @@ namespace Flashlight {
         std::unique_ptr<VulkanWrapper::Surface> m_Surface;
         std::unique_ptr<VulkanWrapper::Device> m_Device;
         std::unique_ptr<VulkanWrapper::SwapChain> m_SwapChain;
+        std::unique_ptr<VulkanWrapper::DescriptorSetLayout> m_DescriptorSetLayout;
         std::unique_ptr<VulkanWrapper::GraphicsPipeline> m_GraphicsPipeline;
 
         VkCommandPool m_CommandPool = VK_NULL_HANDLE;
@@ -72,10 +68,12 @@ namespace Flashlight {
         void CreateCommandPool();
         void AllocateCommandBuffers();
         void CreateSynchronisationPrimitives();
+        void CreateUniformBuffers();
 
         void RecreateSwapChain();
 
         [[nodiscard]] inline const FrameObjects& GetCurrentFrameObjects() const;
+        void UpdateUniformBuffer() const;
     };
 
 #include "Renderer.inl"

@@ -10,6 +10,10 @@
 #include "FlashlightEngine/Renderer/VulkanWrapper/Instance.hpp"
 #include "FlashlightEngine/Renderer/Mesh.hpp"
 
+#define GLM_FORCE_RADIANS
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
 namespace Flashlight {
     Renderer::Renderer(const DebugLevel& debugLevel, Window& window) : m_Window(window) {
         InitializeVulkan(debugLevel, window);
@@ -22,7 +26,8 @@ namespace Flashlight {
     Renderer::~Renderer() {
         vkDeviceWaitIdle(m_Device->GetNativeDevice());
 
-        for (const auto frame : m_FrameObjects) {
+        for (const auto& frame : m_FrameObjects) {
+            frame.UniformBuffer.Unmap();
             if (frame.ImageAvailableSemaphore && frame.RenderFinishedSemaphore && frame.InFlightFence) {
                 vkDestroySemaphore(m_Device->GetNativeDevice(), frame.ImageAvailableSemaphore, nullptr);
                 vkDestroySemaphore(m_Device->GetNativeDevice(), frame.RenderFinishedSemaphore, nullptr);
@@ -98,6 +103,9 @@ namespace Flashlight {
         if (vkEndCommandBuffer(frame.FrameCommandBuffer) != VK_SUCCESS) {
             Log::EngineError("Failed to record command buffer.");
         }
+
+        UpdateUniformBuffer();
+
         const auto result = m_SwapChain->SubmitCommandBufferAndPresent(frame, m_CurrentFrameIndex);
 
         if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR ||
@@ -126,8 +134,10 @@ namespace Flashlight {
         description.Surface = m_Surface->GetNativeSurface();
         description.WindowExtent = m_Window.GetWindowExtent();
         description.OldSwapChain = nullptr;
-        
+
         m_SwapChain = std::make_unique<VulkanWrapper::SwapChain>(*m_Device, description);
+
+        m_DescriptorSet = std::make_unique<VulkanWrapper::DescriptorSetLayout>(*m_Device, VK_SHADER_STAGE_VERTEX_BIT);
     }
 
     void Renderer::CreatePipeline() {
@@ -140,7 +150,7 @@ namespace Flashlight {
 
         const auto bindingDescriptions = Vertex::GetBindingDescription();
         const auto attributeDescriptions = Vertex::GetAttributesDescriptions();
-        
+
         VulkanWrapper::GraphicsPipeline::Builder pipelineBuilder{*m_Device};
         pipelineBuilder.VertexShader(vertexShaderModule);
         pipelineBuilder.FragmentShader(fragmentShaderModule);
@@ -150,7 +160,7 @@ namespace Flashlight {
         pipelineBuilder.RasterizeState(VK_POLYGON_MODE_FILL, VK_CULL_MODE_BACK_BIT);
         pipelineBuilder.MultisampleState();
         pipelineBuilder.ColorBlendState(false, VK_BLEND_OP_ADD, VK_BLEND_OP_ADD, false, VK_LOGIC_OP_COPY);
-        pipelineBuilder.PipelineLayout({}, {});
+        pipelineBuilder.PipelineLayout({m_DescriptorSet->GetLayout()}, {});
 
         m_GraphicsPipeline = pipelineBuilder.Build(m_SwapChain->GetRenderPass());
     }
@@ -204,6 +214,19 @@ namespace Flashlight {
         }
     }
 
+    void Renderer::CreateUniformBuffers() {
+        VkDeviceSize bufferSize = sizeof(UniformBufferObject);
+
+        for (auto& frame : m_FrameObjects) {
+            VulkanWrapper::Buffer ubo{
+                *m_Device, bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+            };
+            frame.UniformBuffer = std::move(ubo);
+            frame.UniformBuffer.Map(bufferSize, 0);
+        }
+    }
+
     void Renderer::RecreateSwapChain() {
         auto extent = m_Window.GetWindowExtent();
         while (extent.width == 0 || extent.height == 0) {
@@ -219,5 +242,26 @@ namespace Flashlight {
         description.OldSwapChain = std::move(m_SwapChain);
 
         m_SwapChain = std::make_unique<VulkanWrapper::SwapChain>(*m_Device, description);
+    }
+
+    void Renderer::UpdateUniformBuffer() const {
+        auto& frame = GetCurrentFrameObjects();
+
+        static auto startTime = std::chrono::high_resolution_clock::now();
+
+        const auto currentTime = std::chrono::high_resolution_clock::now();
+        const float deltaTime = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).
+            count();
+
+        UniformBufferObject ubo{};
+        ubo.Model = glm::rotate(glm::mat4(1.0f), deltaTime * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+        ubo.View = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f),
+                               glm::vec3(0.0f, 0.0f, 1.0f));
+        ubo.Projection = glm::perspective(glm::radians(45.0f),
+                                          static_cast<float>(m_SwapChain->GetSwapChainExtent().width) / static_cast<
+                                              float>(m_SwapChain->GetSwapChainExtent().height), 0.1f, 10.0f);
+        ubo.Projection[1][1] *= -1;
+
+        memcpy(frame.UniformBuffer.GetMappedMemory(), &ubo, sizeof(ubo));
     }
 }

@@ -39,12 +39,16 @@ namespace Flashlight {
                                             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
                                                 VK_MEMORY_PROPERTY_HOST_COHERENT_BIT};
 
-        stagingBuffer.SendData(vertexBufferSize, m_Vertices.data(), 0);
-
+        stagingBuffer.Map(vertexBufferSize, 0);
+        stagingBuffer.SendData(vertexBufferSize, m_Vertices.data());
+        stagingBuffer.Unmap();
+        
         m_Device.CopyBuffer(stagingBuffer.GetNativeBuffer(), m_VertexBuffer.GetNativeBuffer(), vertexBufferSize);
 
-        stagingBuffer.SendData(indexBufferSize, m_Indices.data(), 0);
-
+        stagingBuffer.Map(indexBufferSize, 0);
+        stagingBuffer.SendData(indexBufferSize, m_Indices.data());
+        stagingBuffer.Unmap();
+        
         m_Device.CopyBuffer(stagingBuffer.GetNativeBuffer(), m_IndexBuffer.GetNativeBuffer(), indexBufferSize);
     }
 }

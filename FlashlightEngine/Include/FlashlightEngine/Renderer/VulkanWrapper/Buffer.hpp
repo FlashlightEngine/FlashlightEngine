@@ -15,9 +15,16 @@ namespace Flashlight::VulkanWrapper {
                VkMemoryPropertyFlags properties);
         inline ~Buffer();
 
-        void SendData(VkDeviceSize size, const void* data, VkDeviceSize offset);
+        inline Buffer(Buffer&& rhs) noexcept;
+        inline Buffer& operator=(Buffer&&) noexcept;
+
+        void Map(VkDeviceSize size, VkDeviceSize offset);
+        void SendData(VkDeviceSize size, const void* data) const;
+        void Unmap() const;
 
         [[nodiscard]] inline VkBuffer GetNativeBuffer() const;
+        [[nodiscard]] inline VkDeviceMemory GetNativeBufferMemory() const;
+        [[nodiscard]] inline void* GetMappedMemory() const;
     };
 
 #include "Buffer.inl"
