@@ -2,13 +2,16 @@
 
 
 bool TestApplication::Init() {
-    const std::vector<Flashlight::Vertex> triangleVertices = {
-        {{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-        {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
-        {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}
+    const std::vector<Flashlight::Vertex> rectangleVertices = {
+        {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+        {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
+        {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
+        {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}}
     };
 
-    m_TriangleMesh = std::make_unique<Flashlight::Mesh>(m_Renderer->GetDevice(), triangleVertices);
+    const std::vector<u32> rectangleIndices = { 0, 1, 2, 2, 3, 0 };
+
+    m_TriangleMesh = std::make_unique<Flashlight::Mesh>(m_Renderer->GetDevice(), rectangleVertices, rectangleIndices);
 
     m_IsRunning = true;
 

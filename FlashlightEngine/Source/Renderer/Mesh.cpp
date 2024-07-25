@@ -8,11 +8,14 @@
 #include "FlashlightEngine/Renderer/Mesh.hpp"
 
 namespace Flashlight {
-    Mesh::Mesh(const VulkanWrapper::Device& device, const std::vector<Vertex>& vertices)
-    : m_Vertices(vertices), m_VertexBuffer(device, sizeof(m_Vertices[0]) * vertices.size(),
-                                             VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-                                             VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT),
-     m_Device(device) {
+    Mesh::Mesh(const VulkanWrapper::Device& device, const std::vector<Vertex>& vertices,
+               const std::vector<u32>& indices)
+    : m_Vertices(vertices), m_Indices(indices),
+      m_VertexBuffer(device, sizeof(vertices[0]) * vertices.size(), VK_BUFFER_USAGE_TRANSFER_DST_BIT |
+          VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT),
+      m_IndexBuffer(device, sizeof(indices[0]) * indices.size(), VK_BUFFER_USAGE_TRANSFER_DST_BIT |
+          VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT), m_Device(device) {
+        
         SendMeshData();
     }
     
@@ -20,22 +23,28 @@ namespace Flashlight {
         constexpr VkDeviceSize offsets[] = {0};
         const VkBuffer vertexBuffer = m_VertexBuffer.GetNativeBuffer();
         vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vertexBuffer, offsets);
+        vkCmdBindIndexBuffer(commandBuffer, m_IndexBuffer.GetNativeBuffer(), 0, VK_INDEX_TYPE_UINT32);
     }
 
 
     void Mesh::Draw(const VkCommandBuffer commandBuffer) const {
-        vkCmdDraw(commandBuffer, static_cast<u32>(m_Vertices.size()), 1, 0, 0);
+        vkCmdDrawIndexed(commandBuffer, static_cast<u32>(m_Indices.size()), 1, 0, 0, 0);
     }
 
-    void Mesh::SendMeshData() {
-        const VkDeviceSize bufferSize = sizeof(m_Vertices[0]) * m_Vertices.size();
+    void Mesh::SendMeshData() const {
+        const VkDeviceSize vertexBufferSize = sizeof(m_Vertices[0]) * m_Vertices.size();
+        const VkDeviceSize indexBufferSize = sizeof(m_Indices[0]) * m_Indices.size();
 
-        VulkanWrapper::Buffer stagingBuffer{m_Device, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+        VulkanWrapper::Buffer stagingBuffer{m_Device, vertexBufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
                                             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
                                                 VK_MEMORY_PROPERTY_HOST_COHERENT_BIT};
 
-        stagingBuffer.SendData(sizeof(m_Vertices[0]) * m_Vertices.size(), m_Vertices.data(), 0);
+        stagingBuffer.SendData(vertexBufferSize, m_Vertices.data(), 0);
 
-        m_Device.CopyBuffer(stagingBuffer.GetNativeBuffer(), m_VertexBuffer.GetNativeBuffer(), bufferSize);
+        m_Device.CopyBuffer(stagingBuffer.GetNativeBuffer(), m_VertexBuffer.GetNativeBuffer(), vertexBufferSize);
+
+        stagingBuffer.SendData(indexBufferSize, m_Indices.data(), 0);
+
+        m_Device.CopyBuffer(stagingBuffer.GetNativeBuffer(), m_IndexBuffer.GetNativeBuffer(), indexBufferSize);
     }
 }

@@ -26,13 +26,16 @@ namespace Flashlight {
 
     class Mesh {
         std::vector<Vertex> m_Vertices;
+        std::vector<u32> m_Indices;
 
         VulkanWrapper::Buffer m_VertexBuffer;
-
+        VulkanWrapper::Buffer m_IndexBuffer;
+        
         const VulkanWrapper::Device& m_Device;
         
     public:
-        explicit Mesh(const VulkanWrapper::Device& device, const std::vector<Vertex>& vertices);
+        explicit Mesh(const VulkanWrapper::Device& device, const std::vector<Vertex>& vertices,
+                      const std::vector<u32>& indices);
         ~Mesh() = default;
 
         Mesh(const Mesh& rhs) = default;
@@ -45,9 +48,10 @@ namespace Flashlight {
         void Draw(VkCommandBuffer commandBuffer) const;
 
         [[nodiscard]] inline std::vector<Vertex> GetVertices() const;
+        [[nodiscard]] inline std::vector<u32> GetIndices() const;
 
     private:
-        void SendMeshData();
+        void SendMeshData() const;
     };
 
 #include "Mesh.inl"
