@@ -60,6 +60,10 @@ namespace Flashlight {
         static inline void EndRenderPass(VkCommandBuffer commandBuffer);
         void EndFrame();
 
+        [[nodiscard]] inline VulkanWrapper::Instance& GetInstance() const;
+        [[nodiscard]] inline VulkanWrapper::Surface& GetSurface() const;
+        [[nodiscard]] inline VulkanWrapper::Device& GetDevice() const;
+        [[nodiscard]] inline VulkanWrapper::SwapChain& GetSwapChain() const;
         [[nodiscard]] inline VulkanWrapper::GraphicsPipeline& GetPipeline() const;
 
     private:

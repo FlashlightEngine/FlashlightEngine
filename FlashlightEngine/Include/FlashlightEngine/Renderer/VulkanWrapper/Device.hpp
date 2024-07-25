@@ -73,7 +73,9 @@ namespace Flashlight::VulkanWrapper {
         [[nodiscard]] inline VkDevice GetNativeDevice() const;
         [[nodiscard]] inline VkQueue GetGraphicsQueue() const;
         [[nodiscard]] inline VkQueue GetPresentQueue() const;
-#pragma endregion 
+#pragma endregion
+
+        [[nodiscard]] u32 FindMemoryType(u32 typeFilter, VkMemoryPropertyFlags properties) const;
 
     private:
         void PickPhysicalDevice();

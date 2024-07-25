@@ -8,7 +8,7 @@
 #include "FlashlightEngine/Renderer/Renderer.hpp"
 
 #include "FlashlightEngine/Renderer/VulkanWrapper/Instance.hpp"
-#include "FlashlightEngine/Renderer/Model.hpp"
+#include "FlashlightEngine/Renderer/Mesh.hpp"
 
 namespace Flashlight {
     Renderer::Renderer(const DebugLevel& debugLevel, Window& window) : m_Window(window) {
@@ -132,13 +132,13 @@ namespace Flashlight {
             *m_Device, "Shaders/basic.frag", VulkanWrapper::ShaderType::Fragment
         };
 
+        const auto bindingDescriptions = Vertex::GetBindingDescription();
+        const auto attributeDescriptions = Vertex::GetAttributesDescriptions();
+        
         VulkanWrapper::GraphicsPipeline::Builder pipelineBuilder{*m_Device};
         pipelineBuilder.VertexShader(vertexShaderModule);
         pipelineBuilder.FragmentShader(fragmentShaderModule);
-        pipelineBuilder.VertexInputState({Vertex::GetBindingDescription()}, {
-                                             Vertex::GetAttributesDescriptions().begin(),
-                                             Vertex::GetAttributesDescriptions().end()
-                                         });
+        pipelineBuilder.VertexInputState(bindingDescriptions, attributeDescriptions);
         pipelineBuilder.InputAssemblyState(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, false);
         pipelineBuilder.Viewport(m_SwapChain->GetSwapChainExtent());
         pipelineBuilder.RasterizeState(VK_POLYGON_MODE_FILL, VK_CULL_MODE_BACK_BIT);

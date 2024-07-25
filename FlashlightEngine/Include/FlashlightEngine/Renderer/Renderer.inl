@@ -11,6 +11,21 @@ inline void Renderer::EndRenderPass(const VkCommandBuffer commandBuffer) {
     vkCmdEndRenderPass(commandBuffer);
 }
 
+inline VulkanWrapper::Instance& Renderer::GetInstance() const {
+    return *m_Instance;
+}
+
+inline VulkanWrapper::Surface& Renderer::GetSurface() const {
+    return *m_Surface;
+}
+
+inline VulkanWrapper::Device& Renderer::GetDevice() const {
+    return *m_Device;
+}
+
+inline VulkanWrapper::SwapChain& Renderer::GetSwapChain() const {
+    return *m_SwapChain;
+}
 
 inline VulkanWrapper::GraphicsPipeline& Renderer::GetPipeline() const {
     return *m_GraphicsPipeline;

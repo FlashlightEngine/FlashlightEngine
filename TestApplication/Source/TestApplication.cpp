@@ -8,7 +8,7 @@ bool TestApplication::Init() {
         {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}
     };
 
-    m_TriangleModel = std::make_unique<Flashlight::Model>(triangleVertices);
+    m_TriangleMesh = std::make_unique<Flashlight::Mesh>(m_Renderer->GetDevice(), triangleVertices);
 
     m_IsRunning = true;
 
@@ -26,7 +26,8 @@ void TestApplication::Render() {
 
         m_Renderer->GetPipeline().Bind(commandBuffer);
 
-        vkCmdDraw(commandBuffer, 3, 1, 0, 0);
+        m_TriangleMesh->Bind(commandBuffer);
+        m_TriangleMesh->Draw(commandBuffer);
 
         m_Renderer->EndRenderPass(commandBuffer);
 

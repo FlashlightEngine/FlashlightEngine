@@ -139,6 +139,21 @@ namespace Flashlight::VulkanWrapper {
         vkGetDeviceQueue(m_Device, m_QueueFamilies.PresentFamily, 0, &m_PresentQueue);
     }
 
+    u32 Device::FindMemoryType(const u32 typeFilter, const VkMemoryPropertyFlags properties) const {
+        VkPhysicalDeviceMemoryProperties memoryProperties;
+        vkGetPhysicalDeviceMemoryProperties(m_PhysicalDevice, &memoryProperties);
+
+        for (u32 i = 0; i < memoryProperties.memoryTypeCount; i++) {
+            if ((typeFilter & (1 << i)) && (memoryProperties.memoryTypes[i].propertyFlags & properties) == properties) {
+                return i;
+            }
+        }
+
+        Log::EngineError("Failed to find suitable memory type.");
+
+        return -1;
+    }
+
 #pragma region Physical Device Utility
     int Device::RateDeviceSuitability(const VkPhysicalDevice physicalDevice) {
         if (!IsDeviceSuitable(physicalDevice)) {
