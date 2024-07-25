@@ -25,7 +25,7 @@ void TestApplication::Render() {
         m_Renderer->BeginRenderPass(commandBuffer);
 
         m_Renderer->GetPipeline().Bind(commandBuffer);
-
+        
         m_TriangleMesh->Bind(commandBuffer);
         m_TriangleMesh->Draw(commandBuffer);
 

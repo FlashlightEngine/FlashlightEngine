@@ -47,6 +47,8 @@ namespace Flashlight::VulkanWrapper {
             VK_KHR_SWAPCHAIN_EXTENSION_NAME
         };
 
+        VkCommandPool m_SingleTimeCommandPool = VK_NULL_HANDLE;
+
         Instance& m_Instance;
         std::vector<const char*> m_ValidationLayers;
         Surface& m_Surface;
@@ -76,10 +78,12 @@ namespace Flashlight::VulkanWrapper {
 #pragma endregion
 
         [[nodiscard]] u32 FindMemoryType(u32 typeFilter, VkMemoryPropertyFlags properties) const;
+        void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size) const;
 
     private:
         void PickPhysicalDevice();
         void CreateLogicalDevice(const DebugLevel& debugLevel);
+        void CreateSingleTimeCommandsPool();
 
 #pragma region Physical Device Utility
         [[nodiscard]] int RateDeviceSuitability(VkPhysicalDevice physicalDevice);

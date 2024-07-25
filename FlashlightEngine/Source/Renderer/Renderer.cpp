@@ -13,7 +13,6 @@
 namespace Flashlight {
     Renderer::Renderer(const DebugLevel& debugLevel, Window& window) : m_Window(window) {
         InitializeVulkan(debugLevel, window);
-        RecreateSwapChain();
         CreatePipeline();
         CreateCommandPool();
         AllocateCommandBuffers();
@@ -122,6 +121,13 @@ namespace Flashlight {
         m_Surface = std::make_unique<VulkanWrapper::Surface>(*m_Instance, window);
 
         m_Device = std::make_unique<VulkanWrapper::Device>(*m_Instance, *m_Surface, debugLevel);
+
+        VulkanWrapper::SwapChainDescription description{};
+        description.Surface = m_Surface->GetNativeSurface();
+        description.WindowExtent = m_Window.GetWindowExtent();
+        description.OldSwapChain = nullptr;
+        
+        m_SwapChain = std::make_unique<VulkanWrapper::SwapChain>(*m_Device, description);
     }
 
     void Renderer::CreatePipeline() {

@@ -139,12 +139,24 @@ namespace Flashlight::VulkanWrapper {
         vkGetDeviceQueue(m_Device, m_QueueFamilies.PresentFamily, 0, &m_PresentQueue);
     }
 
+    void Device::CreateSingleTimeCommandsPool() {
+        VkCommandPoolCreateInfo poolInfo{};
+        poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+        poolInfo.queueFamilyIndex = m_QueueFamilies.GraphicsFamily;
+        poolInfo.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT;
+
+        if (vkCreateCommandPool(m_Device, &poolInfo, nullptr, &m_SingleTimeCommandPool) != VK_SUCCESS) {
+            Log::EngineError("Failed to create single time command pool.");
+        }
+    }
+
     u32 Device::FindMemoryType(const u32 typeFilter, const VkMemoryPropertyFlags properties) const {
         VkPhysicalDeviceMemoryProperties memoryProperties;
         vkGetPhysicalDeviceMemoryProperties(m_PhysicalDevice, &memoryProperties);
 
         for (u32 i = 0; i < memoryProperties.memoryTypeCount; i++) {
-            if ((typeFilter & (1 << i)) && (memoryProperties.memoryTypes[i].propertyFlags & properties) == properties) {
+            if ((typeFilter & (1 << i)) && (memoryProperties.memoryTypes[i].propertyFlags & properties) ==
+                properties) {
                 return i;
             }
         }
@@ -152,6 +164,41 @@ namespace Flashlight::VulkanWrapper {
         Log::EngineError("Failed to find suitable memory type.");
 
         return -1;
+    }
+
+    void Device::CopyBuffer(const VkBuffer srcBuffer, const VkBuffer dstBuffer, const VkDeviceSize size) const {
+        VkCommandBufferAllocateInfo allocateInfo{};
+        allocateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+        allocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        allocateInfo.commandPool = m_SingleTimeCommandPool;
+        allocateInfo.commandBufferCount = 1;
+
+        VkCommandBuffer commandBuffer;
+        vkAllocateCommandBuffers(m_Device, &allocateInfo, &commandBuffer);
+
+        VkCommandBufferBeginInfo beginInfo{};
+        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+        vkBeginCommandBuffer(commandBuffer, &beginInfo);
+
+        VkBufferCopy copyRegion;
+        copyRegion.srcOffset = 0;
+        copyRegion.dstOffset = 0;
+        copyRegion.size = size;
+        vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
+
+        vkEndCommandBuffer(commandBuffer);
+
+        VkSubmitInfo submitInfo{};
+        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        submitInfo.commandBufferCount = 1;
+        submitInfo.pCommandBuffers = &commandBuffer;
+
+        vkQueueSubmit(m_GraphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
+        vkQueueWaitIdle(m_GraphicsQueue);
+
+        vkFreeCommandBuffers(m_Device, m_SingleTimeCommandPool, 1, &commandBuffer);
     }
 
 #pragma region Physical Device Utility

@@ -28,6 +28,8 @@ namespace Flashlight {
         std::vector<Vertex> m_Vertices;
 
         VulkanWrapper::Buffer m_VertexBuffer;
+
+        const VulkanWrapper::Device& m_Device;
         
     public:
         explicit Mesh(const VulkanWrapper::Device& device, const std::vector<Vertex>& vertices);

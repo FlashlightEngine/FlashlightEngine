@@ -13,9 +13,15 @@ inline Device::Device(Instance& instance, Surface& surface, const DebugLevel& de
                                                       m_Surface(surface) {
     PickPhysicalDevice();
     CreateLogicalDevice(debugLevel);
+    CreateSingleTimeCommandsPool();
 }
 
 inline Device::~Device() {
+    if (m_SingleTimeCommandPool) {
+        Log::EngineTrace("Destroying single time command pool.");
+        vkDestroyCommandPool(m_Device, m_SingleTimeCommandPool, nullptr);
+    }
+    
     if (m_Device) {
         Log::EngineTrace("Destroying Vulkan device.");
         vkDestroyDevice(m_Device, nullptr);

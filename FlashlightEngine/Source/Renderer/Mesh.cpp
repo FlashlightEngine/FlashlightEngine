@@ -10,9 +10,9 @@
 namespace Flashlight {
     Mesh::Mesh(const VulkanWrapper::Device& device, const std::vector<Vertex>& vertices)
     : m_Vertices(vertices), m_VertexBuffer(device, sizeof(m_Vertices[0]) * vertices.size(),
-                                             VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_SHARING_MODE_EXCLUSIVE,
-                                             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-                                             VK_MEMORY_PROPERTY_HOST_COHERENT_BIT) {
+                                             VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+                                             VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT),
+     m_Device(device) {
         SendMeshData();
     }
     
@@ -28,6 +28,14 @@ namespace Flashlight {
     }
 
     void Mesh::SendMeshData() {
-        m_VertexBuffer.SendData(sizeof(m_Vertices[0]) * m_Vertices.size(), m_Vertices.data(), 0);
+        const VkDeviceSize bufferSize = sizeof(m_Vertices[0]) * m_Vertices.size();
+
+        VulkanWrapper::Buffer stagingBuffer{m_Device, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                                            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                                                VK_MEMORY_PROPERTY_HOST_COHERENT_BIT};
+
+        stagingBuffer.SendData(sizeof(m_Vertices[0]) * m_Vertices.size(), m_Vertices.data(), 0);
+
+        m_Device.CopyBuffer(stagingBuffer.GetNativeBuffer(), m_VertexBuffer.GetNativeBuffer(), bufferSize);
     }
 }

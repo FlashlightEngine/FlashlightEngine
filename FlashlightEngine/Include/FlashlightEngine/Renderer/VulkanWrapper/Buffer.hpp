@@ -11,7 +11,7 @@ namespace Flashlight::VulkanWrapper {
         const Device& m_Device;
 
     public:
-        Buffer(const Device& device, VkDeviceSize bufferSize, VkBufferUsageFlags usage, VkSharingMode sharingMode,
+        Buffer(const Device& device, VkDeviceSize bufferSize, VkBufferUsageFlags usage,
                VkMemoryPropertyFlags properties);
         inline ~Buffer();
 

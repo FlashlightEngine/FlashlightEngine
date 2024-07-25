@@ -2,12 +2,12 @@
 
 namespace Flashlight::VulkanWrapper {
     Buffer::Buffer(const Device& device, const VkDeviceSize bufferSize, const VkBufferUsageFlags usage,
-                   const VkSharingMode sharingMode, const VkMemoryPropertyFlags properties) : m_Device(device) {
+                   const VkMemoryPropertyFlags properties) : m_Device(device) {
         VkBufferCreateInfo bufferInfo{};
         bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
         bufferInfo.size = bufferSize;
         bufferInfo.usage = usage;
-        bufferInfo.sharingMode = sharingMode;
+        bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
         if (vkCreateBuffer(m_Device.GetNativeDevice(), &bufferInfo, nullptr, &m_Buffer) != VK_SUCCESS) {
             Log::EngineError("Failed to create Vulkan buffer.");
