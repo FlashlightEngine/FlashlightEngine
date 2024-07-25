@@ -2,7 +2,11 @@
 
 #include "FlashlightEngine/Application.hpp"
 
-class TestApplication final : public Flashlight::Application {    
+#include "FlashlightEngine/Renderer/Model.hpp"
+
+class TestApplication final : public Flashlight::Application {
+    std::unique_ptr<Flashlight::Model> m_TriangleModel;
+    
 public:
     TestApplication() = default;
     ~TestApplication() override = default;

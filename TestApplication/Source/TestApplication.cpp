@@ -2,6 +2,14 @@
 
 
 bool TestApplication::Init() {
+    const std::vector<Flashlight::Vertex> triangleVertices = {
+        {{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+        {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
+        {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}
+    };
+
+    m_TriangleModel = std::make_unique<Flashlight::Model>(triangleVertices);
+
     m_IsRunning = true;
 
     return true;

@@ -13,6 +13,7 @@
 
 #include "fltypes.hpp"
 
+#include <array>
 #include <cassert>
 #include <cstring>
 #include <filesystem>
