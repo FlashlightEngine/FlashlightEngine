@@ -31,6 +31,10 @@ inline VulkanWrapper::GraphicsPipeline& Renderer::GetPipeline() const {
     return *m_GraphicsPipeline;
 }
 
-inline const FrameObjects& Renderer::GetCurrentFrameObjects() const {
-    return m_FrameObjects[m_CurrentFrameNumber % m_MaxFramesInFlight];
+inline const Frame& Renderer::GetCurrentFrame() const {
+    return m_Frames[m_CurrentFrameNumber % m_MaxFramesInFlight];
+}
+
+inline u32 Renderer::GetCurrentFrameIndex() const {
+    return m_CurrentFrameNumber % m_MaxFramesInFlight;
 }

@@ -19,21 +19,13 @@ namespace Flashlight {
         InitializeVulkan(debugLevel, window);
         CreatePipeline();
         CreateCommandPool();
-        AllocateCommandBuffers();
-        CreateSynchronisationPrimitives();
+        CreateFrameResources();
     }
 
     Renderer::~Renderer() {
         vkDeviceWaitIdle(m_Device->GetNativeDevice());
 
-        for (const auto& frame : m_FrameObjects) {
-            frame.UniformBuffer.Unmap();
-            if (frame.ImageAvailableSemaphore && frame.RenderFinishedSemaphore && frame.InFlightFence) {
-                vkDestroySemaphore(m_Device->GetNativeDevice(), frame.ImageAvailableSemaphore, nullptr);
-                vkDestroySemaphore(m_Device->GetNativeDevice(), frame.RenderFinishedSemaphore, nullptr);
-                vkDestroyFence(m_Device->GetNativeDevice(), frame.InFlightFence, nullptr);
-            }
-        }
+        FreeFrameResources();
 
         if (m_CommandPool) {
             Log::EngineTrace("Destroying Vulkan command pool.");
@@ -43,7 +35,7 @@ namespace Flashlight {
 
     VkCommandBuffer Renderer::BeginFrame() {
         m_CurrentFrameNumber++;
-        const auto& frame = GetCurrentFrameObjects();
+        auto& frame = GetCurrentFrame();
         const auto result = m_SwapChain->AcquireNextImageIndex(frame, m_CurrentFrameIndex);
 
         if (result == VK_ERROR_OUT_OF_DATE_KHR) {
@@ -99,7 +91,7 @@ namespace Flashlight {
     }
 
     void Renderer::EndFrame() {
-        const auto& frame = GetCurrentFrameObjects();
+        const auto& frame = GetCurrentFrame();
         if (vkEndCommandBuffer(frame.FrameCommandBuffer) != VK_SUCCESS) {
             Log::EngineError("Failed to record command buffer.");
         }
@@ -136,8 +128,6 @@ namespace Flashlight {
         description.OldSwapChain = nullptr;
 
         m_SwapChain = std::make_unique<VulkanWrapper::SwapChain>(*m_Device, description);
-
-        m_DescriptorSet = std::make_unique<VulkanWrapper::DescriptorSetLayout>(*m_Device, VK_SHADER_STAGE_VERTEX_BIT);
     }
 
     void Renderer::CreatePipeline() {
@@ -151,6 +141,11 @@ namespace Flashlight {
         const auto bindingDescriptions = Vertex::GetBindingDescription();
         const auto attributeDescriptions = Vertex::GetAttributesDescriptions();
 
+        std::unique_ptr<VulkanWrapper::DescriptorSetLayout::Builder> builder;
+        builder->AddEntry({0, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_PIPELINE_STAGE_VERTEX_SHADER_BIT});
+
+        m_DescriptorSetLayout = builder->Build(*m_Device);
+
         VulkanWrapper::GraphicsPipeline::Builder pipelineBuilder{*m_Device};
         pipelineBuilder.VertexShader(vertexShaderModule);
         pipelineBuilder.FragmentShader(fragmentShaderModule);
@@ -160,7 +155,6 @@ namespace Flashlight {
         pipelineBuilder.RasterizeState(VK_POLYGON_MODE_FILL, VK_CULL_MODE_BACK_BIT);
         pipelineBuilder.MultisampleState();
         pipelineBuilder.ColorBlendState(false, VK_BLEND_OP_ADD, VK_BLEND_OP_ADD, false, VK_LOGIC_OP_COPY);
-        pipelineBuilder.PipelineLayout({m_DescriptorSet->GetLayout()}, {});
 
         m_GraphicsPipeline = pipelineBuilder.Build(m_SwapChain->GetRenderPass());
     }
@@ -178,23 +172,28 @@ namespace Flashlight {
         Log::EngineTrace("Vulkan command pool created");
     }
 
-    void Renderer::AllocateCommandBuffers() {
+    void Renderer::CreateFrameResources() {
+        AllocateFramesCommandBuffer();
+        CreateFramesSynchronisationPrimitives();
+        AllocateFramesUniformBuffers();
+    }
+
+    void Renderer::AllocateFramesCommandBuffer() {
         VkCommandBufferAllocateInfo allocateInfo{};
         allocateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
         allocateInfo.commandPool = m_CommandPool;
         allocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
         allocateInfo.commandBufferCount = 1;
-
-        for (auto& frame : m_FrameObjects) {
-            if (vkAllocateCommandBuffers(m_Device->GetNativeDevice(), &allocateInfo,
-                                         &frame.FrameCommandBuffer)
+        
+        for (auto& frame : m_Frames) {
+            if (vkAllocateCommandBuffers(m_Device->GetNativeDevice(), &allocateInfo, &frame.FrameCommandBuffer)
                 != VK_SUCCESS) {
-                Log::EngineFatal({0x01, 0x0F}, "Failed to allocate command buffer.");
+                Log::EngineFatal({0x01, 0x0F}, "Failed to allocate frame command buffer.");
             }
         }
     }
 
-    void Renderer::CreateSynchronisationPrimitives() {
+    void Renderer::CreateFramesSynchronisationPrimitives() {
         VkSemaphoreCreateInfo semaphoreInfo{};
         semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 
@@ -202,28 +201,39 @@ namespace Flashlight {
         fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
         fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
-        for (auto& frame : m_FrameObjects) {
-            if (vkCreateSemaphore(m_Device->GetNativeDevice(), &semaphoreInfo, nullptr,
-                                  &frame.ImageAvailableSemaphore) ||
-                vkCreateSemaphore(m_Device->GetNativeDevice(), &semaphoreInfo, nullptr,
-                                  &frame.RenderFinishedSemaphore) ||
-                vkCreateFence(m_Device->GetNativeDevice(), &fenceInfo, nullptr, &frame.InFlightFence)
-                != VK_SUCCESS) {
+        for (auto& frame : m_Frames) {
+            if (vkCreateSemaphore(m_Device->GetNativeDevice(), &semaphoreInfo, nullptr, &frame.ImageAvailableSemaphore) != VK_SUCCESS ||
+            vkCreateSemaphore(m_Device->GetNativeDevice(), &semaphoreInfo, nullptr, &frame.RenderFinishedSemaphore) != VK_SUCCESS ||
+            vkCreateFence(m_Device->GetNativeDevice(), &fenceInfo, nullptr, &frame.InFlightFence) != VK_SUCCESS) {
                 Log::EngineFatal({0x01, 0x10}, "Failed to create synchronisation primitives.");
             }
         }
     }
 
-    void Renderer::CreateUniformBuffers() {
+    void Renderer::AllocateFramesUniformBuffers() {
         VkDeviceSize bufferSize = sizeof(UniformBufferObject);
+        
+        for (auto& frame : m_Frames) {
+            frame.UniformBuffer = std::make_unique<VulkanWrapper::Buffer>(*m_Device, bufferSize,
+                                                                          VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                                                                          VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                                                                          VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
-        for (auto& frame : m_FrameObjects) {
-            VulkanWrapper::Buffer ubo{
-                *m_Device, bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
-            };
-            frame.UniformBuffer = std::move(ubo);
-            frame.UniformBuffer.Map(bufferSize, 0);
+            frame.UniformBuffer->Map(bufferSize, 0);
+        }
+    }
+
+    void Renderer::FreeFrameResources() const {
+        vkDeviceWaitIdle(m_Device->GetNativeDevice());
+
+        for (const auto& frame : m_Frames) {
+            frame.UniformBuffer->Unmap();
+
+            if (frame.ImageAvailableSemaphore && frame.RenderFinishedSemaphore && frame.InFlightFence) {
+                vkDestroySemaphore(m_Device->GetNativeDevice(), frame.ImageAvailableSemaphore, nullptr);
+                vkDestroySemaphore(m_Device->GetNativeDevice(), frame.RenderFinishedSemaphore, nullptr);
+                vkDestroyFence(m_Device->GetNativeDevice(), frame.InFlightFence, nullptr);
+            }
         }
     }
 
@@ -245,7 +255,7 @@ namespace Flashlight {
     }
 
     void Renderer::UpdateUniformBuffer() const {
-        auto& frame = GetCurrentFrameObjects();
+        auto& frame = GetCurrentFrame();
 
         static auto startTime = std::chrono::high_resolution_clock::now();
 
@@ -262,6 +272,6 @@ namespace Flashlight {
                                               float>(m_SwapChain->GetSwapChainExtent().height), 0.1f, 10.0f);
         ubo.Projection[1][1] *= -1;
 
-        memcpy(frame.UniformBuffer.GetMappedMemory(), &ubo, sizeof(ubo));
+        memcpy(frame.UniformBuffer->GetMappedMemory(), &ubo, sizeof(ubo));
     }
 }

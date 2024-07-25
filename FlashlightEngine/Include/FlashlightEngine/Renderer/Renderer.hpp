@@ -34,7 +34,7 @@ namespace Flashlight {
 
         VkCommandPool m_CommandPool = VK_NULL_HANDLE;
 
-        std::vector<FrameObjects> m_FrameObjects{m_MaxFramesInFlight};
+        std::vector<Frame> m_Frames {m_MaxFramesInFlight};
         
         u32 m_CurrentFrameIndex = 0;
         u32 m_CurrentFrameNumber = 0;
@@ -66,13 +66,18 @@ namespace Flashlight {
         void InitializeVulkan(const DebugLevel& debugLevel, const Window& window);
         void CreatePipeline();
         void CreateCommandPool();
-        void AllocateCommandBuffers();
-        void CreateSynchronisationPrimitives();
-        void CreateUniformBuffers();
+        void CreateFrameResources();
+
+        void AllocateFramesCommandBuffer();
+        void CreateFramesSynchronisationPrimitives();
+        void AllocateFramesUniformBuffers();
+
+        void FreeFrameResources() const;
 
         void RecreateSwapChain();
 
-        [[nodiscard]] inline const FrameObjects& GetCurrentFrameObjects() const;
+        [[nodiscard]] inline const Frame& GetCurrentFrame() const;
+        [[nodiscard]] inline u32 GetCurrentFrameIndex() const;
         void UpdateUniformBuffer() const;
     };
 

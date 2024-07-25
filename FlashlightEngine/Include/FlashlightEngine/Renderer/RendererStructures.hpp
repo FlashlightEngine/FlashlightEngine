@@ -20,13 +20,13 @@ namespace Flashlight {
         glm::mat4 Projection;
     };
     
-    struct FrameObjects {
-        VkCommandBuffer FrameCommandBuffer;
+    struct Frame {
+        VkCommandBuffer FrameCommandBuffer{};
 
         VkSemaphore ImageAvailableSemaphore{};
         VkSemaphore RenderFinishedSemaphore{};
         VkFence InFlightFence{};
 
-        VulkanWrapper::Buffer UniformBuffer;
+        std::shared_ptr<VulkanWrapper::Buffer> UniformBuffer;
     };
 }

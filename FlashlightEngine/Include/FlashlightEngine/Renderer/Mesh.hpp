@@ -34,8 +34,8 @@ namespace Flashlight {
         const VulkanWrapper::Device& m_Device;
         
     public:
-        explicit Mesh(const VulkanWrapper::Device& device, const std::vector<Vertex>& vertices,
-                      const std::vector<u32>& indices);
+        Mesh(const VulkanWrapper::Device& device, const std::vector<Vertex>& vertices,
+             const std::vector<u32>& indices);
         ~Mesh() = default;
 
         Mesh(const Mesh& rhs) = default;

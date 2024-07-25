@@ -16,7 +16,7 @@ Buffer::~Buffer() {
     }
 }
 
-inline Buffer::Buffer(Buffer&& rhs) : m_Device(rhs.m_Device) {
+inline Buffer::Buffer(Buffer&& rhs) noexcept : m_Device(rhs.m_Device) {
     m_Buffer = rhs.m_Buffer;
     m_BufferMemory = rhs.m_BufferMemory;
     m_MappedMemory = rhs.m_MappedMemory;

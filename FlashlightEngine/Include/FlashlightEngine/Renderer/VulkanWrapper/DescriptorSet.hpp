@@ -3,23 +3,37 @@
 #include "FlashlightEngine/Renderer/VulkanWrapper/Device.hpp"
 
 namespace Flashlight::VulkanWrapper {
-    class DescriptorSetLayout {
-        VkDescriptorSetLayoutBinding m_UboLayoutBinding;
-        VkDescriptorSetLayout m_Layout;
+    struct DescriptorSetLayoutEntry {
+        u32 BindingNumber;
+        u32 BindingCount;
+        VkDescriptorType DescriptorType;
+        VkPipelineStageFlags Stages;
+    };
 
-        const Device& m_Device;        
+    class DescriptorSetLayout {
+        VkDescriptorSetLayout m_Layout = VK_NULL_HANDLE;
+
+        const Device& m_Device;
+
     public:
-        DescriptorSetLayout(const Device& device, VkPipelineStageFlags stages);
+        class Builder {
+            std::vector<DescriptorSetLayoutEntry> m_Entries;
+            
+        public:
+            Builder& AddEntry(const DescriptorSetLayoutEntry& entry);
+            [[nodiscard]] std::unique_ptr<DescriptorSetLayout> Build(const Device& device) const;
+        };
+        
+        DescriptorSetLayout(const Device& device, const std::vector<VkDescriptorSetLayoutBinding>& bindings);
         ~DescriptorSetLayout();
 
         DescriptorSetLayout(const DescriptorSetLayout&) = delete;
-        DescriptorSetLayout(DescriptorSetLayout&&) = delete;
+        DescriptorSetLayout(DescriptorSetLayout&& rhs) noexcept;
 
         DescriptorSetLayout& operator=(const DescriptorSetLayout&) = delete;
-        DescriptorSetLayout& operator=(DescriptorSetLayout&&) = delete;
+        DescriptorSetLayout& operator=(DescriptorSetLayout&& rhs) noexcept;
 
-        [[nodiscard]] inline  VkDescriptorSetLayoutBinding GetUboBinding() const;
-        [[nodiscard]] inline  VkDescriptorSetLayout GetLayout() const;
+        [[nodiscard]] inline VkDescriptorSetLayout GetNativeLayout() const;
     };
 
 #include "DescriptorSet.inl"

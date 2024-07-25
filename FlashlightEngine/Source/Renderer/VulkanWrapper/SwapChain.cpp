@@ -27,35 +27,35 @@ namespace Flashlight::VulkanWrapper {
         m_Description.OldSwapChain = nullptr;
     }
 
-    VkResult SwapChain::AcquireNextImageIndex(const FrameObjects& renderObjects, u32& imageIndex) const {
-        vkWaitForFences(m_Device.GetNativeDevice(), 1, &renderObjects.InFlightFence, VK_TRUE,
+    VkResult SwapChain::AcquireNextImageIndex(const Frame& frame, u32& imageIndex) const {
+        vkWaitForFences(m_Device.GetNativeDevice(), 1, &frame.InFlightFence, VK_TRUE,
                         std::numeric_limits<u64>::max());
 
-        vkResetFences(m_Device.GetNativeDevice(), 1, &renderObjects.InFlightFence);
+        vkResetFences(m_Device.GetNativeDevice(), 1, &frame.InFlightFence);
 
         return vkAcquireNextImageKHR(m_Device.GetNativeDevice(), m_SwapChain, std::numeric_limits<u64>::max(),
-                                     renderObjects.ImageAvailableSemaphore, VK_NULL_HANDLE, &imageIndex);
+                                     frame.ImageAvailableSemaphore, VK_NULL_HANDLE, &imageIndex);
     }
 
-    VkResult SwapChain::SubmitCommandBufferAndPresent(const FrameObjects& renderObjects,
-                                                      const u32& imageIndex) const {
+    VkResult SwapChain::SubmitCommandBufferAndPresent(const Frame& frame, const u32& imageIndex) const {
         VkSubmitInfo submitInfo{};
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
-        const VkSemaphore waitSemaphores[] = {renderObjects.ImageAvailableSemaphore};
+        const VkSemaphore waitSemaphores[] = {frame.ImageAvailableSemaphore};
         constexpr VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
         submitInfo.waitSemaphoreCount = 1;
         submitInfo.pWaitSemaphores = waitSemaphores;
         submitInfo.pWaitDstStageMask = waitStages;
 
         submitInfo.commandBufferCount = 1;
-        submitInfo.pCommandBuffers = &renderObjects.FrameCommandBuffer;
+        submitInfo.pCommandBuffers = &frame.FrameCommandBuffer;
 
-        const VkSemaphore signalSemaphores[] = {renderObjects.RenderFinishedSemaphore};
+        const VkSemaphore signalSemaphores[] = {frame.RenderFinishedSemaphore};
         submitInfo.signalSemaphoreCount = 1;
         submitInfo.pSignalSemaphores = signalSemaphores;
 
-        if (vkQueueSubmit(m_Device.GetGraphicsQueue(), 1, &submitInfo, renderObjects.InFlightFence) != VK_SUCCESS) {
+        if (vkQueueSubmit(m_Device.GetGraphicsQueue(), 1, &submitInfo, frame.InFlightFence)
+            != VK_SUCCESS) {
             Log::EngineError("Failed to submit work to graphics queue.");
         }
 
