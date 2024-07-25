@@ -34,3 +34,7 @@ inline std::array<VkVertexInputAttributeDescription, 2> Vertex::GetAttributesDes
 
 inline Model::Model(const std::vector<Vertex>& vertices) : m_Vertices(vertices) {
 }
+
+inline std::vector<Vertex> Model::GetVertices() const {
+    return m_Vertices;
+}

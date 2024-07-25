@@ -35,9 +35,9 @@ namespace Flashlight {
         Model& operator=(const Model& rhs) = default;
         Model& operator=(Model&& rhs) = default;
 
-        void SendData(const VkDevice& device, const VkBuffer& vertexBuffer);
         void Draw(VkCommandBuffer commandBuffer);
-        void FreeBuffer(const VkBuffer& buffer);
+
+        [[nodiscard]] inline std::vector<Vertex> GetVertices() const;
     };
 
 #include "Model.inl"
