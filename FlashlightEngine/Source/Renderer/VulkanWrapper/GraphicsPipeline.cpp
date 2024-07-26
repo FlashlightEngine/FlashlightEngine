@@ -120,6 +120,7 @@ namespace Flashlight::VulkanWrapper {
     void GraphicsPipeline::Builder::PipelineLayout(const std::vector<VkDescriptorSetLayout>& layouts,
                                                         const std::vector<VkPushConstantRange>&
                                                         pushConstantRanges) {
+        m_PipelineLayoutCreateInfo = {};
         m_PipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
         m_PipelineLayoutCreateInfo.setLayoutCount = static_cast<u32>(layouts.size());
         m_PipelineLayoutCreateInfo.pSetLayouts = layouts.data();

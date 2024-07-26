@@ -2,10 +2,6 @@
 
 Buffer::~Buffer() {
     vkDeviceWaitIdle(m_Device.GetNativeDevice());
-
-    if (m_MappedMemory != nullptr) {
-        Unmap();
-    }
     
     if (m_Buffer) {
         vkDestroyBuffer(m_Device.GetNativeDevice(), m_Buffer, nullptr);

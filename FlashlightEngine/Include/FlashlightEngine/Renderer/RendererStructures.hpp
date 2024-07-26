@@ -11,8 +11,6 @@
 
 #include <glm/glm.hpp>
 
-#include <volk.h>
-
 namespace Flashlight {
     struct UniformBufferObject {
         glm::mat4 Model;
