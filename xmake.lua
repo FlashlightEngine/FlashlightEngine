@@ -20,7 +20,7 @@ if (is_mode("debug")) then
 end
 
 -- Define packages to download.
-add_requires("glfw 3.4", "glm 1.0.1", "spdlog v1.9.0", "magic_enum v0.9.5")
+add_requires("glad v0.1.36", "glfw 3.4", "glm 1.0.1", "spdlog v1.9.0", "magic_enum v0.9.5")
 add_requires("glslang 1.3.283+0", {configs = {binaryOnly = true}})
 
 local outputdir = "$(mode)-$(os)-$(arch)"
@@ -52,7 +52,7 @@ target("FlashlightEngine")
   set_pcxxheader("FlashlightEngine/Include/FlashlightEngine/pch.hpp")
 
   -- public dependencies
-  add_packages("glfw", "glm", "spdlog", {public = true})
+  add_packages("glad", "glfw", "glm", "spdlog", {public = true})
   -- private dependencies
   add_packages("magic_enum")
 
