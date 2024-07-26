@@ -25,7 +25,6 @@ namespace Flashlight {
 
     struct WindowData {
         i32 Width, Height;
-        bool ShouldInvalidateSwapChain = false;
     };
 
     class Window {
@@ -46,9 +45,6 @@ namespace Flashlight {
         [[nodiscard]] inline bool ShouldClose() const;
         [[nodiscard]] inline i32 GetWidth() const;
         [[nodiscard]] inline i32 GetHeight() const;
-        [[nodiscard]] inline VkExtent2D GetWindowExtent() const;
-        [[nodiscard]] inline bool ShouldInvalidateSwapChain() const;
-        inline void SwapChainInvalidated();
 
         static inline void Update();
         inline void Close() const;

@@ -10,11 +10,10 @@
 #include "FlashlightEngine/Core/Logger.hpp"
 
 namespace Flashlight {
-    void Application::Run(const WindowProperties &windowProperties, const DebugLevel &debugLevel) {
+    void Application::Run(const WindowProperties &windowProperties) {
         Logger::Init();
 
         m_Window = std::make_unique<Window>(windowProperties);
-        m_Renderer = std::make_unique<Renderer>(debugLevel, *m_Window);
 
         Log::AppInfo("Launching application.");
 

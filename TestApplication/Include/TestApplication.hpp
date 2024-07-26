@@ -2,11 +2,7 @@
 
 #include "FlashlightEngine/Application.hpp"
 
-#include "FlashlightEngine/Renderer/Mesh.hpp"
-
-class TestApplication final : public Flashlight::Application {
-    std::unique_ptr<Flashlight::Mesh> m_TriangleMesh;
-    
+class TestApplication final : public Flashlight::Application {    
 public:
     TestApplication() = default;
     ~TestApplication() override = default;

@@ -32,18 +32,6 @@ inline i32 Window::GetHeight() const {
     return m_Data.Height;
 }
 
-inline VkExtent2D Window::GetWindowExtent() const {
-    return {static_cast<u32>(m_Data.Width), static_cast<u32>(m_Data.Height)};
-}
-
-inline bool Window::ShouldInvalidateSwapChain() const {
-    return m_Data.ShouldInvalidateSwapChain;
-}
-
-inline void Window::SwapChainInvalidated() {
-    m_Data.ShouldInvalidateSwapChain = false;
-}
-
 inline void Window::Update() {
     glfwPollEvents();
 }

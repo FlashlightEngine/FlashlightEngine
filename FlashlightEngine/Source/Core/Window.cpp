@@ -9,8 +9,6 @@
 
 #include "FlashlightEngine/Core/Logger.hpp"
 
-#include "FlashlightEngine/pch.hpp"
-
 namespace Flashlight {
     Window::Window(const WindowProperties& windowProperties) {
         if (!glfwInit()) {
@@ -32,11 +30,10 @@ namespace Flashlight {
 
         glfwSetWindowUserPointer(m_Window, &m_Data);
 
-        glfwSetWindowSizeCallback(m_Window, [](GLFWwindow* window, int width, int height) {
+        glfwSetWindowSizeCallback(m_Window, [](GLFWwindow* window, const int width, const int height) {
             const auto data = static_cast<WindowData*>(glfwGetWindowUserPointer(window));
             data->Width = width;
             data->Height = height;
-            data->ShouldInvalidateSwapChain = true;
         });
     }
 }

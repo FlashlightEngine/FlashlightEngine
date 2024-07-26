@@ -7,7 +7,7 @@
  */
 #pragma once
 
-#include "FlashlightEngine/Renderer/Renderer.hpp"
+#include "FlashlightEngine/Core/Window.hpp"
 
 #include "FlashlightEngine/pch.hpp"
 
@@ -16,7 +16,7 @@ namespace Flashlight {
     public:
         virtual ~Application() = default;
 
-        void Run(const WindowProperties &windowProperties, const DebugLevel &debugLevel);
+        void Run(const WindowProperties &windowProperties);
 
         virtual bool Init() = 0;
         virtual void Update() = 0;
@@ -29,7 +29,6 @@ namespace Flashlight {
     protected:
         bool m_IsRunning = false;
         std::unique_ptr<Window>  m_Window;
-        std::unique_ptr<Renderer> m_Renderer;
     };
 
     std::unique_ptr<Application> CreateApp();
