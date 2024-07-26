@@ -1,6 +1,6 @@
 #pragma once
 
-#include "FlashlightEngine/Application.hpp"
+#include <FlashlightEngine/Application.hpp>
 
 class TestApplication final : public Flashlight::Application {    
 public:
@@ -17,4 +17,7 @@ public:
     void Update() override;
     void Render() override;
     void Cleanup() override;
+
+private:
+    void ProcessInput();
 };
