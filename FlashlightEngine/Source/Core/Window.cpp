@@ -55,4 +55,21 @@ namespace Flashlight {
             data->Height = height;
         });
     }
+
+    KeyState Window::GetKeyState(Keys key) const {
+        if (glfwGetKey(m_Window, static_cast<i32>(key)) == GLFW_PRESS) {
+            return KeyState::Pressed;
+        }
+        
+        if (glfwGetKey(m_Window, static_cast<i32>(key)) == GLFW_RELEASE) {
+            return KeyState::Released;
+        }
+
+        if (glfwGetKey(m_Window, static_cast<i32>(key)) == GLFW_REPEAT) {
+            return KeyState::Repeated;
+        }
+
+        return KeyState::None;
+    }
+
 }
