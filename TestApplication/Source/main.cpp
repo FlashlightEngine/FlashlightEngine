@@ -3,8 +3,8 @@
 int main() {
     TestApplication app{};
 
-    const Flashlight::WindowProperties windowProperties {640, 480, "Test Application"};
-
+    const Flashlight::WindowProperties windowProperties {800, 600, "Test Application" };
+    
     app.Run(windowProperties);
 
     return 0;

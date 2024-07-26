@@ -13,7 +13,9 @@
 
 #include "fltypes.hpp"
 
+#include <array>
 #include <cassert>
+#include <chrono>
 #include <cstring>
 #include <filesystem>
 #include <fstream>

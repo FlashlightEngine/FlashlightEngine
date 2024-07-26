@@ -1,3 +1,10 @@
+/* Copyright (C) 2024 Jean "Pixfri" Letessier
+ * This file is part of "Flashlight Engine"
+ * For conditions of distribution and use, see copyright notice in LICENSE.
+ *
+ * File : Window.hpp
+ * Description : Declaration of the Window class. The Window class is used to create and manage a GLFW window.
+ */
 #pragma once
 
 #include "FlashlightEngine/Core/Logger.hpp"
@@ -16,11 +23,16 @@ namespace Flashlight {
         }
     };
 
+    struct WindowData {
+        i32 Width, Height;
+    };
+
     class Window {
         GLFWwindow* m_Window;
-
+        WindowData m_Data;
+        
     public:
-        explicit inline Window(const WindowProperties& windowProperties);
+        explicit Window(const WindowProperties& windowProperties);
         inline ~Window();
 
         Window(const Window&) = delete;
@@ -31,13 +43,11 @@ namespace Flashlight {
 
         [[nodiscard]] inline GLFWwindow* GetGlfwWindow() const;
         [[nodiscard]] inline bool ShouldClose() const;
+        [[nodiscard]] inline i32 GetWidth() const;
+        [[nodiscard]] inline i32 GetHeight() const;
 
         static inline void Update();
         inline void Close() const;
-
-    private:
-        void Create(const WindowProperties& windowProperties);
-        void Destroy() const;
     };
 
 #include "Window.inl"
