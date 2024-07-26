@@ -46,7 +46,7 @@ namespace Flashlight {
         [[nodiscard]] inline i32 GetWidth() const;
         [[nodiscard]] inline i32 GetHeight() const;
 
-        static inline void Update();
+        inline void Update() const;
         inline void Close() const;
     };
 

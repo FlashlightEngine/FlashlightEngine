@@ -9,13 +9,20 @@
 
 #include "FlashlightEngine/Core/Logger.hpp"
 
+#include <glad/glad.h>
+
 namespace Flashlight {
     Window::Window(const WindowProperties& windowProperties) {
         if (!glfwInit()) {
-            Log::EngineFatal({0x02, 0x00}, "Failed to initialize GLFW.");
+            Log::EngineFatal({0x01, 0x00}, "Failed to initialize GLFW.");
         }
 
-        glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+#ifdef __APPLE__
+        glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
+#endif
 
         Log::EngineTrace("Creating window.");
 
@@ -23,14 +30,26 @@ namespace Flashlight {
                                     nullptr, nullptr);
 
         if (!m_Window) {
-            Log::EngineFatal({0x02, 0x01}, "Failed to create window.");
+            glfwTerminate();
+            Log::EngineFatal({0x01, 0x01}, "Failed to create window.");
         } else {
             Log::EngineTrace("Window created.");
         }
+        glfwMakeContextCurrent(m_Window);
+
+        Log::EngineTrace("Loading OpenGL...");
+        // (clangd says that this cast isn't possible even though it is.)
+        if (!gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress))) {  // NOLINT(clang-diagnostic-cast-function-type-strict) 
+            Log::EngineFatal({0x01, 0x02}, "Failed to initialize OpenGL.");
+        } else {
+            Log::EngineTrace("OpenGL loaded.");
+        }
+        glViewport(0, 0, windowProperties.Width, windowProperties.Height);
 
         glfwSetWindowUserPointer(m_Window, &m_Data);
 
         glfwSetWindowSizeCallback(m_Window, [](GLFWwindow* window, const int width, const int height) {
+            glViewport(0, 0, width, height);
             const auto data = static_cast<WindowData*>(glfwGetWindowUserPointer(window));
             data->Width = width;
             data->Height = height;
