@@ -141,7 +141,7 @@ namespace Flashlight {
         const auto bindingDescriptions = Vertex::GetBindingDescription();
         const auto attributeDescriptions = Vertex::GetAttributesDescriptions();
 
-        std::unique_ptr<VulkanWrapper::DescriptorSetLayout::Builder> builder;
+        auto builder = std::make_unique<VulkanWrapper::DescriptorSetLayout::Builder>();
         builder->AddEntry({0, 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_PIPELINE_STAGE_VERTEX_SHADER_BIT});
 
         m_DescriptorSetLayout = builder->Build(*m_Device);
@@ -155,6 +155,7 @@ namespace Flashlight {
         pipelineBuilder.RasterizeState(VK_POLYGON_MODE_FILL, VK_CULL_MODE_BACK_BIT);
         pipelineBuilder.MultisampleState();
         pipelineBuilder.ColorBlendState(false, VK_BLEND_OP_ADD, VK_BLEND_OP_ADD, false, VK_LOGIC_OP_COPY);
+        pipelineBuilder.PipelineLayout({m_DescriptorSetLayout->GetNativeLayout()}, {});
 
         m_GraphicsPipeline = pipelineBuilder.Build(m_SwapChain->GetRenderPass());
     }
