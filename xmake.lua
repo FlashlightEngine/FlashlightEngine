@@ -21,7 +21,6 @@ end
 
 -- Define packages to download.
 add_requires("glad v0.1.36", "glfw 3.4", "glm 1.0.1", "spdlog v1.9.0", "magic_enum v0.9.5")
-add_requires("glslang 1.3.283+0", {configs = {binaryOnly = true}})
 
 local outputdir = "$(mode)-$(os)-$(arch)"
 
