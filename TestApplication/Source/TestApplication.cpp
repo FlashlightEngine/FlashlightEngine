@@ -12,6 +12,7 @@ void TestApplication::Update() {
 }
 
 void TestApplication::Render() {
+    m_Renderer->ClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 }
 
 void TestApplication::Cleanup() {
