@@ -25,6 +25,7 @@ namespace Flashlight {
 
     struct WindowData {
         i32 Width, Height;
+        bool ShouldRecreateSwapChain = false;
     };
 
     enum class KeyState {
@@ -180,6 +181,8 @@ namespace Flashlight {
         [[nodiscard]] inline bool ShouldClose() const;
         [[nodiscard]] inline i32 GetWidth() const;
         [[nodiscard]] inline i32 GetHeight() const;
+        [[nodiscard]] bool ShouldRecreateSwapChain() const;
+        inline void SwapChainRecreated();
         [[nodiscard]] KeyState GetKeyState(Keys key) const;
 
         static inline void Update();

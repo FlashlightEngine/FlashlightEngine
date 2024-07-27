@@ -32,6 +32,14 @@ inline i32 Window::GetHeight() const {
     return m_Data.Height;
 }
 
+inline bool Window::ShouldRecreateSwapChain() const {
+    return m_Data.ShouldRecreateSwapChain;
+}
+
+inline void Window::SwapChainRecreated() {
+    m_Data.ShouldRecreateSwapChain = false;
+}
+
 inline void Window::Update() {
     glfwPollEvents();
 }
