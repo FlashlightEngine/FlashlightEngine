@@ -1,29 +1,25 @@
 #include "TestApplication.hpp"
 
 
-bool TestApplication::Init(const Flashlight::WindowProperties& windowProperties) {
-    if (!Application::Init(windowProperties)) {
+bool TestApplication::Init(const Flashlight::WindowProperties& windowProperties,
+                           const Flashlight::DebugLevel& debugLevel) {
+    if (!Application::Init(windowProperties, debugLevel)) {
         Flashlight::Log::AppFatal({0x00, 0x01}, "Failed to initialize application base.");
     }
 
-    Flashlight::VertexPositionColor vertices[] = {
-        {Flashlight::VertexPosition{ 0.0f,  0.5f, 0.0f}, Flashlight::VertexColor{0.25f, 0.39f, 0.19f}},
-        {Flashlight::VertexPosition{-0.5f, -0.5f, 0.0f}, Flashlight::VertexColor{0.44f, 0.75f, 0.35f}},
-        {Flashlight::VertexPosition{ 0.5f, -0.5f, 0.0f}, Flashlight::VertexColor{0.38f, 0.55f, 0.20f}}
+    std::vector<Flashlight::Vertex> vertices = {
+        {{ -0.5f, -0.5f }, { 1.0f, 0.0f, 0.0f }},
+        {{  0.5f, -0.5f }, { 0.0f, 1.0f, 0.0f }},
+        {{  0.5f,  0.5f }, { 0.0f, 0.0f, 1.0f }},
+        {{ -0.5f,  0.5f }, { 1.0f, 1.0f, 1.0f }}
     };
 
-    D3D11_BUFFER_DESC bufferInfo = {};
-    bufferInfo.ByteWidth = sizeof(vertices);
-    bufferInfo.Usage = D3D11_USAGE_IMMUTABLE;
-    bufferInfo.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+    std::vector<u32> indices = {
+        0, 1, 2, 2, 3, 0
+    };
 
-    D3D11_SUBRESOURCE_DATA resourceData = {};
-    resourceData.pSysMem = vertices;
+    m_RectangleMesh = std::make_unique<Flashlight::Mesh>(m_Renderer->GetDevice(), vertices, indices);
 
-    if (FAILED(m_Renderer->GetDevice()->CreateBuffer(&bufferInfo, &resourceData, &m_TriangleVertices))) {
-        Flashlight::Log::EngineError("Failed to create vertex buffer.");
-    }
-    
     m_IsRunning = true;
 
     return true;
@@ -34,16 +30,19 @@ void TestApplication::Update() {
 }
 
 void TestApplication::Render() {
-    m_Renderer->BeginRendering(*m_Window);
+    VkCommandBuffer commandBuffer = m_Renderer->BeginFrame();
+    if (commandBuffer) {
+        m_Renderer->BeginRenderPass(commandBuffer);
 
-    u32 stride = m_Renderer->GetMainShader()->GetLayoutByteSize(Flashlight::VertexType::PositionColor);
-    constexpr u32 vertexOffset = 0;
-    m_Renderer->GetDeviceContext()->IASetVertexBuffers(0, 1, m_TriangleVertices.GetAddressOf(), &stride, &vertexOffset);
-    m_Renderer->GetDeviceContext()->Draw(3, 0);
-    
-    m_Renderer->EndRendering();
+        m_Renderer->UseMainPipeline(commandBuffer);
+
+        m_RectangleMesh->Draw(commandBuffer);
+
+        m_Renderer->EndRenderPass(commandBuffer);
+
+        m_Renderer->EndFrame();
+    }
 }
 
 void TestApplication::Cleanup() {
-    m_TriangleVertices.Reset();
 }

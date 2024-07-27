@@ -20,14 +20,17 @@ if (is_mode("debug")) then
 end
 
 -- Define packages to download.
-add_requires("glad v0.1.36", "glfw 3.4", "glm 1.0.1", "spdlog v1.9.0", "magic_enum v0.9.5")
+add_requires("volk 1.3.283+0", "glfw 3.4", "glm 1.0.1", "spdlog v1.9.0", "magic_enum v0.9.5")
+add_requires("glslang 1.3.283+0", {configs = {binaryOnly = true}})
+
+add_defines("VK_NO_PROTOTYPES", "GLFW_INCLUDE_VULKAN")
 
 local outputdir = "$(mode)-$(os)-$(arch)"
 
 -- A rule to copy resources from a target's 'Resources' directory.
 rule("cp-resources")
   after_build(function (target)
-    os.cp(target:name() .. "/Shaders", "build/" .. outputdir .. "/" .. target:name() .. "/bin")
+    -- os.cp(target:name() .. "/Resources", "build/" .. outputdir .. "/" .. target:name() .. "/bin")
   end)
 
 target("FlashlightEngine")
@@ -50,21 +53,23 @@ target("FlashlightEngine")
   set_pcxxheader("FlashlightEngine/Include/FlashlightEngine/pch.hpp")
 
   -- public dependencies
-  add_packages("glad", "glfw", "glm", "spdlog", {public = true})
+  add_packages("volk", "glfw", "glm", "spdlog", {public = true})
   -- private dependencies
   add_packages("magic_enum")
 
 target("TestApplication")
-    set_kind("binary")
-    add_rules("cp-resources")
+  set_kind("binary")
+  add_rules("cp-resources")
+  add_rules("utils.glsl2spv", {outputdir="build/" .. outputdir .. "/TestApplication/bin/Shaders"})
 
-    set_targetdir("build/" .. outputdir .. "/TestApplication/bin")
-    set_objectdir("build/" .. outputdir .. "/TestApplication/obj")
+  set_targetdir("build/" .. outputdir .. "/TestApplication/bin")
+  set_objectdir("build/" .. outputdir .. "/TestApplication/obj")
 
-    add_files("TestApplication/Source/**.cpp")
-    add_headerfiles("TestApplication/Include/**.hpp", "TestApplication/Include/**.h", "TestApplication/Include/**.inl")
-    add_includedirs("TestApplication/Include")
-    
-    add_headerfiles("TestApplication/Shaders/**") -- A little trick to make them show in the VS/Rider solution.
-    
-    add_deps("FlashlightEngine")
+  add_files("TestApplication/Source/**.cpp")
+  add_headerfiles("TestApplication/Include/**.hpp", "TestApplication/Include/**.h", "TestApplication/Include/**.inl")
+  add_includedirs("TestApplication/Include")
+  
+  add_files("TestApplication/Shaders/**") -- Tell utils.glsl2spv to compile shaders.
+  add_headerfiles("TestApplication/Shaders/**") -- A little trick to make them show in the VS/Rider solution.
+  
+  add_deps("FlashlightEngine")

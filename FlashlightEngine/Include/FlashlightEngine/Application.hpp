@@ -8,7 +8,7 @@
 #pragma once
 
 #include "FlashlightEngine/Core/Window.hpp"
-#include "FlashlightEngine/DX11Renderer/Renderer.hpp"
+#include "FlashlightEngine/Renderer//Renderer.hpp"
 
 #include "FlashlightEngine/pch.hpp"
 
@@ -17,10 +17,10 @@ namespace Flashlight {
     public:
         virtual ~Application() = default;
 
-        void Run(const WindowProperties &windowProperties);
+        void Run(const WindowProperties &windowProperties, const DebugLevel& debugLevel);
 
     protected:
-        virtual bool Init(const WindowProperties& windowProperties);
+        virtual bool Init(const WindowProperties& windowProperties, const DebugLevel& debugLevel);
         virtual void Update();
         virtual void Render() = 0;
         virtual void Cleanup() = 0;

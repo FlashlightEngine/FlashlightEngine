@@ -2,11 +2,10 @@
 
 #include <FlashlightEngine/Application.hpp>
 
-#include <FlashlightEngine/DX11Renderer/Mesh.hpp>
+#include <FlashlightEngine/Renderer/Mesh.hpp>
 
 class TestApplication final : public Flashlight::Application {
-    ComPtr<ID3D11Buffer> m_TriangleVertices = nullptr;
-    
+    std::unique_ptr<Flashlight::Mesh> m_RectangleMesh;
 public:
     TestApplication() = default;
     ~TestApplication() override = default;
@@ -18,7 +17,7 @@ public:
     TestApplication& operator=(TestApplication&&) = delete;
 
 protected:
-    bool Init(const Flashlight::WindowProperties& windowProperties) override;
+    bool Init(const Flashlight::WindowProperties& windowProperties, const Flashlight::DebugLevel& debugLevel) override;
     void Update() override;
     void Render() override;
     void Cleanup() override;

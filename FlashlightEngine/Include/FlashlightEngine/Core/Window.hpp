@@ -13,6 +13,8 @@
 
 #include <GLFW/glfw3.h>
 
+#include <volk.h>
+
 namespace Flashlight {
     struct WindowProperties {
         i32 Width, Height;
@@ -181,6 +183,7 @@ namespace Flashlight {
         [[nodiscard]] inline bool ShouldClose() const;
         [[nodiscard]] inline i32 GetWidth() const;
         [[nodiscard]] inline i32 GetHeight() const;
+        [[nodiscard]] inline VkExtent2D GetWindowExtent() const;
         [[nodiscard]] bool ShouldRecreateSwapChain() const;
         inline void SwapChainRecreated();
         [[nodiscard]] KeyState GetKeyState(Keys key) const;

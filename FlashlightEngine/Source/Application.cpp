@@ -10,8 +10,8 @@
 #include "FlashlightEngine/Core/Logger.hpp"
 
 namespace Flashlight {
-    void Application::Run(const WindowProperties &windowProperties) {
-        if (!Init(windowProperties)) {
+    void Application::Run(const WindowProperties &windowProperties, const DebugLevel& debugLevel) {
+        if (!Init(windowProperties, debugLevel)) {
             Log::AppFatal({0x00, 0x01}, "Failed to initialize application.");
         }
         
@@ -28,11 +28,11 @@ namespace Flashlight {
         Cleanup();
     }
 
-    bool Application::Init(const WindowProperties& windowProperties) {
+    bool Application::Init(const WindowProperties& windowProperties, const DebugLevel& debugLevel) {
         Logger::Init();
 
         m_Window = std::make_unique<Window>(windowProperties);
-        m_Renderer = std::make_unique<Renderer>(*m_Window);
+        m_Renderer = std::make_unique<Renderer>(debugLevel, *m_Window);
 
         return true;
     }
@@ -43,9 +43,5 @@ namespace Flashlight {
         }
 
         m_Window->Update();
-
-        if (m_Window->ShouldRecreateSwapChain()) {
-            m_Renderer->RecreateSwapChain(*m_Window);
-        }
     }
 }
