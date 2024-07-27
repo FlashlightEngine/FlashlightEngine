@@ -1,8 +1,8 @@
 #pragma once
 
-#include "FlashlightEngine/Application.hpp"
+#include <FlashlightEngine/Application.hpp>
 
-class TestApplication final : public Flashlight::Application {    
+class TestApplication final : public Flashlight::Application {
 public:
     TestApplication() = default;
     ~TestApplication() override = default;
@@ -13,7 +13,8 @@ public:
     TestApplication& operator=(const TestApplication&) = delete;
     TestApplication& operator=(TestApplication&&) = delete;
 
-    bool Init() override;
+protected:
+    bool Init(const Flashlight::WindowProperties& windowProperties) override;
     void Update() override;
     void Render() override;
     void Cleanup() override;

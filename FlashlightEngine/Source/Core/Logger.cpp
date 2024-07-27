@@ -59,19 +59,19 @@ namespace Flashlight {
             std::stringstream message;
             switch (errorCode.ModuleId) {
             case 0x00:
-                message << "[APPLICATION INITIALIZATION] ";
+                message << "[APPLICATION INITIALIZATION]";
                 break;
                 
             case 0x01:
-                message << "[RENDERER] ";
+                message << "[CORE]";
                 break;
                 
             case 0x02:
-                message << "[CORE] ";
+                message << "[RENDERER] ";
                 break;
 
             default:
-                message << "[INVALID/UNKNOWN MODULE ID] ";
+                message << "[INVALID/UNKNOWN MODULE ID]";
                 break;
             }
 

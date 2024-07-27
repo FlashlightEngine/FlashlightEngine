@@ -11,19 +11,13 @@
 
 namespace Flashlight {
     void Application::Run(const WindowProperties &windowProperties) {
-        Logger::Init();
-
-        m_Window = std::make_unique<Window>(windowProperties);
-
         Log::AppInfo("Launching application.");
 
-        if (!Init()) {
+        if (!Init(windowProperties)) {
             Log::AppFatal({0x00, 0x01}, "Failed to initialize application.");
         }
 
         while (m_IsRunning) {
-            m_Window->Update();
-            
             Update();
 
             Render();
@@ -31,10 +25,28 @@ namespace Flashlight {
             if (m_Window->ShouldClose()) {
                 m_IsRunning = false;
             }
+            
+            m_Window->Update();
         }
 
         Log::AppInfo("Quitting application.");
         
         Cleanup();
+    }
+
+    bool Application::Init(const WindowProperties& windowProperties) {
+        Logger::Init();
+
+        m_Window = std::make_unique<Window>(windowProperties);
+
+        return true;
+    }
+
+    void Application::Update() {
+        if (m_Window->ShouldClose()) {
+            m_IsRunning = false;
+        }
+
+        m_Window->Update();
     }
 }
