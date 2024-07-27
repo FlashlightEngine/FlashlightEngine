@@ -32,8 +32,7 @@ inline i32 Window::GetHeight() const {
     return m_Data.Height;
 }
 
-inline void Window::Update() const {
-    glfwSwapBuffers(m_Window);
+inline void Window::Update() {
     glfwPollEvents();
 }
 

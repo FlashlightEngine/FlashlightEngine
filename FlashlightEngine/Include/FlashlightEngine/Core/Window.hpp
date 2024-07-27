@@ -182,7 +182,7 @@ namespace Flashlight {
         [[nodiscard]] inline i32 GetHeight() const;
         [[nodiscard]] KeyState GetKeyState(Keys key) const;
 
-        inline void Update() const;
+        static inline void Update();
         inline void Close() const;
     };
 

@@ -21,12 +21,6 @@ namespace Flashlight {
             Update();
 
             Render();
-
-            if (m_Window->ShouldClose()) {
-                m_IsRunning = false;
-            }
-            
-            m_Window->Update();
         }
 
         Log::AppInfo("Quitting application.");
