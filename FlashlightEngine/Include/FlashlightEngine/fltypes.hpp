@@ -9,6 +9,7 @@
 #pragma once
 
 #include <cstdint>
+#include <wrl.h>
 
 using i8 = std::int8_t;
 using i16 = std::int16_t;
@@ -24,3 +25,6 @@ using size = u64;
 
 using f32 = float;
 using f64 = double;
+
+template<typename T>
+using ComPtr = Microsoft::WRL::ComPtr<T>;

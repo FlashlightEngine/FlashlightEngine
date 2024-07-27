@@ -3,8 +3,8 @@ set_xmakever("2.9.3")
 set_project("FlashlightEngine")
 set_version("0.0.1")
 
-set_allowedplats("windows", "linux")
-set_allowedarchs("windows|x64", "linux|x64", "linux|x86_64")
+set_allowedplats("windows")
+set_allowedarchs("windows|x64")
 
 add_rules("mode.debug", "mode.release")
 set_languages("cxx20")
@@ -27,7 +27,6 @@ local outputdir = "$(mode)-$(os)-$(arch)"
 -- A rule to copy resources from a target's 'Resources' directory.
 rule("cp-resources")
   after_build(function (target)
-    os.cp(target:name() .. "/Resources", "build/" .. outputdir .. "/" .. target:name() .. "/bin")
     os.cp(target:name() .. "/Shaders", "build/" .. outputdir .. "/" .. target:name() .. "/bin")
   end)
 
@@ -57,7 +56,7 @@ target("FlashlightEngine")
 
 target("TestApplication")
     set_kind("binary")
-    -- add_rules("cp-resources")
+    add_rules("cp-resources")
 
     set_targetdir("build/" .. outputdir .. "/TestApplication/bin")
     set_objectdir("build/" .. outputdir .. "/TestApplication/obj")

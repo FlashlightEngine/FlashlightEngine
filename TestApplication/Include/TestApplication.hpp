@@ -2,7 +2,11 @@
 
 #include <FlashlightEngine/Application.hpp>
 
+#include <FlashlightEngine/DX11Renderer/Mesh.hpp>
+
 class TestApplication final : public Flashlight::Application {
+    ComPtr<ID3D11Buffer> m_TriangleVertices = nullptr;
+    
 public:
     TestApplication() = default;
     ~TestApplication() override = default;
