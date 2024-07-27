@@ -27,7 +27,6 @@ local outputdir = "$(mode)-$(os)-$(arch)"
 -- A rule to copy resources from a target's 'Resources' directory.
 rule("cp-resources")
   after_build(function (target)
-    os.cp(target:name() .. "/Resources", "build/" .. outputdir .. "/" .. target:name() .. "/bin")
     os.cp(target:name() .. "/Shaders", "build/" .. outputdir .. "/" .. target:name() .. "/bin")
   end)
 
@@ -57,7 +56,7 @@ target("FlashlightEngine")
 
 target("TestApplication")
     set_kind("binary")
-    -- add_rules("cp-resources")
+    add_rules("cp-resources")
 
     set_targetdir("build/" .. outputdir .. "/TestApplication/bin")
     set_objectdir("build/" .. outputdir .. "/TestApplication/obj")

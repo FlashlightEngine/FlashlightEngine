@@ -9,8 +9,6 @@
 
 #include "FlashlightEngine/Core/Logger.hpp"
 
-#include <glad/glad.h>
-
 namespace Flashlight {
     Window::Window(const WindowProperties& windowProperties) {
         if (!glfwInit()) {
@@ -18,6 +16,8 @@ namespace Flashlight {
         }
 
         Log::EngineTrace("Creating window.");
+
+        glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
         m_Window = glfwCreateWindow(windowProperties.Width, windowProperties.Height, windowProperties.Title.c_str(),
                                     nullptr, nullptr);
