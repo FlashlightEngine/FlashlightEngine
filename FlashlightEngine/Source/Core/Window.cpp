@@ -39,12 +39,14 @@ namespace Flashlight {
 
         Log::EngineTrace("Loading OpenGL...");
         // (clangd says that this cast isn't possible even though it is.)
-        if (!gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress))) {  // NOLINT(clang-diagnostic-cast-function-type-strict) 
+        if (!gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress))) { // NOLINT(clang-diagnostic-cast-function-type-strict) 
             Log::EngineFatal({0x01, 0x02}, "Failed to initialize OpenGL.");
         } else {
             Log::EngineTrace("OpenGL loaded.");
         }
-        glViewport(0, 0, windowProperties.Width, windowProperties.Height);
+        m_Data.Width = windowProperties.Width;
+        m_Data.Height = windowProperties.Height;
+        glViewport(0, 0, m_Data.Width, windowProperties.Height);
 
         glfwSetWindowUserPointer(m_Window, &m_Data);
 
@@ -57,19 +59,19 @@ namespace Flashlight {
     }
 
     KeyState Window::GetKeyState(Keys key) const {
-        if (glfwGetKey(m_Window, static_cast<i32>(key)) == GLFW_PRESS) {
+        switch (glfwGetKey(m_Window, static_cast<i32>(key))) {
+        case GLFW_PRESS:
             return KeyState::Pressed;
-        }
-        
-        if (glfwGetKey(m_Window, static_cast<i32>(key)) == GLFW_RELEASE) {
+
+        case GLFW_RELEASE:
             return KeyState::Released;
-        }
 
-        if (glfwGetKey(m_Window, static_cast<i32>(key)) == GLFW_REPEAT) {
+        case GLFW_REPEAT:
             return KeyState::Repeated;
-        }
 
-        return KeyState::None;
+        default:
+            return KeyState::None;
+        }
     }
 
 }
