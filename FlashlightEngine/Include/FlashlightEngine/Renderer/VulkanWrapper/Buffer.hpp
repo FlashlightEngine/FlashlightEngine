@@ -7,6 +7,8 @@ namespace Flashlight::VulkanWrapper {
         VkBuffer m_Buffer = VK_NULL_HANDLE;
         VkDeviceMemory m_BufferMemory = VK_NULL_HANDLE;
         void* m_MappedMemory = nullptr;
+        bool m_IsMemoryMapped = false;
+        VkMemoryPropertyFlags m_MemoryPropertyFlags = 0;
 
         std::shared_ptr<Device> m_Device;
 
@@ -15,7 +17,15 @@ namespace Flashlight::VulkanWrapper {
                VkMemoryPropertyFlags properties);
         inline ~Buffer();
 
-        void SendData(VkDeviceSize size, const void* data, VkDeviceSize offset);
+        Buffer(const Buffer&) = delete;
+        Buffer(Buffer&& rhs) noexcept;
+
+        Buffer& operator=(const Buffer&) = delete;
+        Buffer& operator=(Buffer&& rhs) noexcept;
+
+        void Map(VkDeviceSize offset, VkDeviceSize size);
+        void SendData(VkDeviceSize size, const void* data) const;
+        void Unmap();
 
         [[nodiscard]] inline VkBuffer GetNativeBuffer() const;
     };

@@ -56,11 +56,15 @@ void Mesh<VertexType>::SendMeshData() const {
         VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
     };
 
-    stagingBuffer.SendData(vertexBufferSize, m_Vertices.data(), 0);
-
+    stagingBuffer.Map(0, vertexBufferSize);
+    stagingBuffer.SendData(vertexBufferSize, m_Vertices.data());
+    stagingBuffer.Unmap();
+    
     m_Device->CopyBuffer(stagingBuffer.GetNativeBuffer(), m_VertexBuffer.GetNativeBuffer(), vertexBufferSize);
 
-    stagingBuffer.SendData(indexBufferSize, m_Indices.data(), 0);
+    stagingBuffer.Map(0, indexBufferSize);
+    stagingBuffer.SendData(indexBufferSize, m_Indices.data());
+    stagingBuffer.Unmap();
 
     m_Device->CopyBuffer(stagingBuffer.GetNativeBuffer(), m_IndexBuffer.GetNativeBuffer(), indexBufferSize);
 }

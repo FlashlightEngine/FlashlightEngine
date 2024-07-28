@@ -9,6 +9,10 @@
 
 #include <glm/glm.hpp>
 
+// I don't know why, but ReSharper thinks this include isn't used.
+// ReSharper disable once CppUnusedIncludeDirective
+#include <volk.h>
+
 namespace Flashlight {
     using position2D = glm::vec2;
     using color = glm::vec3;
