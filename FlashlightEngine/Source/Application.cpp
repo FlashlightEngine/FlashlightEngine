@@ -38,10 +38,19 @@ namespace Flashlight {
     }
 
     void Application::Update() {
+        // Compute delta time.
+        const auto oldTime = m_CurrentTime;
+        m_CurrentTime = std::chrono::high_resolution_clock::now();
+
+        const std::chrono::duration<double, std::milli> timeSpan = (m_CurrentTime - oldTime);
+        m_DeltaTime = timeSpan.count() / 1000.0;
+
+        // Check if window is closed.
         if (m_Window->ShouldClose()) {
             m_IsRunning = false;
         }
 
+        // Poll window events.
         m_Window->Update();
     }
 }

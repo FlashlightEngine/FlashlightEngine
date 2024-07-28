@@ -8,9 +8,7 @@
 #pragma once
 
 #include "FlashlightEngine/Core/Window.hpp"
-#include "FlashlightEngine/Renderer//Renderer.hpp"
-
-#include "FlashlightEngine/pch.hpp"
+#include "FlashlightEngine/Renderer/Renderer.hpp"
 
 namespace Flashlight {
     class Application {
@@ -29,8 +27,11 @@ namespace Flashlight {
         inline void Close();
 
         bool m_IsRunning = false;
+        double m_DeltaTime = 0.016;
         std::unique_ptr<Window> m_Window;
         std::unique_ptr<Renderer> m_Renderer;
+    private:
+        std::chrono::high_resolution_clock::time_point m_CurrentTime;
     };
 
     std::unique_ptr<Application> CreateApp();
