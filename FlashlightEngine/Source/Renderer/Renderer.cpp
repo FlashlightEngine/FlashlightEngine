@@ -7,8 +7,8 @@
  */
 #include "FlashlightEngine/Renderer/Renderer.hpp"
 
+#include "FlashlightEngine/Renderer/RendererStructures/Vertex.hpp"
 #include "FlashlightEngine/Renderer/VulkanWrapper/Instance.hpp"
-#include "FlashlightEngine/Renderer/Mesh.hpp"
 
 namespace Flashlight {
     Renderer::Renderer(const DebugLevel& debugLevel, Window& window) : m_Window(window) {
@@ -136,8 +136,8 @@ namespace Flashlight {
         const auto fragmentShaderModule = std::make_shared<VulkanWrapper::ShaderModule>(
             m_Device, "Shaders/basic.frag", VulkanWrapper::ShaderType::Fragment);
 
-        const auto bindingDescriptions = Vertex::GetBindingDescription();
-        const auto attributeDescriptions = Vertex::GetAttributesDescriptions();
+        const auto bindingDescriptions = Vertex2DColor::GetBindingDescription();
+        const auto attributeDescriptions = Vertex2DColor::GetAttributesDescriptions();
 
         VulkanWrapper::GraphicsPipeline::Builder pipelineBuilder{m_Device};
         pipelineBuilder.VertexShader(vertexShaderModule);

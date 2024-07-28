@@ -7,7 +7,7 @@ bool TestApplication::Init(const Flashlight::WindowProperties& windowProperties,
         Flashlight::Log::AppFatal({0x00, 0x01}, "Failed to initialize application base.");
     }
 
-    std::vector<Flashlight::Vertex> vertices = {
+    std::vector<Flashlight::Vertex2DColor> vertices = {
         {{ -0.5f, -0.5f }, { 1.0f, 0.0f, 0.0f }},
         {{  0.5f, -0.5f }, { 0.0f, 1.0f, 0.0f }},
         {{  0.5f,  0.5f }, { 0.0f, 0.0f, 1.0f }},
@@ -18,7 +18,7 @@ bool TestApplication::Init(const Flashlight::WindowProperties& windowProperties,
         0, 1, 2, 2, 3, 0
     };
 
-    m_RectangleMesh = std::make_unique<Flashlight::Mesh>(m_Renderer->GetDevice(), vertices, indices);
+    m_RectangleMesh = std::make_unique<Flashlight::Mesh<Flashlight::Vertex2DColor>>(m_Renderer->GetDevice(), vertices, indices);
 
     m_IsRunning = true;
 

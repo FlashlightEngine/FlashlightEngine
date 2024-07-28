@@ -11,21 +11,10 @@
 
 #include "FlashlightEngine/pch.hpp"
 
-#include <glm/glm.hpp>
-
-#include <volk.h>
-
 namespace Flashlight {
-    struct Vertex {
-        glm::vec2 Position;
-        glm::vec3 Color;
-
-        static inline std::vector<VkVertexInputBindingDescription> GetBindingDescription();
-        static inline std::vector<VkVertexInputAttributeDescription> GetAttributesDescriptions();
-    };
-
+    template<typename VertexType>
     class Mesh {
-        std::vector<Vertex> m_Vertices;
+        std::vector<VertexType> m_Vertices;
         std::vector<u32> m_Indices;
 
         VulkanWrapper::Buffer m_VertexBuffer;
@@ -34,7 +23,7 @@ namespace Flashlight {
         std::shared_ptr<VulkanWrapper::Device> m_Device;
         
     public:
-        Mesh(const std::shared_ptr<VulkanWrapper::Device>& device, const std::vector<Vertex>& vertices,
+        Mesh(const std::shared_ptr<VulkanWrapper::Device>& device, const std::vector<VertexType>& vertices,
              const std::vector<u32>& indices);
         ~Mesh() = default;
 
@@ -46,8 +35,8 @@ namespace Flashlight {
         
         void Draw(VkCommandBuffer commandBuffer) const;
 
-        [[nodiscard]] inline std::vector<Vertex> GetVertices() const;
-        [[nodiscard]] inline std::vector<u32> GetIndices() const;
+        [[nodiscard]] std::vector<VertexType> GetVertices() const;
+        [[nodiscard]] std::vector<u32> GetIndices() const;
 
     private:
         void SendMeshData() const;
