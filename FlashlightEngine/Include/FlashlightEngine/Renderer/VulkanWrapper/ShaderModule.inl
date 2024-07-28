@@ -7,12 +7,6 @@
  */
 #pragma once
 
-inline ShaderModule::ShaderModule(const std::shared_ptr<Device>& device, const std::filesystem::path& shaderPath,
-                                  const ShaderType& shaderType) : m_Device(device) {
-    CreateShaderModule(shaderPath);
-    CreateShaderStage(shaderType);
-}
-
 inline ShaderModule::~ShaderModule() {
     if (m_ShaderModule) {
         Log::EngineTrace("Destroying Vulkan shader module.");

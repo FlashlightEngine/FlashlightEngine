@@ -10,6 +10,8 @@
 
 #include "FlashlightEngine/Renderer/VulkanWrapper/Device.hpp"
 
+#include <shaderc/shaderc.hpp>
+
 namespace Flashlight::VulkanWrapper {
     // Only vertex and fragment shaders supported for now. 
     enum class ShaderType : VkShaderStageFlags {
@@ -24,7 +26,8 @@ namespace Flashlight::VulkanWrapper {
         std::shared_ptr<Device> m_Device;
 
     public:
-        inline ShaderModule(const std::shared_ptr<Device>& device, const std::filesystem::path& shaderPath, const ShaderType& shaderType);
+        ShaderModule(const std::shared_ptr<Device>& device, const std::filesystem::path& shaderPath,
+                     const ShaderType& shaderType);
         inline ~ShaderModule();
 
         ShaderModule(const ShaderModule&) = delete;
@@ -37,10 +40,13 @@ namespace Flashlight::VulkanWrapper {
         [[nodiscard]] inline VkPipelineShaderStageCreateInfo GetNativeShaderStageInfo() const;
 
     private:
-        void CreateShaderModule(const std::filesystem::path& shaderPath);
+        [[nodiscard]] static std::string ReadFile(const std::filesystem::path& filePath);
+        [[nodiscard]] static std::vector<u32> CompileGlslToSpv(const std::string& code,
+                                                               const shaderc_shader_kind& shaderType,
+                                                               const std::string& sourceFileName,
+                                                               bool optimize = true);
+        void CreateShaderModule(const std::vector<u32>& spvBytecode);
         void CreateShaderStage(const ShaderType& shaderType);
-
-        [[nodiscard]] static std::vector<char> ReadShaderFile(const std::filesystem::path& shaderPath);
     };
 
 #include "ShaderModule.inl"

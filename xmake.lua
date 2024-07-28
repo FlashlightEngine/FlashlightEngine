@@ -30,6 +30,7 @@ local outputdir = "$(mode)-$(os)-$(arch)"
 rule("cp-resources")
   after_build(function (target)
     -- os.cp(target:name() .. "/Resources", "build/" .. outputdir .. "/" .. target:name() .. "/bin")
+    os.cp(target:name() .. "/Shaders", "build/" .. outputdir .. "/" .. target:name() .. "/bin")
   end)
 
 target("FlashlightEngine")

@@ -10,8 +10,8 @@
 #include "FlashlightEngine/Renderer/RendererStructures/Vertex.hpp"
 #include "FlashlightEngine/Renderer/VulkanWrapper/Instance.hpp"
 
-#define GLM_FORCE_RADIANS
-#define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
+#define GLM_FORCE_RADIANS // NOLINT(clang-diagnostic-unused-macros)
+#define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES // NOLINT(clang-diagnostic-unused-macros)
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
