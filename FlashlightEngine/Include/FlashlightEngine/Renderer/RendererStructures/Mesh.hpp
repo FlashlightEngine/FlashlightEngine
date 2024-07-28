@@ -3,7 +3,7 @@
  * For conditions of distribution and use, see copyright notice in LICENSE.
  *
  * File : Model.hpp
- * Description : Declaration of the Model class. It is used to represent a model. each model has its own vertices.
+ * Description : Declaration of the Mesh class. It is used to represent a mesh and its vertices and indices.
  */
 #pragma once
 

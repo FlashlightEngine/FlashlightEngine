@@ -136,13 +136,13 @@ namespace Flashlight {
         const auto fragmentShaderModule = std::make_shared<VulkanWrapper::ShaderModule>(
             m_Device, "Shaders/basic.frag", VulkanWrapper::ShaderType::Fragment);
 
-        const auto bindingDescriptions = Vertex2DColor::GetBindingDescription();
-        const auto attributeDescriptions = Vertex2DColor::GetAttributesDescriptions();
+        const auto bindings = Vertex2DColor::GetBindingDescription();
+        const auto attributes = Vertex2DColor::GetAttributesDescriptions();
 
         VulkanWrapper::GraphicsPipeline::Builder pipelineBuilder{m_Device};
         pipelineBuilder.VertexShader(vertexShaderModule);
         pipelineBuilder.FragmentShader(fragmentShaderModule);
-        pipelineBuilder.VertexInputState(bindingDescriptions, attributeDescriptions);
+        pipelineBuilder.VertexInputState(bindings, attributes);
         pipelineBuilder.InputAssemblyState(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, false);
         pipelineBuilder.Viewport(m_SwapChain->GetSwapChainExtent());
         pipelineBuilder.RasterizeState(VK_POLYGON_MODE_FILL, VK_CULL_MODE_BACK_BIT);

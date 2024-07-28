@@ -8,6 +8,7 @@
  */
 #pragma once
 
+#include "FlashlightEngine/Renderer/RendererStructures/Vertex.hpp"
 #include "FlashlightEngine/Renderer/VulkanWrapper/Device.hpp"
 #include "FlashlightEngine/Renderer/VulkanWrapper/RenderPass.hpp"
 #include "FlashlightEngine/Renderer/VulkanWrapper/ShaderModule.hpp"
@@ -35,7 +36,7 @@ namespace Flashlight::VulkanWrapper {
             void ColorBlendState(bool blendEnabled, VkBlendOp colorBlendingOp, VkBlendOp alphaBlendingOp,
                                  bool logicOpEnabled, VkLogicOp logicOp);
             void PipelineLayout(const std::vector<VkDescriptorSetLayout>& layouts,
-                                     const std::vector<VkPushConstantRange>& pushConstantRanges);
+                                const std::vector<VkPushConstantRange>& pushConstantRanges);
 
             [[nodiscard]] std::unique_ptr<GraphicsPipeline> Build(const RenderPass& renderPass) const;
 
@@ -57,7 +58,8 @@ namespace Flashlight::VulkanWrapper {
             VkPipelineLayoutCreateInfo m_PipelineLayoutCreateInfo{};
         };
 
-        GraphicsPipeline(const std::shared_ptr<Device>& device, const VkPipeline& pipeline, const VkPipelineLayout& pipelineLayout);
+        GraphicsPipeline(const std::shared_ptr<Device>& device, const VkPipeline& pipeline,
+                         const VkPipelineLayout& pipelineLayout);
         inline ~GraphicsPipeline();
 
         GraphicsPipeline(const GraphicsPipeline&) = delete;

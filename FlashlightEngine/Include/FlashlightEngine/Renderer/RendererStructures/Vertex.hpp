@@ -1,8 +1,13 @@
-﻿#pragma once
+﻿/* Copyright (C) 2024 Jean "Pixfri" Letessier
+ * This file is part of "Flashlight Engine"
+ * For conditions of distribution and use, see copyright notice in LICENSE.
+ *
+ * File : Vertex.hpp
+ * Description : Declaration of different Vertex-representing structures.
+ */
+#pragma once
 
 #include <glm/glm.hpp>
-
-#include <volk.h>
 
 namespace Flashlight {
     using position2D = glm::vec2;
@@ -12,7 +17,9 @@ namespace Flashlight {
         position2D Position;
         color Color;
 
-        static std::vector<VkVertexInputBindingDescription> GetBindingDescription();
-        static std::vector<VkVertexInputAttributeDescription> GetAttributesDescriptions();
+        [[nodiscard]] static inline std::vector<VkVertexInputBindingDescription> GetBindingDescription();
+        [[nodiscard]] static inline std::vector<VkVertexInputAttributeDescription> GetAttributesDescriptions();
     };
+
+#include "Vertex.inl"
 }

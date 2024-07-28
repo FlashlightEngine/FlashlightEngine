@@ -2,8 +2,8 @@
  * This file is part of "Flashlight Engine"
  * For conditions of distribution and use, see copyright notice in LICENSE.
  *
- * File : Model.inl
- * Description : Definitions of inline methods from the Model class.
+ * File : Mesh.inl
+ * Description : Definitions of inline methods from the Mesh class.
  */
 #pragma once
 template <typename VertexType>
