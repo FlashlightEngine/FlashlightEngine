@@ -20,8 +20,7 @@ if (is_mode("debug")) then
 end
 
 -- Define packages to download.
-add_requires("volk 1.3.283+0", "glfw 3.4", "glm 1.0.1", "spdlog v1.9.0", "magic_enum v0.9.5")
-add_requires("glslang 1.3.283+0", {configs = {binaryOnly = true}})
+add_requires("shaderc v2024.1", "volk 1.3.283+0", "glfw 3.4", "glm 1.0.1", "spdlog v1.9.0", "magic_enum v0.9.5")
 
 add_defines("VK_NO_PROTOTYPES", "GLFW_INCLUDE_VULKAN")
 
@@ -53,14 +52,13 @@ target("FlashlightEngine")
   set_pcxxheader("FlashlightEngine/Include/FlashlightEngine/pch.hpp")
 
   -- public dependencies
-  add_packages("volk", "glfw", "glm", "spdlog", {public = true})
+  add_packages("shaderc", "volk", "glfw", "glm", "spdlog", {public = true})
   -- private dependencies
   add_packages("magic_enum")
 
 target("TestApplication")
   set_kind("binary")
   add_rules("cp-resources")
-  add_rules("utils.glsl2spv", {outputdir="build/" .. outputdir .. "/TestApplication/bin/Shaders"})
 
   set_targetdir("build/" .. outputdir .. "/TestApplication/bin")
   set_objectdir("build/" .. outputdir .. "/TestApplication/obj")
@@ -69,7 +67,6 @@ target("TestApplication")
   add_headerfiles("TestApplication/Include/**.hpp", "TestApplication/Include/**.h", "TestApplication/Include/**.inl")
   add_includedirs("TestApplication/Include")
   
-  add_files("TestApplication/Shaders/**") -- Tell utils.glsl2spv to compile shaders.
   add_headerfiles("TestApplication/Shaders/**") -- A little trick to make them show in the VS/Rider solution.
   
   add_deps("FlashlightEngine")
