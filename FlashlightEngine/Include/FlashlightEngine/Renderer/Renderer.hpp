@@ -16,6 +16,7 @@
 #include "FlashlightEngine/Renderer/VulkanWrapper/Surface.hpp"
 #include "FlashlightEngine/Renderer/VulkanWrapper/Device.hpp"
 #include "FlashlightEngine/Renderer/VulkanWrapper/SwapChain.hpp"
+#include "FlashlightEngine/Renderer/VulkanWrapper/DescriptorSets.hpp"
 #include "FlashlightEngine/Renderer/VulkanWrapper/GraphicsPipeline.hpp"
 
 namespace Flashlight {
@@ -44,12 +45,11 @@ namespace Flashlight {
         std::unique_ptr<VulkanWrapper::Surface> m_Surface;
         std::shared_ptr<VulkanWrapper::Device> m_Device;
         std::unique_ptr<VulkanWrapper::SwapChain> m_SwapChain;
+        std::unique_ptr<VulkanWrapper::DescriptorSetLayout> m_DescriptorSetLayout;
         std::unique_ptr<VulkanWrapper::GraphicsPipeline> m_MainGraphicsPipeline;
-
-        VkDescriptorSetLayoutBinding m_UboLayoutBinding;
-        VkDescriptorSetLayout m_DescriptorSetLayout = VK_NULL_HANDLE;
+        std::unique_ptr<VulkanWrapper::DescriptorPool> m_DescriptorPool;
+        
         VkCommandPool m_CommandPool = VK_NULL_HANDLE;
-        VkDescriptorPool m_DescriptorPool;
 
         std::vector<FrameObjects> m_FrameObjects{m_MaxFramesInFlight};
         

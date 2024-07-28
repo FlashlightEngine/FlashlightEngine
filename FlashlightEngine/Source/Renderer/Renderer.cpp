@@ -11,6 +11,7 @@
 #include "FlashlightEngine/Renderer/VulkanWrapper/Instance.hpp"
 
 #define GLM_FORCE_RADIANS
+#define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -44,10 +45,6 @@ namespace Flashlight {
             Log::EngineTrace("Destroying Vulkan command pool.");
             vkDestroyCommandPool(m_Device->GetNativeDevice(), m_CommandPool, nullptr);
         }
-
-        vkDestroyDescriptorPool(m_Device->GetNativeDevice(), m_DescriptorPool, nullptr);
-
-        vkDestroyDescriptorSetLayout(m_Device->GetNativeDevice(), m_DescriptorSetLayout, nullptr);
     }
 
     VkCommandBuffer Renderer::BeginFrame() {
@@ -80,7 +77,7 @@ namespace Flashlight {
 
     void Renderer::BeginRenderPass(const VkCommandBuffer commandBuffer) const {
         auto& frame = GetCurrentFrameObjects();
-        
+
         VkRenderPassBeginInfo beginInfo{};
         beginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
         beginInfo.renderPass = m_SwapChain->GetRenderPass().GetNativeRenderPass();
@@ -110,7 +107,9 @@ namespace Flashlight {
 
         UseMainPipeline(commandBuffer);
 
-        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_MainGraphicsPipeline->GetNativePipelineLayout(), 0, 1, &frame.DescriptorSet, 0, nullptr);
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                m_MainGraphicsPipeline->GetNativePipelineLayout(), 0, 1, &frame.DescriptorSet, 0,
+                                nullptr);
     }
 
     void Renderer::EndFrame() {
@@ -168,22 +167,10 @@ namespace Flashlight {
     }
 
     void Renderer::CreateDescriptorSetLayout() {
-        m_UboLayoutBinding = {};
-        m_UboLayoutBinding.binding = 0;
-        m_UboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        m_UboLayoutBinding.descriptorCount = 1;
-        m_UboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-        m_UboLayoutBinding.pImmutableSamplers = nullptr;
-
-        VkDescriptorSetLayoutCreateInfo layoutInfo{};
-        layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-        layoutInfo.bindingCount = 1;
-        layoutInfo.pBindings = &m_UboLayoutBinding;
-
-        if (vkCreateDescriptorSetLayout(m_Device->GetNativeDevice(), &layoutInfo, nullptr, &m_DescriptorSetLayout)
-            != VK_SUCCESS) {
-            Log::EngineFatal({0x02, 0x11}, "Failed to create descriptor set layout.");
-        }
+        const auto builder = std::make_unique<VulkanWrapper::DescriptorSetLayout::Builder>(m_Device);
+        m_DescriptorSetLayout = builder->AddBinding({
+            0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT
+        }).Build();
     }
 
     void Renderer::CreatePipeline() {
@@ -204,7 +191,7 @@ namespace Flashlight {
         pipelineBuilder.RasterizeState(VK_POLYGON_MODE_FILL, VK_CULL_MODE_BACK_BIT);
         pipelineBuilder.MultisampleState();
         pipelineBuilder.ColorBlendState(false, VK_BLEND_OP_ADD, VK_BLEND_OP_ADD, false, VK_LOGIC_OP_COPY);
-        pipelineBuilder.PipelineLayout({m_DescriptorSetLayout}, {});
+        pipelineBuilder.PipelineLayout({m_DescriptorSetLayout->GetNativeLayout()}, {});
 
         m_MainGraphicsPipeline = pipelineBuilder.Build(m_SwapChain->GetRenderPass());
     }
@@ -270,34 +257,15 @@ namespace Flashlight {
     }
 
     void Renderer::CreateDescriptorPool() {
-        VkDescriptorPoolSize poolSize;
-        poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        poolSize.descriptorCount = m_MaxFramesInFlight;
-
-        VkDescriptorPoolCreateInfo poolInfo{};
-        poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-        poolInfo.poolSizeCount = 1;
-        poolInfo.pPoolSizes = &poolSize;
-        poolInfo.maxSets = m_MaxFramesInFlight;
-
-        if (vkCreateDescriptorPool(m_Device->GetNativeDevice(), &poolInfo, nullptr, &m_DescriptorPool) != VK_SUCCESS) {
-            Log::EngineFatal({0x02, 0x12}, "Failed to create descriptor pool.");
-        }
+        const auto builder = std::make_unique<VulkanWrapper::DescriptorPool::Builder>(m_Device);
+        m_DescriptorPool = builder->AddSize({VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, m_MaxFramesInFlight})
+                                  .Build(m_MaxFramesInFlight);
     }
 
     void Renderer::CreateDescriptorSets() {
-
         for (auto& frame : m_FrameObjects) {
-            VkDescriptorSetAllocateInfo allocateInfo{};
-            allocateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-            allocateInfo.descriptorPool = m_DescriptorPool;
-            allocateInfo.descriptorSetCount = 1;
-            allocateInfo.pSetLayouts = &m_DescriptorSetLayout;
+            frame.DescriptorSet = m_DescriptorPool->AllocateDescriptorSets(1, {m_DescriptorSetLayout->GetNativeLayout()})[0];
             
-            if (vkAllocateDescriptorSets(m_Device->GetNativeDevice(), &allocateInfo, &frame.DescriptorSet) != VK_SUCCESS) {
-                Log::EngineFatal({0x02, 0x13}, "Failed to create frame descriptor set.");
-            }
-
             VkDescriptorBufferInfo bufferInfo = frame.UniformBuffer->GetDescriptorInfo(sizeof(UniformBufferObject));
 
             VkWriteDescriptorSet descriptorWrite{};
@@ -310,7 +278,7 @@ namespace Flashlight {
             descriptorWrite.pBufferInfo = &bufferInfo;
             descriptorWrite.pImageInfo = nullptr;
             descriptorWrite.pTexelBufferView = nullptr;
-            
+
             vkUpdateDescriptorSets(m_Device->GetNativeDevice(), 1, &descriptorWrite, 0, nullptr);
         }
     }
