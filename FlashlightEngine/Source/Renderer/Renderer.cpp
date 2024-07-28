@@ -10,19 +10,29 @@
 #include "FlashlightEngine/Renderer/RendererStructures/Vertex.hpp"
 #include "FlashlightEngine/Renderer/VulkanWrapper/Instance.hpp"
 
+#define GLM_FORCE_RADIANS
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
 namespace Flashlight {
     Renderer::Renderer(const DebugLevel& debugLevel, Window& window) : m_Window(window) {
         InitializeVulkan(debugLevel, window);
+        CreateDescriptorSetLayout();
         CreatePipeline();
         CreateCommandPool();
         AllocateCommandBuffers();
         CreateSynchronisationPrimitives();
+        CreateUniformBuffers();
+        CreateDescriptorPool();
+        CreateDescriptorSets();
     }
 
     Renderer::~Renderer() {
         vkDeviceWaitIdle(m_Device->GetNativeDevice());
 
-        for (const auto frame : m_FrameObjects) {
+        for (const auto& frame : m_FrameObjects) {
+            frame.UniformBuffer->Unmap();
+
             if (frame.ImageAvailableSemaphore && frame.RenderFinishedSemaphore && frame.InFlightFence) {
                 vkDestroySemaphore(m_Device->GetNativeDevice(), frame.ImageAvailableSemaphore, nullptr);
                 vkDestroySemaphore(m_Device->GetNativeDevice(), frame.RenderFinishedSemaphore, nullptr);
@@ -34,6 +44,10 @@ namespace Flashlight {
             Log::EngineTrace("Destroying Vulkan command pool.");
             vkDestroyCommandPool(m_Device->GetNativeDevice(), m_CommandPool, nullptr);
         }
+
+        vkDestroyDescriptorPool(m_Device->GetNativeDevice(), m_DescriptorPool, nullptr);
+
+        vkDestroyDescriptorSetLayout(m_Device->GetNativeDevice(), m_DescriptorSetLayout, nullptr);
     }
 
     VkCommandBuffer Renderer::BeginFrame() {
@@ -65,6 +79,8 @@ namespace Flashlight {
     }
 
     void Renderer::BeginRenderPass(const VkCommandBuffer commandBuffer) const {
+        auto& frame = GetCurrentFrameObjects();
+        
         VkRenderPassBeginInfo beginInfo{};
         beginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
         beginInfo.renderPass = m_SwapChain->GetRenderPass().GetNativeRenderPass();
@@ -91,6 +107,10 @@ namespace Flashlight {
         scissor.offset = {0, 0};
         scissor.extent = m_SwapChain->GetSwapChainExtent();
         vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+
+        UseMainPipeline(commandBuffer);
+
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_MainGraphicsPipeline->GetNativePipelineLayout(), 0, 1, &frame.DescriptorSet, 0, nullptr);
     }
 
     void Renderer::EndFrame() {
@@ -109,6 +129,23 @@ namespace Flashlight {
         if (result != VK_SUCCESS) {
             Log::EngineError("Failed to present swap chain image.");
         }
+    }
+
+    void Renderer::UpdateUniforms(const float deltaTime) const {
+        auto& frame = GetCurrentFrameObjects();
+
+        const float aspectRatio = static_cast<float>(m_SwapChain->GetSwapChainExtent().width) /
+            static_cast<float>(m_SwapChain->GetSwapChainExtent().height);
+
+        UniformBufferObject ubo;
+        ubo.Model = rotate(glm::mat4(1.0f), deltaTime * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+        ubo.View = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f),
+                               glm::vec3(0.0f, 0.0f, 1.0f));
+        ubo.Projection = glm::perspective(glm::radians(45.0f), aspectRatio, 0.1f, 10.0f);
+
+        ubo.Projection[1][1] *= -1;
+
+        frame.UniformBuffer->SendData(sizeof(ubo), &ubo);
     }
 
     void Renderer::InitializeVulkan(const DebugLevel& debugLevel, const Window& window) {
@@ -130,6 +167,25 @@ namespace Flashlight {
         m_SwapChain = std::make_unique<VulkanWrapper::SwapChain>(m_Device, description);
     }
 
+    void Renderer::CreateDescriptorSetLayout() {
+        m_UboLayoutBinding = {};
+        m_UboLayoutBinding.binding = 0;
+        m_UboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        m_UboLayoutBinding.descriptorCount = 1;
+        m_UboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+        m_UboLayoutBinding.pImmutableSamplers = nullptr;
+
+        VkDescriptorSetLayoutCreateInfo layoutInfo{};
+        layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        layoutInfo.bindingCount = 1;
+        layoutInfo.pBindings = &m_UboLayoutBinding;
+
+        if (vkCreateDescriptorSetLayout(m_Device->GetNativeDevice(), &layoutInfo, nullptr, &m_DescriptorSetLayout)
+            != VK_SUCCESS) {
+            Log::EngineFatal({0x02, 0x11}, "Failed to create descriptor set layout.");
+        }
+    }
+
     void Renderer::CreatePipeline() {
         const auto vertexShaderModule = std::make_shared<VulkanWrapper::ShaderModule>(
             m_Device, "Shaders/basic.vert", VulkanWrapper::ShaderType::Vertex);
@@ -148,7 +204,7 @@ namespace Flashlight {
         pipelineBuilder.RasterizeState(VK_POLYGON_MODE_FILL, VK_CULL_MODE_BACK_BIT);
         pipelineBuilder.MultisampleState();
         pipelineBuilder.ColorBlendState(false, VK_BLEND_OP_ADD, VK_BLEND_OP_ADD, false, VK_LOGIC_OP_COPY);
-        pipelineBuilder.PipelineLayout({}, {});
+        pipelineBuilder.PipelineLayout({m_DescriptorSetLayout}, {});
 
         m_MainGraphicsPipeline = pipelineBuilder.Build(m_SwapChain->GetRenderPass());
     }
@@ -197,8 +253,65 @@ namespace Flashlight {
                                   &frame.RenderFinishedSemaphore) ||
                 vkCreateFence(m_Device->GetNativeDevice(), &fenceInfo, nullptr, &frame.InFlightFence)
                 != VK_SUCCESS) {
-                Log::EngineFatal({0x01, 0x10}, "Failed to create synchronisation primitives.");
+                Log::EngineFatal({0x02, 0x10}, "Failed to create synchronisation primitives.");
             }
+        }
+    }
+
+    void Renderer::CreateUniformBuffers() {
+        for (auto& frame : m_FrameObjects) {
+            constexpr VkDeviceSize bufferSize = sizeof(UniformBufferObject);
+            frame.UniformBuffer = std::make_unique<VulkanWrapper::Buffer>(
+                m_Device, bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+
+            frame.UniformBuffer->Map(0, bufferSize);
+        }
+    }
+
+    void Renderer::CreateDescriptorPool() {
+        VkDescriptorPoolSize poolSize;
+        poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        poolSize.descriptorCount = m_MaxFramesInFlight;
+
+        VkDescriptorPoolCreateInfo poolInfo{};
+        poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+        poolInfo.poolSizeCount = 1;
+        poolInfo.pPoolSizes = &poolSize;
+        poolInfo.maxSets = m_MaxFramesInFlight;
+
+        if (vkCreateDescriptorPool(m_Device->GetNativeDevice(), &poolInfo, nullptr, &m_DescriptorPool) != VK_SUCCESS) {
+            Log::EngineFatal({0x02, 0x12}, "Failed to create descriptor pool.");
+        }
+    }
+
+    void Renderer::CreateDescriptorSets() {
+
+        for (auto& frame : m_FrameObjects) {
+            VkDescriptorSetAllocateInfo allocateInfo{};
+            allocateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+            allocateInfo.descriptorPool = m_DescriptorPool;
+            allocateInfo.descriptorSetCount = 1;
+            allocateInfo.pSetLayouts = &m_DescriptorSetLayout;
+            
+            if (vkAllocateDescriptorSets(m_Device->GetNativeDevice(), &allocateInfo, &frame.DescriptorSet) != VK_SUCCESS) {
+                Log::EngineFatal({0x02, 0x13}, "Failed to create frame descriptor set.");
+            }
+
+            VkDescriptorBufferInfo bufferInfo = frame.UniformBuffer->GetDescriptorInfo(sizeof(UniformBufferObject));
+
+            VkWriteDescriptorSet descriptorWrite{};
+            descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            descriptorWrite.dstSet = frame.DescriptorSet;
+            descriptorWrite.dstBinding = 0;
+            descriptorWrite.dstArrayElement = 0;
+            descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            descriptorWrite.descriptorCount = 1;
+            descriptorWrite.pBufferInfo = &bufferInfo;
+            descriptorWrite.pImageInfo = nullptr;
+            descriptorWrite.pTexelBufferView = nullptr;
+            
+            vkUpdateDescriptorSets(m_Device->GetNativeDevice(), 1, &descriptorWrite, 0, nullptr);
         }
     }
 

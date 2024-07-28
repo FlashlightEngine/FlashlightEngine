@@ -27,7 +27,7 @@ namespace Flashlight {
         inline void Close();
 
         bool m_IsRunning = false;
-        double m_DeltaTime = 0.016;
+        float m_DeltaTime = 0.016f;
         std::unique_ptr<Window> m_Window;
         std::unique_ptr<Renderer> m_Renderer;
     private:

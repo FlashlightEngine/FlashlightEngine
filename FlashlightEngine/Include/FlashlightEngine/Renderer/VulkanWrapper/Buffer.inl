@@ -2,6 +2,10 @@
 
 Buffer::~Buffer() {
     vkDeviceWaitIdle(m_Device->GetNativeDevice());
+
+    if (m_IsMemoryMapped) {
+        Unmap();
+    }
     
     if (m_Buffer) {
         vkDestroyBuffer(m_Device->GetNativeDevice(), m_Buffer, nullptr);
@@ -14,4 +18,8 @@ Buffer::~Buffer() {
 
 inline VkBuffer Buffer::GetNativeBuffer() const {
     return m_Buffer;
+}
+
+inline VkDescriptorBufferInfo Buffer::GetDescriptorInfo(const VkDeviceSize range, const VkDeviceSize offset) const {
+    return {m_Buffer, offset, range};
 }

@@ -28,6 +28,7 @@ namespace Flashlight::VulkanWrapper {
         void Unmap();
 
         [[nodiscard]] inline VkBuffer GetNativeBuffer() const;
+        [[nodiscard]] inline VkDescriptorBufferInfo GetDescriptorInfo(VkDeviceSize range, VkDeviceSize offset = 0) const;
     };
 
 #include "Buffer.inl"

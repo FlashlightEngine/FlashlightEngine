@@ -10,6 +10,7 @@
 
 #include "FlashlightEngine/Core/Window.hpp"
 
+#include "FlashlightEngine/Renderer/VulkanWrapper/Buffer.hpp"
 #include "FlashlightEngine/Renderer/VulkanWrapper/Instance.hpp"
 #include "FlashlightEngine/Renderer/VulkanWrapper/DebugMessenger.hpp"
 #include "FlashlightEngine/Renderer/VulkanWrapper/Surface.hpp"
@@ -24,6 +25,15 @@ namespace Flashlight {
         VkSemaphore ImageAvailableSemaphore{};
         VkSemaphore RenderFinishedSemaphore{};
         VkFence InFlightFence{};
+
+        std::unique_ptr<VulkanWrapper::Buffer> UniformBuffer;
+        VkDescriptorSet DescriptorSet;
+    };
+
+    struct UniformBufferObject {
+        glm::mat4 Model;
+        glm::mat4 View;
+        glm::mat4 Projection;
     };
 
     class Renderer {
@@ -36,7 +46,10 @@ namespace Flashlight {
         std::unique_ptr<VulkanWrapper::SwapChain> m_SwapChain;
         std::unique_ptr<VulkanWrapper::GraphicsPipeline> m_MainGraphicsPipeline;
 
+        VkDescriptorSetLayoutBinding m_UboLayoutBinding;
+        VkDescriptorSetLayout m_DescriptorSetLayout = VK_NULL_HANDLE;
         VkCommandPool m_CommandPool = VK_NULL_HANDLE;
+        VkDescriptorPool m_DescriptorPool;
 
         std::vector<FrameObjects> m_FrameObjects{m_MaxFramesInFlight};
         
@@ -61,16 +74,21 @@ namespace Flashlight {
         void EndFrame();
 
         inline void UseMainPipeline(VkCommandBuffer commandBuffer) const;
+        void UpdateUniforms(float deltaTime) const;
 
         [[nodiscard]] inline std::shared_ptr<VulkanWrapper::Instance> GetInstance() const;
         [[nodiscard]] inline std::shared_ptr<VulkanWrapper::Device> GetDevice() const;
 
     private:
         void InitializeVulkan(const DebugLevel& debugLevel, const Window& window);
+        void CreateDescriptorSetLayout();
         void CreatePipeline();
         void CreateCommandPool();
         void AllocateCommandBuffers();
         void CreateSynchronisationPrimitives();
+        void CreateUniformBuffers();
+        void CreateDescriptorPool();
+        void CreateDescriptorSets();
 
         void RecreateSwapChain();
 

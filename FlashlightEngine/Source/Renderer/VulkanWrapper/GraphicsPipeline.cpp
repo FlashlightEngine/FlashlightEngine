@@ -73,7 +73,7 @@ namespace Flashlight::VulkanWrapper {
         m_RasterizationInfo.polygonMode = polygonMode;
         m_RasterizationInfo.lineWidth = 1.0f;
         m_RasterizationInfo.cullMode = cullMode;
-        m_RasterizationInfo.frontFace = VK_FRONT_FACE_CLOCKWISE;
+        m_RasterizationInfo.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
         m_RasterizationInfo.depthBiasEnable = VK_FALSE;
         m_RasterizationInfo.depthBiasConstantFactor = 0.0f;
         m_RasterizationInfo.depthBiasClamp = 0.0f;
