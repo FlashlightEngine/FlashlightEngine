@@ -20,7 +20,7 @@ if (is_mode("debug")) then
 end
 
 -- Define packages to download.
-add_requires("shaderc v2024.1", "volk 1.3.283+0", "glfw 3.4", "glm 1.0.1", "spdlog v1.9.0", "magic_enum v0.9.5")
+add_requires("vk-bootstrap v1.3.290", "libsdl 2.30.5", "glm 1.0.1", "spdlog v1.9.0", "magic_enum v0.9.5")
 
 add_defines("VK_NO_PROTOTYPES", "GLFW_INCLUDE_VULKAN")
 
@@ -53,7 +53,7 @@ target("FlashlightEngine")
   set_pcxxheader("FlashlightEngine/Include/FlashlightEngine/pch.hpp")
 
   -- public dependencies
-  add_packages("shaderc", "volk", "glfw", "glm", "spdlog", {public = true})
+  add_packages("vk-bootstrap", "libsdl", "glm", "spdlog", {public = true})
   -- private dependencies
   add_packages("magic_enum")
 
