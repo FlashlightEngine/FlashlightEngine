@@ -2,12 +2,8 @@
 
 #include <FlashlightEngine/Application.hpp>
 
-#include <FlashlightEngine/Renderer/RendererStructures/Mesh.hpp>
-#include <FlashlightEngine/Renderer/RendererStructures/Vertex.hpp>
-
 class TestApplication final : public Flashlight::Application {
-    std::unique_ptr<Flashlight::Mesh<Flashlight::Vertex2DColor>> m_RectangleMesh;
-public:
+    public:
     TestApplication() = default;
     ~TestApplication() override = default;
 
@@ -18,7 +14,7 @@ public:
     TestApplication& operator=(TestApplication&&) = delete;
 
 protected:
-    bool Init(const Flashlight::WindowProperties& windowProperties, const Flashlight::DebugLevel& debugLevel) override;
+    bool Init(const Flashlight::WindowProperties& windowProperties) override;
     void Update() override;
     void Render() override;
     void Cleanup() override;

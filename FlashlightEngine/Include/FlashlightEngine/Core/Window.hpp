@@ -13,8 +13,6 @@
 
 #include <GLFW/glfw3.h>
 
-#include <volk.h>
-
 namespace Flashlight {
     struct WindowProperties {
         i32 Width, Height;
@@ -27,7 +25,6 @@ namespace Flashlight {
 
     struct WindowData {
         i32 Width, Height;
-        bool ShouldRecreateSwapChain = false;
     };
 
     enum class KeyState {
@@ -184,8 +181,6 @@ namespace Flashlight {
         [[nodiscard]] inline i32 GetWidth() const;
         [[nodiscard]] inline i32 GetHeight() const;
         [[nodiscard]] inline VkExtent2D GetWindowExtent() const;
-        [[nodiscard]] bool ShouldRecreateSwapChain() const;
-        inline void SwapChainRecreated();
         [[nodiscard]] KeyState GetKeyState(Keys key) const;
 
         static inline void Update();

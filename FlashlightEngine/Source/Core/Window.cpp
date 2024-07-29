@@ -38,7 +38,6 @@ namespace Flashlight {
             const auto data = static_cast<WindowData*>(glfwGetWindowUserPointer(window));
             data->Width = width;
             data->Height = height;
-            data->ShouldRecreateSwapChain = true;
         });
     }
 

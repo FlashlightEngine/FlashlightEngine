@@ -8,17 +8,16 @@
 #pragma once
 
 #include "FlashlightEngine/Core/Window.hpp"
-#include "FlashlightEngine/Renderer/Renderer.hpp"
 
 namespace Flashlight {
     class Application {
     public:
         virtual ~Application() = default;
 
-        void Run(const WindowProperties &windowProperties, const DebugLevel& debugLevel);
+        void Run(const WindowProperties &windowProperties);
 
     protected:
-        virtual bool Init(const WindowProperties& windowProperties, const DebugLevel& debugLevel);
+        virtual bool Init(const WindowProperties& windowProperties);
         virtual void Update();
         virtual void Render() = 0;
         virtual void Cleanup() = 0;
@@ -29,7 +28,6 @@ namespace Flashlight {
         bool m_IsRunning = false;
         float m_DeltaTime = 0.016f;
         std::unique_ptr<Window> m_Window;
-        std::unique_ptr<Renderer> m_Renderer;
     private:
         std::chrono::high_resolution_clock::time_point m_CurrentTime;
     };
