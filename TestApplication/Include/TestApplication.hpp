@@ -14,7 +14,7 @@ class TestApplication final : public Flashlight::Application {
     TestApplication& operator=(TestApplication&&) = delete;
 
 protected:
-    bool Init(const Flashlight::WindowProperties& windowProperties) override;
+    bool Init(const Flashlight::WindowProperties& windowProperties, const Flashlight::DebugLevel& debugLevel) override;
     void Update() override;
     void Render() override;
     void Cleanup() override;

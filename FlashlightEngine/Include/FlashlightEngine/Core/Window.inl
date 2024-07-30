@@ -31,6 +31,9 @@ inline VkExtent2D Window::GetExtent() const {
     return { static_cast<u32>(m_Data.Width), static_cast<u32>(m_Data.Height) };
 }
 
+inline std::string Window::GetTitle() const {
+    return m_Data.Title;
+}
 
 inline void Window::Close() {
     m_Data.ShouldClose = true;

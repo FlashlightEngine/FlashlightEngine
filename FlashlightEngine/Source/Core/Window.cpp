@@ -32,6 +32,7 @@ namespace Flashlight {
 
         m_Data.Width = windowProperties.Width;
         m_Data.Height = windowProperties.Height;
+        m_Data.Title = windowProperties.Title;
     }
 
     Window::~Window() {

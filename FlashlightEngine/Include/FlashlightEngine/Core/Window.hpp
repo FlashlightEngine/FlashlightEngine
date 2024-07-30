@@ -27,6 +27,7 @@ namespace Flashlight {
 
     struct WindowData {
         i32 Width, Height;
+        std::string Title;
         bool ShouldClose = false;
         bool StopRendering = false;
     };
@@ -51,6 +52,7 @@ namespace Flashlight {
         [[nodiscard]] inline i32 GetWidth() const;
         [[nodiscard]] inline i32 GetHeight() const;
         [[nodiscard]] inline VkExtent2D GetExtent() const;
+        [[nodiscard]] inline std::string GetTitle() const;
 
         void Update();
         inline void Close();
