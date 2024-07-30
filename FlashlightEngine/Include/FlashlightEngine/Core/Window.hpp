@@ -3,7 +3,7 @@
  * For conditions of distribution and use, see copyright notice in LICENSE.
  *
  * File : Window.hpp
- * Description : Declaration of the Window class. The Window class is used to create and manage a GLFW window.
+ * Description : Declaration of the Window class. The Window class is used to create and manage a SDL window.
  */
 #pragma once
 
