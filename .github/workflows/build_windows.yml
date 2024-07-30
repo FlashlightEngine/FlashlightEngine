@@ -44,7 +44,7 @@ jobs:
         run: xmake repo --update
 
       - name: Clear XMake Cache
-        run: xmake f -c
+        run: xmake f -c -y
 
       - name: Configure XMake and install dependencies
         run: xmake config --arch=${{ matrix.arch }} --mode=${{ matrix.mode }} --yes
