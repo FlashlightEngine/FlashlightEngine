@@ -21,8 +21,9 @@ namespace Flashlight::VulkanRenderer::VulkanInit {
     VkSemaphoreCreateInfo SemaphoreCreateInfo(VkSemaphoreCreateFlags flags = 0);
 
 
-    VkSubmitInfo2 SubmitInfo(VkCommandBufferSubmitInfo* commandBufferSubmitInfo,
-                             VkSemaphoreSubmitInfo* signalSemaphoreInfo, VkSemaphoreSubmitInfo* waitSemaphoreInfo);
+    VkSubmitInfo2 SubmitInfo(const VkCommandBufferSubmitInfo* commandBufferSubmitInfo,
+                             const VkSemaphoreSubmitInfo* signalSemaphoreInfo,
+                             const VkSemaphoreSubmitInfo* waitSemaphoreInfo);
     VkPresentInfoKHR PresentInfo();
 
     VkRenderingAttachmentInfo AttachmentInfo(VkImageView view, const VkClearValue* clearValue, VkImageLayout layout);

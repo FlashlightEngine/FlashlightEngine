@@ -8,7 +8,6 @@
 #pragma once
 
 #include <FlashlightEngine/VulkanRenderer/VulkanTypes.hpp>
-#include <FlashlightEngine/VulkanRenderer/VulkanInitializers.hpp>
 
 #include <FlashlightEngine/Core/Window.hpp>
 
@@ -28,6 +27,9 @@ namespace Flashlight {
         struct FrameData {
             VkCommandPool CommandPool;
             VkCommandBuffer MainCommandBuffer;
+
+            VkSemaphore SwapchainSemaphore, RenderSemaphore;
+            VkFence RenderFence;
         };
 
         constexpr u32 g_FrameOverlap = 2;
@@ -55,7 +57,6 @@ namespace Flashlight {
             u32 m_GraphicsQueueFamily = 0;
             
         public:
-            
             VulkanRenderer(const Window& window, const DebugLevel& debugLevel);
             ~VulkanRenderer();
 
@@ -64,6 +65,8 @@ namespace Flashlight {
 
             VulkanRenderer& operator=(const VulkanRenderer&) = delete;
             VulkanRenderer& operator=(VulkanRenderer&&) = delete;
+
+            void BeginFrame();
 
         private:
             void InitializeVulkan(const Window& window, const DebugLevel& debugLevel);

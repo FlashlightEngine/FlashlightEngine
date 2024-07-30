@@ -17,6 +17,7 @@ void TestApplication::Update() {
 }
 
 void TestApplication::Render() {
+    m_Renderer->BeginFrame();
 }
 
 void TestApplication::Cleanup() {

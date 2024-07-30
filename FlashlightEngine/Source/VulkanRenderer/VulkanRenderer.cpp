@@ -7,6 +7,9 @@
  */
 #include <FlashlightEngine/VulkanRenderer/VulkanRenderer.hpp>
 
+#include <FlashlightEngine/VulkanRenderer/VulkanInitializers.hpp>
+#include <FlashlightEngine/VulkanRenderer/VulkanUtils/VulkanImageUtils.hpp>
+
 #include <magic_enum.hpp>
 
 #include <SDL_vulkan.h>
@@ -79,12 +82,17 @@ namespace Flashlight::VulkanRenderer {
 
     VulkanRenderer::~VulkanRenderer() {
         vkDeviceWaitIdle(m_Device);
-        
+
         for (u32 i = 0; i < g_FrameOverlap; i++) {
-            Log::EngineTrace("Destroying Vulkan command pool for frame #{0}", i);
+            Log::EngineTrace("Destroying Vulkan command pool for frame #{0}.", i);
             vkDestroyCommandPool(m_Device, m_Frames[i].CommandPool, nullptr);
+
+            Log::EngineTrace("Destroying Vulkan synchronisation objects for frame #{0}.", i);
+            vkDestroyFence(m_Device, m_Frames[i].RenderFence, nullptr);
+            vkDestroySemaphore(m_Device, m_Frames[i].RenderSemaphore, nullptr);
+            vkDestroySemaphore(m_Device, m_Frames[i].SwapchainSemaphore, nullptr);
         }
-        
+
         if (m_Swapchain) {
             DestroySwapchain();
         }
@@ -108,6 +116,66 @@ namespace Flashlight::VulkanRenderer {
             Log::EngineTrace("Destroying Vulkan instance.");
             vkDestroyInstance(m_Instance, nullptr);
         }
+    }
+
+    void VulkanRenderer::BeginFrame() {
+        VK_CHECK(vkWaitForFences(m_Device, 1, &GetCurrentFrame().RenderFence, true, 1000000000))
+        VK_CHECK(vkResetFences(m_Device, 1, &GetCurrentFrame().RenderFence))
+
+        u32 swapchainImageIndex;
+        VK_CHECK(
+            vkAcquireNextImageKHR(m_Device, m_Swapchain, 1000000000, GetCurrentFrame().SwapchainSemaphore, nullptr,
+                &swapchainImageIndex))
+
+        const VkCommandBuffer cmd = GetCurrentFrame().MainCommandBuffer;
+
+        VK_CHECK(vkResetCommandBuffer(cmd, 0))
+
+        const VkCommandBufferBeginInfo cmdBeginInfo = VulkanInit::CommandBufferBeginInfo(
+            VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
+
+        VK_CHECK(vkBeginCommandBuffer(cmd, &cmdBeginInfo))
+
+        VulkanUtils::TransitionImage(cmd, m_SwapchainImages[swapchainImageIndex], VK_IMAGE_LAYOUT_UNDEFINED,
+                                     VK_IMAGE_LAYOUT_GENERAL);
+
+        VkClearColorValue clearValue;
+        const float flash = std::abs(std::sin(static_cast<f32>(m_FrameNumber) / 120.0f));
+        clearValue = {{0.0f, 0.0f, flash, 1.0f}};
+
+        VkImageSubresourceRange clearRange = VulkanInit::ImageSubresourceRange(VK_IMAGE_ASPECT_COLOR_BIT);
+
+        vkCmdClearColorImage(cmd, m_SwapchainImages[swapchainImageIndex], VK_IMAGE_LAYOUT_GENERAL, &clearValue, 1,
+                             &clearRange);
+
+        VulkanUtils::TransitionImage(cmd, m_SwapchainImages[swapchainImageIndex], VK_IMAGE_LAYOUT_GENERAL,
+                                     VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
+
+        VK_CHECK(vkEndCommandBuffer(cmd))
+
+        VkCommandBufferSubmitInfo cmdInfo = VulkanInit::CommandBufferSubmitInfo(cmd);
+
+        VkSemaphoreSubmitInfo waitInfo = VulkanInit::SemaphoreSubmitInfo(VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT, GetCurrentFrame().SwapchainSemaphore);
+        VkSemaphoreSubmitInfo signalInfo = VulkanInit::SemaphoreSubmitInfo(VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT, GetCurrentFrame().RenderSemaphore);
+
+        const VkSubmitInfo2 submit = VulkanInit::SubmitInfo(&cmdInfo, &signalInfo, &waitInfo);
+        
+        VK_CHECK(vkQueueSubmit2(m_GraphicsQueue, 1, &submit, GetCurrentFrame().RenderFence))
+
+        VkPresentInfoKHR presentInfo {};
+        presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+        presentInfo.pNext = nullptr;
+        presentInfo.pSwapchains = &m_Swapchain;
+        presentInfo.swapchainCount = 1;
+
+        presentInfo.pWaitSemaphores = &GetCurrentFrame().RenderSemaphore;
+        presentInfo.waitSemaphoreCount = 1;
+
+        presentInfo.pImageIndices = &swapchainImageIndex;
+
+        VK_CHECK(vkQueuePresentKHR(m_GraphicsQueue, &presentInfo))
+
+        m_FrameNumber++;
     }
 
     void VulkanRenderer::InitializeVulkan(const Window& window, const DebugLevel& debugLevel) {
@@ -270,12 +338,13 @@ namespace Flashlight::VulkanRenderer {
         const VkCommandPoolCreateInfo commandPoolInfo = VulkanInit::CommandPoolCreateInfo(
             m_GraphicsQueueFamily, VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
 
-        Log::EngineTrace("Creating frames Vulkan command pool & command buffer.");
+        Log::EngineTrace("Creating frames Vulkan command pool & command buffer...");
         for (u32 i = 0; i < g_FrameOverlap; i++) {
             VK_CHECK(vkCreateCommandPool(m_Device, &commandPoolInfo, nullptr, &m_Frames[i].CommandPool))
             Log::EngineTrace("Created Vulkan command pool for frame #{0}", i);
 
-            VkCommandBufferAllocateInfo cmdAllocInfo = VulkanInit::CommandBufferAllocateInfo(m_Frames[i].CommandPool);
+            VkCommandBufferAllocateInfo cmdAllocInfo = VulkanInit::CommandBufferAllocateInfo(
+                m_Frames[i].CommandPool);
 
             VK_CHECK(vkAllocateCommandBuffers(m_Device, &cmdAllocInfo, &m_Frames[i].MainCommandBuffer))
             Log::EngineTrace("Created Vulkan command command for frame #{0}", i);
@@ -283,6 +352,19 @@ namespace Flashlight::VulkanRenderer {
     }
 
     void VulkanRenderer::InitializeSynchronisationPrimitives() {
+        const VkFenceCreateInfo fenceCreateInfo = VulkanInit::FenceCreateInfo(VK_FENCE_CREATE_SIGNALED_BIT);
+        const VkSemaphoreCreateInfo semaphoreCreateInfo = VulkanInit::SemaphoreCreateInfo();
+
+        Log::EngineTrace("Creating Vulkan synchronisation primitives...");
+        for (u32 i = 0; i < g_FrameOverlap; i++) {
+            VK_CHECK(vkCreateFence(m_Device, &fenceCreateInfo, nullptr, &m_Frames[i].RenderFence))
+            Log::EngineTrace("Vulkan render fence created for frame #{0}", i);
+
+            VK_CHECK(vkCreateSemaphore(m_Device, &semaphoreCreateInfo, nullptr, &m_Frames[i].SwapchainSemaphore))
+            Log::EngineTrace("Vulkan swapchain semaphore created for frame #{0}", i);
+            VK_CHECK(vkCreateSemaphore(m_Device, &semaphoreCreateInfo, nullptr, &m_Frames[i].RenderSemaphore))
+            Log::EngineTrace("Vulkan render semaphore created for frame #{0}", i);
+        }
     }
 
     void VulkanRenderer::CreateSwapchain(const u32 width, const u32 height) {
