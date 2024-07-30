@@ -97,7 +97,7 @@ namespace Flashlight::VulkanRenderer {
 
         presentInfo.pImageIndices = &frame.SwapchainImageIndex;
 
-        VK_CHECK(vkQueuePresentKHR(m_Device->GetGraphicsQueue(), &presentInfo))
+        VK_CHECK(vkQueuePresentKHR(m_Device->GetPresentQueue(), &presentInfo))
 
         m_FrameNumber++;
     }
@@ -115,7 +115,7 @@ namespace Flashlight::VulkanRenderer {
 
     void VulkanRenderer::InitializeCommands() {
         const VkCommandPoolCreateInfo commandPoolInfo = VulkanInit::CommandPoolCreateInfo(
-            m_Device->GetGraphicsQueueFamily(), VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
+            m_Device->GetGraphicsQueueFamilyIndex(), VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
 
         Log::EngineTrace("Creating frames Vulkan command pool & command buffer...");
         for (u32 i = 0; i < g_FrameOverlap; i++) {

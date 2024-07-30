@@ -88,7 +88,8 @@ namespace Flashlight::VulkanRenderer::VulkanWrapper {
 
         m_GraphicsQueue = vkbDevice.get_queue(vkb::QueueType::graphics).value();
         m_GraphicsQueueFamily = vkbDevice.get_queue_index(vkb::QueueType::graphics).value();
-        
+        m_PresentQueue = vkbDevice.get_queue(vkb::QueueType::present).value();
+        m_PresentQueueFamily = vkbDevice.get_queue_index(vkb::QueueType::present).value();
     }
 
     Device::~Device() {
@@ -103,8 +104,17 @@ namespace Flashlight::VulkanRenderer::VulkanWrapper {
         m_Device = other.m_Device;
         m_GraphicsQueue = other.m_GraphicsQueue;
         m_GraphicsQueueFamily = other.m_GraphicsQueueFamily;
+        m_PresentQueue = other.m_PresentQueue;
+        m_PresentQueueFamily = other.m_PresentQueueFamily;
 
         m_Instance = std::move(other.m_Instance);
+        
+        other.m_PhysicalDevice = VK_NULL_HANDLE;
+        other.m_Device = VK_NULL_HANDLE;
+        other.m_GraphicsQueue = VK_NULL_HANDLE;
+        other.m_GraphicsQueueFamily = 0;
+        other.m_PresentQueue = VK_NULL_HANDLE;
+        other.m_PresentQueueFamily = 0;
     }
 
     Device& Device::operator=(Device&& other) noexcept {
@@ -112,8 +122,17 @@ namespace Flashlight::VulkanRenderer::VulkanWrapper {
         m_Device = other.m_Device;
         m_GraphicsQueue = other.m_GraphicsQueue;
         m_GraphicsQueueFamily = other.m_GraphicsQueueFamily;
+        m_PresentQueue = other.m_PresentQueue;
+        m_PresentQueueFamily = other.m_PresentQueueFamily;
 
         m_Instance = std::move(other.m_Instance);
+        
+        other.m_PhysicalDevice = VK_NULL_HANDLE;
+        other.m_Device = VK_NULL_HANDLE;
+        other.m_GraphicsQueue = VK_NULL_HANDLE;
+        other.m_GraphicsQueueFamily = 0;
+        other.m_PresentQueue = VK_NULL_HANDLE;
+        other.m_PresentQueueFamily = 0;
 
         return *this;
     }

@@ -19,6 +19,8 @@ namespace Flashlight::VulkanRenderer::VulkanWrapper {
 
         VkQueue m_GraphicsQueue = VK_NULL_HANDLE;
         u32 m_GraphicsQueueFamily = 0;
+        VkQueue m_PresentQueue = VK_NULL_HANDLE;
+        u32 m_PresentQueueFamily = 0;
         
         std::shared_ptr<Instance> m_Instance;
         
@@ -35,7 +37,9 @@ namespace Flashlight::VulkanRenderer::VulkanWrapper {
         [[nodiscard]] inline VkPhysicalDevice GetPhysicalDevice() const;
         [[nodiscard]] inline VkDevice GetLogicalDevice() const;
         [[nodiscard]] inline VkQueue GetGraphicsQueue() const;
-        [[nodiscard]] inline u32 GetGraphicsQueueFamily() const;
+        [[nodiscard]] inline u32 GetGraphicsQueueFamilyIndex() const;
+        [[nodiscard]] inline VkQueue GetPresentQueue() const;
+        [[nodiscard]] inline u32 GetPresentQueueFamilyIndex() const;
     };
 
 #include "Device.inl"

@@ -19,6 +19,14 @@ inline VkQueue Device::GetGraphicsQueue() const {
     return m_GraphicsQueue;
 }
 
-inline u32 Device::GetGraphicsQueueFamily() const {
+inline u32 Device::GetGraphicsQueueFamilyIndex() const {
     return m_GraphicsQueueFamily;
+}
+
+inline VkQueue Device::GetPresentQueue() const {
+    return m_PresentQueue;
+}
+
+inline u32 Device::GetPresentQueueFamilyIndex() const {
+    return m_PresentQueueFamily;
 }
