@@ -7,7 +7,7 @@
  */
 #pragma once
 
-#include "FlashlightEngine/pch.hpp"
+#include <FlashlightEngine/pch.hpp>
 
 #include <spdlog/spdlog.h>
 

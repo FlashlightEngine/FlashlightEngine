@@ -7,11 +7,16 @@
  */
 #pragma once
 
-inline Window::~Window() {
-
+inline bool Window::ShouldClose() const {
+    return m_Data.ShouldClose;
 }
 
-inline bool Window::ShouldClose() const {
+inline bool Window::ShouldStopRendering() const {
+    return m_Data.StopRendering;
+}
+
+inline SDL_Window* Window::GetNativeWindow() const {
+    return m_Window;
 }
 
 inline i32 Window::GetWidth() const {
@@ -22,8 +27,6 @@ inline i32 Window::GetHeight() const {
     return m_Data.Height;
 }
 
-inline void Window::Update() {
-}
-
-inline void Window::Close() const {
+inline void Window::Close() {
+    m_Data.ShouldClose = true;
 }

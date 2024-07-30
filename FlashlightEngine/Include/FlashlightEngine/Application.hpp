@@ -7,7 +7,7 @@
  */
 #pragma once
 
-#include "FlashlightEngine/Core/Window.hpp"
+#include <FlashlightEngine/Core/Window.hpp>
 
 namespace Flashlight {
     class Application {
@@ -15,6 +15,8 @@ namespace Flashlight {
         virtual ~Application() = default;
 
         void Run(const WindowProperties &windowProperties);
+
+        [[nodiscard]] static inline Application& GetRunningInstance();
 
     protected:
         virtual bool Init(const WindowProperties& windowProperties);
@@ -30,9 +32,8 @@ namespace Flashlight {
         std::unique_ptr<Window> m_Window;
     private:
         std::chrono::high_resolution_clock::time_point m_CurrentTime;
+        static Application* m_SLoadedApplication;
     };
-
-    std::unique_ptr<Application> CreateApp();
 
 #include "Application.inl"
 }

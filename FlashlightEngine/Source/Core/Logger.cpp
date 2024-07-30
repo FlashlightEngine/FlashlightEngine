@@ -5,7 +5,7 @@
  * File : Logger.cpp
  * Description : Definitions of methods from the Logger class.
  */
-#include "FlashlightEngine/Core/Logger.hpp"
+#include <FlashlightEngine/Core/Logger.hpp>
 
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/sinks/base_sink.h>

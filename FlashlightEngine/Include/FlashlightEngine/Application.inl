@@ -7,6 +7,10 @@
  */
 #pragma once
 
+inline Application& Application::GetRunningInstance() {
+    return *m_SLoadedApplication;
+}
+
 inline bool Application::IsRunning() const {
     return m_IsRunning;
 }

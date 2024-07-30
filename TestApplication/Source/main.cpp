@@ -1,6 +1,8 @@
 ﻿#include "TestApplication.hpp"
 
-int main() {
+#undef main
+
+int main(int argc, char* argv[]) {
     TestApplication app{};
 
     const Flashlight::WindowProperties windowProperties {800, 600, "Test Application" };

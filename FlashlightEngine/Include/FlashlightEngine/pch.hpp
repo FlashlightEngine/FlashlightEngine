@@ -17,13 +17,16 @@
 #include <cassert>
 #include <chrono>
 #include <cstring>
+#include <deque>
 #include <filesystem>
 #include <fstream>
 #include <functional>
 #include <iostream>
 #include <map>
 #include <memory>
+#include <optional>
 #include <set>
+#include <span>
 #include <string>
 #include <unordered_set>
 #include <unordered_map>

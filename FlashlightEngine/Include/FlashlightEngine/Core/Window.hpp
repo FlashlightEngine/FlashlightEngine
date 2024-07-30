@@ -7,9 +7,11 @@
  */
 #pragma once
 
-#include "FlashlightEngine/Core/Logger.hpp"
+#include <FlashlightEngine/Core/Logger.hpp>
 
-#include "FlashlightEngine/pch.hpp"
+#include <FlashlightEngine/pch.hpp>
+
+#include <SDL.h>
 
 namespace Flashlight {
     struct WindowProperties {
@@ -23,14 +25,17 @@ namespace Flashlight {
 
     struct WindowData {
         i32 Width, Height;
+        bool ShouldClose = false;
+        bool StopRendering = false;
     };
 
     class Window {
+        SDL_Window* m_Window = nullptr;
         WindowData m_Data;
 
     public:
         explicit Window(const WindowProperties& windowProperties);
-        inline ~Window();
+        ~Window();
 
         Window(const Window&) = delete;
         Window(Window&&) = delete;
@@ -39,11 +44,13 @@ namespace Flashlight {
         Window& operator=(Window&&) = delete;
 
         [[nodiscard]] inline bool ShouldClose() const;
+        [[nodiscard]] inline bool ShouldStopRendering() const;
+        [[nodiscard]] inline SDL_Window* GetNativeWindow() const;
         [[nodiscard]] inline i32 GetWidth() const;
         [[nodiscard]] inline i32 GetHeight() const;
 
-        static inline void Update();
-        inline void Close() const;
+        void Update();
+        inline void Close();
     };
 
 #include "Window.inl"

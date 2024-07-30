@@ -5,12 +5,17 @@
  * File : Application.cpp
  * Description : Definitions of methods from the Application class.
  */
-#include "FlashlightEngine/Application.hpp"
+#include <FlashlightEngine/Application.hpp>
 
-#include "FlashlightEngine/Core/Logger.hpp"
+#include <FlashlightEngine/Core/Logger.hpp>
 
 namespace Flashlight {
+    Application* Application::m_SLoadedApplication = nullptr;
+    
     void Application::Run(const WindowProperties &windowProperties) {
+        assert(!m_SLoadedApplication);
+        m_SLoadedApplication = this;
+        
         if (!Init(windowProperties)) {
             Log::AppFatal({0x00, 0x01}, "Failed to initialize application.");
         }
@@ -51,5 +56,9 @@ namespace Flashlight {
 
         // Poll window events.
         m_Window->Update();
+
+        if (m_Window->ShouldStopRendering()) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        }
     }
 }
