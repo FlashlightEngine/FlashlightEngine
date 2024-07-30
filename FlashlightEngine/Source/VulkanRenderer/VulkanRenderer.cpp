@@ -106,6 +106,9 @@ namespace Flashlight::VulkanRenderer {
     void VulkanRenderer::InitializeVulkan(const Window& window, const DebugLevel& debugLevel) {
         volkInitialize();
 
+        /*
+         * Instance & debug messenger creation
+         */
         Log::EngineTrace("Creating Vulkan instance & debug messenger...");
         vkb::InstanceBuilder builder;
 
@@ -162,10 +165,16 @@ namespace Flashlight::VulkanRenderer {
 
         volkLoadInstanceOnly(m_Instance);
 
+        /*
+         * Window surface creation 
+         */
         Log::EngineTrace("Creating Vulkan window surface...");
         SDL_Vulkan_CreateSurface(window.GetNativeWindow(), m_Instance, &m_Surface);
         Log::EngineTrace("Vulkan window surface created.");
 
+        /*
+         * Physical device selection & logical device creation.
+         */
         // Vulkan 1.3 features
         VkPhysicalDeviceVulkan13Features features = {
             .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES
