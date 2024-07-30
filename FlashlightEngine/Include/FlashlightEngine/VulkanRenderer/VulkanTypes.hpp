@@ -18,6 +18,25 @@
 #include <glm/mat4x4.hpp>
 #include <glm/vec4.hpp>
 
+enum class DebugLevel {
+    None = 0,
+
+    Errors = 1,
+    Warnings = 2,
+    Verbose = 3,
+    Debug = 4
+};
+
+struct FrameData {
+    VkCommandPool CommandPool;
+    VkCommandBuffer MainCommandBuffer;
+
+    VkSemaphore SwapchainSemaphore, RenderSemaphore;
+    VkFence RenderFence;
+
+    u32 SwapchainImageIndex;
+};
+
 #define VK_CHECK(x)                                                                 \
     do {                                                                            \
         VkResult err = x;                                                           \
