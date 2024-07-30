@@ -78,6 +78,13 @@ namespace Flashlight::VulkanRenderer {
     }
 
     VulkanRenderer::~VulkanRenderer() {
+        vkDeviceWaitIdle(m_Device);
+        
+        for (u32 i = 0; i < g_FrameOverlap; i++) {
+            Log::EngineTrace("Destroying Vulkan command pool for frame #{0}", i);
+            vkDestroyCommandPool(m_Device, m_Frames[i].CommandPool, nullptr);
+        }
+        
         if (m_Swapchain) {
             DestroySwapchain();
         }
@@ -249,6 +256,9 @@ namespace Flashlight::VulkanRenderer {
                              VK_API_VERSION_MINOR(physicalDeviceProperties.driverVersion),
                              VK_API_VERSION_PATCH(physicalDeviceProperties.driverVersion));
         }
+
+        m_GraphicsQueue = vkbDevice.get_queue(vkb::QueueType::graphics).value();
+        m_GraphicsQueueFamily = vkbDevice.get_queue_index(vkb::QueueType::graphics).value();
     }
 
 
@@ -257,6 +267,19 @@ namespace Flashlight::VulkanRenderer {
     }
 
     void VulkanRenderer::InitializeCommands() {
+        const VkCommandPoolCreateInfo commandPoolInfo = VulkanInit::CommandPoolCreateInfo(
+            m_GraphicsQueueFamily, VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
+
+        Log::EngineTrace("Creating frames Vulkan command pool & command buffer.");
+        for (u32 i = 0; i < g_FrameOverlap; i++) {
+            VK_CHECK(vkCreateCommandPool(m_Device, &commandPoolInfo, nullptr, &m_Frames[i].CommandPool))
+            Log::EngineTrace("Created Vulkan command pool for frame #{0}", i);
+
+            VkCommandBufferAllocateInfo cmdAllocInfo = VulkanInit::CommandBufferAllocateInfo(m_Frames[i].CommandPool);
+
+            VK_CHECK(vkAllocateCommandBuffers(m_Device, &cmdAllocInfo, &m_Frames[i].MainCommandBuffer))
+            Log::EngineTrace("Created Vulkan command command for frame #{0}", i);
+        }
     }
 
     void VulkanRenderer::InitializeSynchronisationPrimitives() {

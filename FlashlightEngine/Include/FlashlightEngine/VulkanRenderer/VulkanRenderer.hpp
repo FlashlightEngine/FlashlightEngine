@@ -25,6 +25,13 @@ namespace Flashlight {
     };
     
     namespace VulkanRenderer {
+        struct FrameData {
+            VkCommandPool CommandPool;
+            VkCommandBuffer MainCommandBuffer;
+        };
+
+        constexpr u32 g_FrameOverlap = 2;
+        
         class VulkanRenderer {
             VkInstance m_Instance = VK_NULL_HANDLE;                     // Vulkan library handle.
             VkDebugUtilsMessengerEXT m_DebugMessenger = VK_NULL_HANDLE; // Vulkan debug output handle.
@@ -39,7 +46,16 @@ namespace Flashlight {
             std::vector<VkImageView> m_SwapchainImageViews;
             VkExtent2D m_SwapchainExtent;
 
+            FrameData m_Frames[g_FrameOverlap];
+            i32 m_FrameNumber = 0;
+
+            FrameData& GetCurrentFrame() { return m_Frames[m_FrameNumber % g_FrameOverlap]; }
+
+            VkQueue m_GraphicsQueue = VK_NULL_HANDLE;
+            u32 m_GraphicsQueueFamily = 0;
+            
         public:
+            
             VulkanRenderer(const Window& window, const DebugLevel& debugLevel);
             ~VulkanRenderer();
 
