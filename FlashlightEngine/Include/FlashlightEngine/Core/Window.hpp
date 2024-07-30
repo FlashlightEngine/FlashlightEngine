@@ -9,6 +9,8 @@
 
 #include <FlashlightEngine/Core/Logger.hpp>
 
+#include <FlashlightEngine/VulkanRenderer/VulkanTypes.hpp>
+
 #include <FlashlightEngine/pch.hpp>
 
 #include <SDL.h>
@@ -48,6 +50,7 @@ namespace Flashlight {
         [[nodiscard]] inline SDL_Window* GetNativeWindow() const;
         [[nodiscard]] inline i32 GetWidth() const;
         [[nodiscard]] inline i32 GetHeight() const;
+        [[nodiscard]] inline VkExtent2D GetExtent() const;
 
         void Update();
         inline void Close();
