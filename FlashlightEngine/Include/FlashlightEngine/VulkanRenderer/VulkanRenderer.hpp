@@ -7,15 +7,10 @@
  */
 #pragma once
 
-#include <FlashlightEngine/VulkanRenderer/VulkanTypes.hpp>
 #include <FlashlightEngine/VulkanRenderer/VulkanDescriptors.hpp>
 #include <FlashlightEngine/VulkanRenderer/VulkanUtils/VulkanPipelines.hpp>
 
 #include <FlashlightEngine/Core/Window.hpp>
-
-#include <imgui.h>
-#include <imgui_impl_sdl2.h>
-#include <imgui_impl_vulkan.h>
 
 #include <VkBootstrap.h>
 
@@ -77,6 +72,9 @@ namespace Flashlight::VulkanRenderer {
 
         void Draw();
 
+        [[nodiscard]] VkInstance GetVulkanInstance() const;
+        [[nodiscard]] VkDevice GetVulkanDevice() const;
+
     private:
         void InitializeVulkan(const Window& window, const DebugLevel& debugLevel);
         void InitializeSwapchain(const Window& window);
@@ -90,7 +88,7 @@ namespace Flashlight::VulkanRenderer {
         void DrawBackground(VkCommandBuffer commandBuffer) const;
         void DrawImGui(VkCommandBuffer commandBuffer, VkImageView targetImageView) const;
 
-        FrameData& GetCurrentFrame() {
+        [[nodiscard]] FrameData& GetCurrentFrame() {
             return m_Frames[m_FrameNumber % g_FrameOverlap];
         }
 

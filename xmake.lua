@@ -23,7 +23,7 @@ end
 add_requires("vulkan-loader 1.3.290+0", "vk-bootstrap v1.3.290", "vulkan-memory-allocator v3.1.0", 
              "vulkan-utility-libraries v1.3.290", "libsdl 2.30.5", "glm 1.0.1", "spdlog v1.9.0", "magic_enum v0.9.5",
              "shaderc v2024.1")
-add_requires("imgui v1.90.9", {configs = {sdl2_no_renderer = true, vulkan = true, debug = is_mode("debug")}})
+add_requires("imgui v1.91.0", {configs = {sdl2_no_renderer = true, vulkan = true, debug = is_mode("debug")}})
 
 local outputdir = "$(mode)-$(os)-$(arch)"
 
@@ -56,5 +56,5 @@ target("FlashlightEngine")
   set_pcxxheader("FlashlightEngine/Include/FlashlightEngine/pch.hpp")
 
   -- target dependencies
-  add_packages("vulkan-loader","vk-bootstrap", "vulkan-memory-allocator", "vulkan-utility-libraries", "libsdl", "glm", "spdlog", 
-               "magic_enum", "shaderc", "imgui")
+  add_packages("vulkan-loader","vk-bootstrap", "vulkan-memory-allocator", "vulkan-utility-libraries", "libsdl", "glm",
+               "spdlog", "magic_enum", "shaderc", "imgui")

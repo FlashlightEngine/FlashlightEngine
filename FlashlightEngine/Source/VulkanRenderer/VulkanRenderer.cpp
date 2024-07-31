@@ -12,11 +12,16 @@
 
 #include <magic_enum.hpp>
 
+
 #include <SDL.h>
 #include <SDL_vulkan.h>
 
 #define VMA_IMPLEMENTATION
 #include <vk_mem_alloc.h>
+
+#include <imgui.h>
+#include <imgui_impl_vulkan.h>
+#include <imgui_impl_sdl2.h>
 
 namespace Flashlight::VulkanRenderer {
     namespace {
@@ -94,37 +99,6 @@ namespace Flashlight::VulkanRenderer {
 
         if (m_RendererInitialized) {
             m_MainDeletionQueue.Flush();
-            for (u32 i = 0; i < g_FrameOverlap; i++) {
-                Log::EngineTrace("Destroying Vulkan command pool for frame #{0}.", i);
-                vkDestroyCommandPool(m_Device, m_Frames[i].CommandPool, nullptr);
-
-                Log::EngineTrace("Destroying Vulkan synchronisation objects for frame #{0}.", i);
-                vkDestroyFence(m_Device, m_Frames[i].RenderFence, nullptr);
-                vkDestroySemaphore(m_Device, m_Frames[i].RenderSemaphore, nullptr);
-                vkDestroySemaphore(m_Device, m_Frames[i].SwapchainSemaphore, nullptr);
-
-                m_Frames[i].DeletionQueue.Flush();
-            }
-
-            Log::EngineTrace("Destroying Vulkan swapchain.");
-            vkDestroySwapchainKHR(m_Device, m_Swapchain, nullptr);
-
-            Log::EngineTrace("Destroying Vulkan swapchain image views.");
-            for (const auto swapchainImageView : m_SwapchainImageViews) {
-                vkDestroyImageView(m_Device, swapchainImageView, nullptr);
-            }
-
-            Log::EngineTrace("Destroying Vulkan device.");
-            vkDestroyDevice(m_Device, nullptr);
-
-            Log::EngineTrace("Destroying Vulkan surface.");
-            vkDestroySurfaceKHR(m_Instance, m_Surface, nullptr);
-
-            Log::EngineTrace("Destroying Vulkan debug messenger.");
-            vkb::destroy_debug_utils_messenger(m_Instance, m_DebugMessenger);
-
-            Log::EngineTrace("Destroying Vulkan instance.");
-            vkDestroyInstance(m_Instance, nullptr);
 
             m_RendererInitialized = false;
         }
@@ -212,6 +186,14 @@ namespace Flashlight::VulkanRenderer {
         m_FrameNumber++;
     }
 
+    VkInstance VulkanRenderer::GetVulkanInstance() const {
+        return m_Instance;
+    }
+
+    VkDevice VulkanRenderer::GetVulkanDevice() const {
+        return m_Device;
+    }
+
     void VulkanRenderer::InitializeVulkan(const Window& window, const DebugLevel& debugLevel) {
         Log::EngineTrace("Creating Vulkan instance & debug messenger...");
         vkb::InstanceBuilder builder;
@@ -266,10 +248,24 @@ namespace Flashlight::VulkanRenderer {
         Log::EngineTrace("Vulkan Instance & debug messenger created.");
         m_Instance = vkbInstance.instance;
         m_DebugMessenger = vkbInstance.debug_messenger;
+        
+        m_MainDeletionQueue.PushFunction([this]() {
+            Log::EngineTrace("Destroying Vulkan debug messenger.");
+            vkb::destroy_debug_utils_messenger(m_Instance, m_DebugMessenger, nullptr);
+            
+            Log::EngineTrace("Destroying Vulkan instance.");
+            vkDestroyInstance(m_Instance, nullptr);
+        });
 
         Log::EngineTrace("Creating Vulkan window surface...");
         SDL_Vulkan_CreateSurface(window.GetNativeWindow(), m_Instance, &m_Surface);
         Log::EngineTrace("Vulkan window surface created.");
+        
+        m_MainDeletionQueue.PushFunction([this]() {
+            Log::EngineTrace("Destroying Vulkan surface.");
+            vkDestroySurfaceKHR(m_Instance, m_Surface, nullptr);
+        });
+        
         // Vulkan 1.3 features
         VkPhysicalDeviceVulkan13Features features = {
             .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES
@@ -348,6 +344,11 @@ namespace Flashlight::VulkanRenderer {
         m_PresentQueue = vkbDevice.get_queue(vkb::QueueType::present).value();
         m_PresentQueueFamily = vkbDevice.get_queue_index(vkb::QueueType::present).value();
 
+        m_MainDeletionQueue.PushFunction([this]() {
+            Log::EngineTrace("Destroying Vulkan device.");
+            vkDestroyDevice(m_Device, nullptr);
+        });
+
         Log::EngineTrace("Creating VMA allocator.");
 
         VmaVulkanFunctions functions{};
@@ -390,6 +391,16 @@ namespace Flashlight::VulkanRenderer {
         m_Swapchain = vkbSwapchain.swapchain;
         m_SwapchainImages = vkbSwapchain.get_images().value();
         m_SwapchainImageViews = vkbSwapchain.get_image_views().value();
+
+        m_MainDeletionQueue.PushFunction([this]() {
+            Log::EngineTrace("Destroying Vulkan swapchain.");
+            vkDestroySwapchainKHR(m_Device, m_Swapchain, nullptr);
+
+            Log::EngineTrace("Destroying Vulkan swapchain image views.");
+            for (const auto swapchainImageView : m_SwapchainImageViews) {
+                vkDestroyImageView(m_Device, swapchainImageView, nullptr);
+            }
+        });
 
         // Draw image size will match the window.
         const VkExtent3D drawImageExtent = {
@@ -451,6 +462,13 @@ namespace Flashlight::VulkanRenderer {
             Log::EngineTrace("Created Vulkan command command for frame #{0}", i);
         }
 
+        m_MainDeletionQueue.PushFunction([this]() {
+            for (u32 i = 0; i < g_FrameOverlap; i++) {
+                Log::EngineTrace("Destroying Vulkan command pool for frame #{0}.", i);
+                vkDestroyCommandPool(m_Device, m_Frames[i].CommandPool, nullptr);
+            }
+        });
+
         commandPoolInfo = VulkanInit::CommandPoolCreateInfo(m_GraphicsQueueFamily,
                                                             VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT |
                                                             VK_COMMAND_POOL_CREATE_TRANSIENT_BIT);
@@ -491,6 +509,17 @@ namespace Flashlight::VulkanRenderer {
                     RenderSemaphore))
             Log::EngineTrace("Vulkan render semaphore created for frame #{0}", i);
         }
+
+        m_MainDeletionQueue.PushFunction([this]() {
+            for (u32 i = 0; i < g_FrameOverlap; i++) {
+                Log::EngineTrace("Destroying Vulkan synchronisation objects for frame #{0}.", i);
+                vkDestroyFence(m_Device, m_Frames[i].RenderFence, nullptr);
+                vkDestroySemaphore(m_Device, m_Frames[i].RenderSemaphore, nullptr);
+                vkDestroySemaphore(m_Device, m_Frames[i].SwapchainSemaphore, nullptr);
+
+                m_Frames[i].DeletionQueue.Flush();
+            }
+        });
 
         Log::EngineTrace("Creating Vulkan fence for immediate commands...");
         VK_CHECK(vkCreateFence(m_Device, &fenceCreateInfo, nullptr, &m_ImmediateFence))
@@ -639,6 +668,10 @@ namespace Flashlight::VulkanRenderer {
         initInfo.PipelineRenderingCreateInfo.pColorAttachmentFormats = &m_SwapchainImageFormat;
 
         initInfo.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
+
+        ImGui_ImplVulkan_LoadFunctions([](const char* functionName, void* vulkanInstance) {
+            return vkGetInstanceProcAddr(*(static_cast<VkInstance*>(vulkanInstance)), functionName);
+        }, &m_Instance);
 
         ImGui_ImplVulkan_Init(&initInfo);
 
