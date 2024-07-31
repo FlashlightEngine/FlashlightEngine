@@ -23,6 +23,7 @@ end
 add_requires("volk 1.3.290+0", "vk-bootstrap v1.3.290", "vulkan-memory-allocator v3.1.0", 
              "vulkan-utility-libraries v1.3.290", "libsdl 2.30.5", "glm 1.0.1", "spdlog v1.9.0", "magic_enum v0.9.5",
              "shaderc v2024.1")
+add_requires("imgui v1.90.9", {configs = {sdl2_no_renderer = true, vulkan = true, debug = is_mode("debug")}})
 
 add_defines("VK_NO_PROTOTYPES")
 
@@ -58,4 +59,4 @@ target("FlashlightEngine")
 
   -- target dependencies
   add_packages("volk","vk-bootstrap", "vulkan-memory-allocator", "vulkan-utility-libraries", "libsdl", "glm", "spdlog", 
-               "magic_enum", "shaderc")
+               "magic_enum", "shaderc", "imgui")
