@@ -76,7 +76,7 @@ namespace Flashlight::VulkanRenderer {
         void InitializeSynchronisationPrimitives();
         void InitializeDescriptors();
         void InitializePipelines();
-        void InitializeBackGroundPipeline();
+        void InitializeBackgroundPipeline();
         
         void DrawBackground(VkCommandBuffer commandBuffer) const;
 
