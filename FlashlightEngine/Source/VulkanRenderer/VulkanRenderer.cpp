@@ -631,6 +631,13 @@ namespace Flashlight::VulkanRenderer {
             Log::EngineFatal({0x02, 0x01}, "Failed to build the sky compute shader module.");
         }
 
+        VkShaderModule gridShaderModule;
+        CreateShaderModule(m_Device, "Shaders/gradient_grid.comp", VulkanUtils::ShaderType::Compute,
+                           &gridShaderModule);
+        if (!skyShaderModule) {
+            Log::EngineFatal({0x02, 0x02}, "Failed to build the grid compute shader module.");
+        }
+
         VkPipelineShaderStageCreateInfo stageInfo{};
         stageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         stageInfo.pNext = nullptr;
@@ -672,17 +679,31 @@ namespace Flashlight::VulkanRenderer {
             vkCreateComputePipelines(m_Device, VK_NULL_HANDLE, 1, &computePipelineCreateInfo, nullptr, &sky.Pipeline
             ))
 
+        computePipelineCreateInfo.stage.module = gridShaderModule;
+
+        ComputeEffect grid;
+        grid.Layout = m_ComputePipelineLayout;
+        grid.Name = "Grid";
+        grid.Data = {};
+
+        VK_CHECK(
+            vkCreateComputePipelines(m_Device, VK_NULL_HANDLE, 1, &computePipelineCreateInfo, nullptr, &grid.Pipeline
+            ))
+
         // Add the 2 effects into the array.
         m_BackgroundEffects.push_back(gradient);
         m_BackgroundEffects.push_back(sky);
+        m_BackgroundEffects.push_back(grid);
 
         vkDestroyShaderModule(m_Device, gradientShaderModule, nullptr);
         vkDestroyShaderModule(m_Device, skyShaderModule, nullptr);
+        vkDestroyShaderModule(m_Device, gridShaderModule, nullptr);
 
-        m_MainDeletionQueue.PushFunction([this, sky, gradient]() {
+        m_MainDeletionQueue.PushFunction([this, sky, gradient, grid]() {
             vkDestroyPipelineLayout(m_Device, m_ComputePipelineLayout, nullptr);
             vkDestroyPipeline(m_Device, sky.Pipeline, nullptr);
             vkDestroyPipeline(m_Device, gradient.Pipeline, nullptr);
+            vkDestroyPipeline(m_Device, grid.Pipeline, nullptr);
         });
     }
 
