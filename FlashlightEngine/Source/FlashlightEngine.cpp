@@ -50,7 +50,7 @@ namespace Flashlight {
         m_CurrentTime = std::chrono::high_resolution_clock::now();
 
         const std::chrono::duration<double, std::milli> timeSpan = (m_CurrentTime - oldTime);
-        m_DeltaTime = static_cast<float>(timeSpan.count()) / 1000.0f;
+        m_DeltaTime = static_cast<f32>(timeSpan.count()) / 1000.0f;
 
         // Check if window is closed.
         if (m_Window->ShouldClose()) {
@@ -65,7 +65,7 @@ namespace Flashlight {
         }
     }
 
-    void FlashlightEngine::Render() {
+    void FlashlightEngine::Render() const {
         m_Renderer->Draw();
     }
 

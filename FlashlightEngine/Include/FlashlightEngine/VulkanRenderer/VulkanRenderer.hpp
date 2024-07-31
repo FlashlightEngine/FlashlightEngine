@@ -8,6 +8,8 @@
 #pragma once
 
 #include <FlashlightEngine/VulkanRenderer/VulkanTypes.hpp>
+#include <FlashlightEngine/VulkanRenderer/VulkanDescriptors.hpp>
+#include <FlashlightEngine/VulkanRenderer/VulkanUtils/VulkanPipelines.hpp>
 
 #include <FlashlightEngine/Core/Window.hpp>
 
@@ -18,6 +20,7 @@ namespace Flashlight::VulkanRenderer {
     constexpr u32 g_FrameOverlap = 2;
 
     class VulkanRenderer {
+        bool m_RendererInitialized = false;
         
         VkInstance m_Instance = VK_NULL_HANDLE;                     // Vulkan library handle.
         VkDebugUtilsMessengerEXT m_DebugMessenger = VK_NULL_HANDLE; // Vulkan debug output handle.
@@ -46,9 +49,13 @@ namespace Flashlight::VulkanRenderer {
         AllocatedImage m_DrawImage;
         VkExtent2D m_DrawExtent;
 
-        FrameData& GetCurrentFrame() {
-            return m_Frames[m_FrameNumber % g_FrameOverlap];
-        }
+        DescriptorAllocator m_GlobalDescriptorAllocator;
+
+        VkDescriptorSet m_DrawImageDescriptors;
+        VkDescriptorSetLayout m_DrawImageDescriptorLayout;
+
+        VkPipeline m_GradientPipeline;
+        VkPipelineLayout m_GradientPipelineLayout;
 
     public:
         VulkanRenderer(const Window& window, const DebugLevel& debugLevel);
@@ -67,8 +74,15 @@ namespace Flashlight::VulkanRenderer {
         void InitializeSwapchain(const Window& window);
         void InitializeCommands();
         void InitializeSynchronisationPrimitives();
+        void InitializeDescriptors();
+        void InitializePipelines();
+        void InitializeBackGroundPipeline();
         
         void DrawBackground(VkCommandBuffer commandBuffer) const;
+
+        FrameData& GetCurrentFrame() {
+            return m_Frames[m_FrameNumber % g_FrameOverlap];
+        }
     };
 
 }

@@ -82,50 +82,49 @@ namespace Flashlight::VulkanRenderer {
         InitializeSwapchain(window);
         InitializeCommands();
         InitializeSynchronisationPrimitives();
+        InitializeDescriptors();
+
+        m_RendererInitialized = true;
     }
 
     VulkanRenderer::~VulkanRenderer() {
         vkDeviceWaitIdle(m_Device);
 
-        m_MainDeletionQueue.Flush();
-        for (u32 i = 0; i < g_FrameOverlap; i++) {
-            Log::EngineTrace("Destroying Vulkan command pool for frame #{0}.", i);
-            vkDestroyCommandPool(m_Device, m_Frames[i].CommandPool, nullptr);
+        if (m_RendererInitialized) {
+            m_MainDeletionQueue.Flush();
+            for (u32 i = 0; i < g_FrameOverlap; i++) {
+                Log::EngineTrace("Destroying Vulkan command pool for frame #{0}.", i);
+                vkDestroyCommandPool(m_Device, m_Frames[i].CommandPool, nullptr);
 
-            Log::EngineTrace("Destroying Vulkan synchronisation objects for frame #{0}.", i);
-            vkDestroyFence(m_Device, m_Frames[i].RenderFence, nullptr);
-            vkDestroySemaphore(m_Device, m_Frames[i].RenderSemaphore, nullptr);
-            vkDestroySemaphore(m_Device, m_Frames[i].SwapchainSemaphore, nullptr);
+                Log::EngineTrace("Destroying Vulkan synchronisation objects for frame #{0}.", i);
+                vkDestroyFence(m_Device, m_Frames[i].RenderFence, nullptr);
+                vkDestroySemaphore(m_Device, m_Frames[i].RenderSemaphore, nullptr);
+                vkDestroySemaphore(m_Device, m_Frames[i].SwapchainSemaphore, nullptr);
 
-            m_Frames[i].DeletionQueue.Flush();
-        }
+                m_Frames[i].DeletionQueue.Flush();
+            }
 
-        Log::EngineTrace("Destroying Vulkan swapchain.");
-        vkDestroySwapchainKHR(m_Device, m_Swapchain, nullptr);
+            Log::EngineTrace("Destroying Vulkan swapchain.");
+            vkDestroySwapchainKHR(m_Device, m_Swapchain, nullptr);
 
-        Log::EngineTrace("Destroying Vulkan swapchain image views.");
-        for (const auto swapchainImageView : m_SwapchainImageViews) {
-            vkDestroyImageView(m_Device, swapchainImageView, nullptr);
-        }
+            Log::EngineTrace("Destroying Vulkan swapchain image views.");
+            for (const auto swapchainImageView : m_SwapchainImageViews) {
+                vkDestroyImageView(m_Device, swapchainImageView, nullptr);
+            }
 
-        if (m_Device) {
             Log::EngineTrace("Destroying Vulkan device.");
             vkDestroyDevice(m_Device, nullptr);
-        }
 
-        if (m_Surface) {
             Log::EngineTrace("Destroying Vulkan surface.");
             vkDestroySurfaceKHR(m_Instance, m_Surface, nullptr);
-        }
 
-        if (m_DebugMessenger) {
             Log::EngineTrace("Destroying Vulkan debug messenger.");
             vkb::destroy_debug_utils_messenger(m_Instance, m_DebugMessenger);
-        }
 
-        if (m_Instance) {
             Log::EngineTrace("Destroying Vulkan instance.");
             vkDestroyInstance(m_Instance, nullptr);
+
+            m_RendererInitialized = false;
         }
     }
 
@@ -353,7 +352,7 @@ namespace Flashlight::VulkanRenderer {
         VmaVulkanFunctions functions{};
         functions.vkGetInstanceProcAddr = vkGetInstanceProcAddr;
         functions.vkGetDeviceProcAddr = vkGetDeviceProcAddr;
-        
+
         VmaAllocatorCreateInfo allocatorInfo{};
         allocatorInfo.physicalDevice = m_PhysicalDevice;
         allocatorInfo.device = m_Device;
@@ -473,9 +472,59 @@ namespace Flashlight::VulkanRenderer {
         }
     }
 
+    void VulkanRenderer::InitializeDescriptors() {
+        // Create a descriptor pool that will hold 10 sets with 1 image each.
+        std::vector<DescriptorAllocator::PoolSizeRatio> sizes = {
+            {VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1}
+        };
+
+        m_GlobalDescriptorAllocator.InitPool(m_Device, 10, sizes);
+
+        // Make the descriptor set layout for the compute draw.
+        {
+            DescriptorLayoutBuilder builder;
+            builder.AddBinding(0, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE);
+            m_DrawImageDescriptorLayout = builder.Build(m_Device, VK_SHADER_STAGE_COMPUTE_BIT);
+        }
+
+        // Allocate a descriptor set for the compute draw.
+        m_DrawImageDescriptors = m_GlobalDescriptorAllocator.Allocate(m_Device, m_DrawImageDescriptorLayout);
+
+        VkDescriptorImageInfo imageInfo{};
+        imageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+        imageInfo.imageView = m_DrawImage.ImageView;
+
+        VkWriteDescriptorSet drawImageWrite{};
+        drawImageWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        drawImageWrite.pNext = nullptr;
+
+        drawImageWrite.dstBinding = 0;
+        drawImageWrite.dstSet = m_DrawImageDescriptors;
+        drawImageWrite.descriptorCount = 1;
+        drawImageWrite.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+        drawImageWrite.pImageInfo = &imageInfo;
+
+        vkUpdateDescriptorSets(m_Device, 1, &drawImageWrite, 0, nullptr);
+
+        // Make sure both the descriptor allocator and the new layout get cleaned up properly.
+        m_MainDeletionQueue.PushFunction([&]() {
+            m_GlobalDescriptorAllocator.DestroyPool(m_Device);
+
+            vkDestroyDescriptorSetLayout(m_Device, m_DrawImageDescriptorLayout, nullptr);
+        });
+    }
+
+    void VulkanRenderer::InitializePipelines() {
+        
+    }
+
+    void VulkanRenderer::InitializeBackGroundPipeline() {
+        
+    }
+
     void VulkanRenderer::DrawBackground(const VkCommandBuffer commandBuffer) const {
         VkClearColorValue colorValue;
-        const float flash = std::abs(std::sin(static_cast<f32>(m_FrameNumber) / 120.0f));
+        const f32 flash = std::abs(std::sin(static_cast<f32>(m_FrameNumber) / 120.0f));
         colorValue = {{0.0f, 0.0f, flash, 1.0f}};
 
         const VkImageSubresourceRange clearRange = VulkanInit::ImageSubresourceRange(VK_IMAGE_ASPECT_COLOR_BIT);

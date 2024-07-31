@@ -30,14 +30,14 @@ namespace Flashlight {
     protected:
         bool Init(const WindowProperties& windowProperties, const DebugLevel& debugLevel);
         void Update();
-        void Render();
+        void Render() const;
         void Cleanup();
 
         [[nodiscard]] inline bool IsRunning() const;
         inline void Close();
 
         bool m_IsRunning = false;
-        float m_DeltaTime = 0.016f;
+        f32 m_DeltaTime = 0.016f;
         std::unique_ptr<Window> m_Window;
         std::unique_ptr<VulkanRenderer::VulkanRenderer> m_Renderer;
 
