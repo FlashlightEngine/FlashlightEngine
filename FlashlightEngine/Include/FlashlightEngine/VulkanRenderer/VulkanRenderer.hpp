@@ -7,6 +7,7 @@
  */
 #pragma once
 
+#include <FlashlightEngine/VulkanRenderer/VulkanTypes.hpp>
 #include <FlashlightEngine/VulkanRenderer/VulkanDescriptors.hpp>
 #include <FlashlightEngine/VulkanRenderer/VulkanUtils/VulkanPipelines.hpp>
 
@@ -17,6 +18,22 @@
 namespace Flashlight::VulkanRenderer {
 
     constexpr u32 g_FrameOverlap = 2;
+
+    struct ComputePushConstants {
+        glm::vec4 Data1;
+        glm::vec4 Data2;
+        glm::vec4 Data3;
+        glm::vec4 Data4;
+    };
+
+    struct ComputeEffect {
+        const char* Name;
+
+        VkPipeline Pipeline;
+        VkPipelineLayout Layout;
+
+        ComputePushConstants Data;
+    };
 
     class VulkanRenderer {
         bool m_RendererInitialized = false;
@@ -53,8 +70,10 @@ namespace Flashlight::VulkanRenderer {
         VkDescriptorSet m_DrawImageDescriptors;
         VkDescriptorSetLayout m_DrawImageDescriptorLayout;
 
-        VkPipeline m_GradientPipeline;
-        VkPipelineLayout m_GradientPipelineLayout;
+        VkPipelineLayout m_ComputePipelineLayout;
+
+        std::vector<ComputeEffect> m_BackgroundEffects;
+        i32 m_CurrentBackgroundEffect{0};
 
         VkFence m_ImmediateFence;
         VkCommandBuffer m_ImmediateCommandBuffer;
@@ -70,6 +89,7 @@ namespace Flashlight::VulkanRenderer {
         VulkanRenderer& operator=(const VulkanRenderer&) = delete;
         VulkanRenderer& operator=(VulkanRenderer&&) = delete;
 
+        void CreateUi();
         void Draw();
 
         [[nodiscard]] VkInstance GetVulkanInstance() const;
@@ -82,7 +102,6 @@ namespace Flashlight::VulkanRenderer {
         void InitializeSynchronisationPrimitives();
         void InitializeDescriptors();
         void InitializePipelines();
-        void InitializeBackgroundPipeline();
         void InitializeImGui(const Window& window);
         
         void DrawBackground(VkCommandBuffer commandBuffer) const;

@@ -104,6 +104,31 @@ namespace Flashlight::VulkanRenderer {
         }
     }
 
+    void VulkanRenderer::CreateUi() {
+        ImGui_ImplVulkan_NewFrame();
+        ImGui_ImplSDL2_NewFrame();
+
+        ImGui::NewFrame();
+
+        if (ImGui::Begin("Background effect data")) {
+            ComputeEffect& selected = m_BackgroundEffects[m_CurrentBackgroundEffect];
+            
+            ImGui::Text("Selected effect: %s", selected.Name);
+
+            ImGui::SliderInt("Effect Index", &m_CurrentBackgroundEffect, 0,
+                             static_cast<i32>(m_BackgroundEffects.size() - 1));
+
+            ImGui::InputFloat4("data1", reinterpret_cast<float*>(&selected.Data.Data1));
+            ImGui::InputFloat4("data2", reinterpret_cast<float*>(&selected.Data.Data2));
+            ImGui::InputFloat4("data3", reinterpret_cast<float*>(&selected.Data.Data3));
+            ImGui::InputFloat4("data4", reinterpret_cast<float*>(&selected.Data.Data4));
+        }
+        ImGui::End();
+
+        ImGui::Render();
+    }
+
+
     void VulkanRenderer::Draw() {
         auto& frame = GetCurrentFrame();
 
@@ -248,11 +273,11 @@ namespace Flashlight::VulkanRenderer {
         Log::EngineTrace("Vulkan Instance & debug messenger created.");
         m_Instance = vkbInstance.instance;
         m_DebugMessenger = vkbInstance.debug_messenger;
-        
+
         m_MainDeletionQueue.PushFunction([this]() {
             Log::EngineTrace("Destroying Vulkan debug messenger.");
             vkb::destroy_debug_utils_messenger(m_Instance, m_DebugMessenger, nullptr);
-            
+
             Log::EngineTrace("Destroying Vulkan instance.");
             vkDestroyInstance(m_Instance, nullptr);
         });
@@ -260,12 +285,12 @@ namespace Flashlight::VulkanRenderer {
         Log::EngineTrace("Creating Vulkan window surface...");
         SDL_Vulkan_CreateSurface(window.GetNativeWindow(), m_Instance, &m_Surface);
         Log::EngineTrace("Vulkan window surface created.");
-        
+
         m_MainDeletionQueue.PushFunction([this]() {
             Log::EngineTrace("Destroying Vulkan surface.");
             vkDestroySurfaceKHR(m_Instance, m_Surface, nullptr);
         });
-        
+
         // Vulkan 1.3 features
         VkPhysicalDeviceVulkan13Features features = {
             .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES
@@ -573,10 +598,7 @@ namespace Flashlight::VulkanRenderer {
     }
 
     void VulkanRenderer::InitializePipelines() {
-        InitializeBackgroundPipeline();
-    }
-
-    void VulkanRenderer::InitializeBackgroundPipeline() {
+        // Create pipeline layout
         VkPipelineLayoutCreateInfo computeLayout{};
         computeLayout.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
         computeLayout.pNext = nullptr;
@@ -584,36 +606,83 @@ namespace Flashlight::VulkanRenderer {
         computeLayout.setLayoutCount = 1;
         computeLayout.pSetLayouts = &m_DrawImageDescriptorLayout;
 
-        VK_CHECK(vkCreatePipelineLayout(m_Device, &computeLayout, nullptr, &m_GradientPipelineLayout))
+        VkPushConstantRange pushConstant;
+        pushConstant.offset = 0;
+        pushConstant.size = sizeof(ComputePushConstants);
+        pushConstant.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
 
-        VkShaderModule computeDrawModule;
-        CreateShaderModule(m_Device, "Shaders/gradient.comp", VulkanUtils::ShaderType::Compute, &computeDrawModule);
-        if (!computeDrawModule) {
-            Log::EngineFatal({0x02, 0x00}, "Failed to build the compute shader module.");
+        computeLayout.pushConstantRangeCount = 1;
+        computeLayout.pPushConstantRanges = &pushConstant;
+
+        VK_CHECK(vkCreatePipelineLayout(m_Device, &computeLayout, nullptr, &m_ComputePipelineLayout))
+
+        // Create shader modules.
+        VkShaderModule gradientShaderModule;
+        CreateShaderModule(m_Device, "Shaders/gradient_color.comp", VulkanUtils::ShaderType::Compute,
+                           &gradientShaderModule);
+        if (!gradientShaderModule) {
+            Log::EngineFatal({0x02, 0x00}, "Failed to build the gradient compute shader module.");
+        }
+
+        VkShaderModule skyShaderModule;
+        CreateShaderModule(m_Device, "Shaders/sky.comp", VulkanUtils::ShaderType::Compute,
+                           &skyShaderModule);
+        if (!skyShaderModule) {
+            Log::EngineFatal({0x02, 0x01}, "Failed to build the sky compute shader module.");
         }
 
         VkPipelineShaderStageCreateInfo stageInfo{};
         stageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         stageInfo.pNext = nullptr;
         stageInfo.stage = VK_SHADER_STAGE_COMPUTE_BIT;
-        stageInfo.module = computeDrawModule;
+        stageInfo.module = gradientShaderModule;
         stageInfo.pName = "main";
+
 
         VkComputePipelineCreateInfo computePipelineCreateInfo{};
         computePipelineCreateInfo.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
         computePipelineCreateInfo.pNext = nullptr;
-        computePipelineCreateInfo.layout = m_GradientPipelineLayout;
+        computePipelineCreateInfo.layout = m_ComputePipelineLayout;
         computePipelineCreateInfo.stage = stageInfo;
 
+        ComputeEffect gradient;
+        gradient.Layout = m_ComputePipelineLayout;
+        gradient.Name = "Gradient";
+        gradient.Data = {};
+
+        // default colors
+        gradient.Data.Data1 = glm::vec4(1, 0, 0, 1);
+        gradient.Data.Data2 = glm::vec4(0, 0, 1, 1);
+
         VK_CHECK(
-            vkCreateComputePipelines(m_Device, VK_NULL_HANDLE, 1, &computePipelineCreateInfo, nullptr, &
-                m_GradientPipeline))
+            vkCreateComputePipelines(m_Device, VK_NULL_HANDLE, 1, &computePipelineCreateInfo, nullptr,
+                &gradient.Pipeline))
 
-        vkDestroyShaderModule(m_Device, computeDrawModule, nullptr);
+        computePipelineCreateInfo.stage.module = skyShaderModule;
 
-        m_MainDeletionQueue.PushFunction([&]() {
-            vkDestroyPipelineLayout(m_Device, m_GradientPipelineLayout, nullptr);
-            vkDestroyPipeline(m_Device, m_GradientPipeline, nullptr);
+        ComputeEffect sky;
+        sky.Layout = m_ComputePipelineLayout;
+        sky.Name = "Sky";
+        sky.Data = {};
+
+        // Default sky parameters.
+        sky.Data.Data1 = glm::vec4(0.1, 0.2, 0.4, 0.97);
+
+        VK_CHECK(
+            vkCreateComputePipelines(m_Device, VK_NULL_HANDLE, 1, &computePipelineCreateInfo, nullptr, &sky.Pipeline
+            ))
+
+        // Add the 2 effects into the array.
+        m_BackgroundEffects.push_back(gradient);
+        m_BackgroundEffects.push_back(sky);
+
+        vkDestroyShaderModule(m_Device, gradientShaderModule, nullptr);
+        vkDestroyShaderModule(m_Device, skyShaderModule, nullptr);
+
+        m_MainDeletionQueue.PushFunction([this, sky, gradient]() {
+            vkDestroyPipelineLayout(m_Device, m_ComputePipelineLayout, nullptr);
+            vkDestroyPipeline(m_Device, sky.Pipeline, nullptr);
+            vkDestroyPipeline(m_Device, gradient.Pipeline, nullptr);
         });
     }
 
@@ -684,12 +753,17 @@ namespace Flashlight::VulkanRenderer {
     }
 
     void VulkanRenderer::DrawBackground(const VkCommandBuffer commandBuffer) const {
+        const ComputeEffect& effect = m_BackgroundEffects[m_CurrentBackgroundEffect];
+
         // Bind the gradient drawing compute pipeline.
-        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_GradientPipeline);
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, effect.Pipeline);
 
         // Bind the descriptor set containing the draw image for the compute pipeline.
-        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_GradientPipelineLayout, 0, 1,
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_ComputePipelineLayout, 0, 1,
                                 &m_DrawImageDescriptors, 0, nullptr);
+
+        vkCmdPushConstants(commandBuffer, m_ComputePipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0,
+                           sizeof(ComputePushConstants), &effect.Data);
 
         // Execute the compute pipeline dispatch. The workgroup size is 16x16, so we need to divide by it.
         vkCmdDispatch(commandBuffer, static_cast<u32>(std::ceil(m_DrawExtent.width / 16.0)),

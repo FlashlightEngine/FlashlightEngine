@@ -70,13 +70,7 @@ namespace Flashlight {
     }
 
     void FlashlightEngine::Render() const {
-        ImGui_ImplVulkan_NewFrame();
-        ImGui_ImplSDL2_NewFrame();
-        ImGui::NewFrame();
-
-        ImGui::ShowDemoWindow();
-
-        ImGui::Render();
+        m_Renderer->CreateUi();
         
         m_Renderer->Draw();
     }
