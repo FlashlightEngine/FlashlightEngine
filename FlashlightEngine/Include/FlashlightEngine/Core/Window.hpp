@@ -13,7 +13,7 @@
 
 #include <FlashlightEngine/pch.hpp>
 
-#include <SDL.h>
+struct SDL_Window;
 
 namespace Flashlight {
     struct WindowProperties {

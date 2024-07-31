@@ -9,7 +9,7 @@
 
 #include <FlashlightEngine/Core/Logger.hpp>
 
-#include <SDL_vulkan.h>
+#include <SDL.h>
 
 namespace Flashlight {
     Window::Window(const WindowProperties& windowProperties) {

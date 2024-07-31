@@ -1,7 +1,8 @@
 #include "TestApplication.hpp"
 
 
-bool TestApplication::Init(const Flashlight::WindowProperties& windowProperties, const DebugLevel& debugLevel) {
+bool TestApplication::Init(const Flashlight::WindowProperties& windowProperties,
+                           const Flashlight::DebugLevel& debugLevel) {
     if (!Application::Init(windowProperties, debugLevel)) {
         Flashlight::Log::AppFatal({0x00, 0x01}, "Failed to initialize application base.");
     }

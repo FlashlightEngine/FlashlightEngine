@@ -3,7 +3,7 @@
 #include <FlashlightEngine/Application.hpp>
 
 class TestApplication final : public Flashlight::Application {
-    public:
+public:
     TestApplication() = default;
     ~TestApplication() override = default;
 
@@ -14,7 +14,8 @@ class TestApplication final : public Flashlight::Application {
     TestApplication& operator=(TestApplication&&) = delete;
 
 protected:
-    bool Init(const Flashlight::WindowProperties& windowProperties, const DebugLevel& debugLevel) override;
+    bool Init(const Flashlight::WindowProperties& windowProperties,
+              const Flashlight::DebugLevel& debugLevel) override;
     void Update() override;
     void Render() override;
     void Cleanup() override;
