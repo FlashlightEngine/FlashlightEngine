@@ -8,10 +8,6 @@
 #pragma once
 
 #include <FlashlightEngine/VulkanRenderer/VulkanTypes.hpp>
-#include <FlashlightEngine/VulkanRenderer/VulkanWrapper/Instance.hpp>
-#include <FlashlightEngine/VulkanRenderer/VulkanWrapper/Surface.hpp>
-#include <FlashlightEngine/VulkanRenderer/VulkanWrapper/Device.hpp>
-#include <FlashlightEngine/VulkanRenderer/VulkanWrapper/Swapchain.hpp>
 
 #include <FlashlightEngine/Core/Window.hpp>
 
@@ -22,13 +18,33 @@ namespace Flashlight::VulkanRenderer {
     constexpr u32 g_FrameOverlap = 2;
 
     class VulkanRenderer {
-        std::shared_ptr<VulkanWrapper::Instance> m_Instance;
-        std::unique_ptr<VulkanWrapper::Surface> m_Surface;
-        std::shared_ptr<VulkanWrapper::Device> m_Device;
-        std::unique_ptr<VulkanWrapper::Swapchain> m_Swapchain;
+        
+        VkInstance m_Instance = VK_NULL_HANDLE;                     // Vulkan library handle.
+        VkDebugUtilsMessengerEXT m_DebugMessenger = VK_NULL_HANDLE; // Vulkan debug output handle.
+        VkSurfaceKHR m_Surface = VK_NULL_HANDLE;                    // Vulkan window surface.
+        VkPhysicalDevice m_PhysicalDevice = VK_NULL_HANDLE;         // GPU chosen as the default device.
+        VkDevice m_Device = VK_NULL_HANDLE;                         // Vulkan device for commands.
+        VmaAllocator m_Allocator;
+
+        VkQueue m_GraphicsQueue = VK_NULL_HANDLE;
+        u32 m_GraphicsQueueFamily = 0;
+        VkQueue m_PresentQueue = VK_NULL_HANDLE;
+        u32 m_PresentQueueFamily = 0;
+
+        VkSwapchainKHR m_Swapchain = VK_NULL_HANDLE;
+        VkFormat m_SwapchainImageFormat = VK_FORMAT_UNDEFINED;
+
+        std::vector<VkImage> m_SwapchainImages;
+        std::vector<VkImageView> m_SwapchainImageViews;
+        VkExtent2D m_SwapchainExtent = {0, 0};
+
+        DeletionQueue m_MainDeletionQueue;
 
         FrameData m_Frames[g_FrameOverlap];
         i32 m_FrameNumber = 0;
+
+        AllocatedImage m_DrawImage;
+        VkExtent2D m_DrawExtent;
 
         FrameData& GetCurrentFrame() {
             return m_Frames[m_FrameNumber % g_FrameOverlap];
@@ -44,14 +60,15 @@ namespace Flashlight::VulkanRenderer {
         VulkanRenderer& operator=(const VulkanRenderer&) = delete;
         VulkanRenderer& operator=(VulkanRenderer&&) = delete;
 
-        VkCommandBuffer BeginFrame();
-        void EndFrame();
+        void Draw();
 
     private:
         void InitializeVulkan(const Window& window, const DebugLevel& debugLevel);
         void InitializeSwapchain(const Window& window);
         void InitializeCommands();
         void InitializeSynchronisationPrimitives();
+        
+        void DrawBackground(VkCommandBuffer commandBuffer) const;
     };
 
 }

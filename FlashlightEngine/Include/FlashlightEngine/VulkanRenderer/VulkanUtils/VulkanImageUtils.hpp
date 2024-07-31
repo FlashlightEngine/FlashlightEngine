@@ -12,4 +12,7 @@
 namespace Flashlight::VulkanRenderer::VulkanUtils {
     void TransitionImage(VkCommandBuffer commandBuffer, VkImage image, VkImageLayout currentLayout,
                          VkImageLayout newLayout);
+
+    void CopyImageToImage(VkCommandBuffer commandBuffer, VkImage source, VkImage destination, VkExtent2D srcSize,
+                          VkExtent2D dstSize);
 }
