@@ -23,7 +23,7 @@ namespace Flashlight {
     protected:
         virtual bool Init(const WindowProperties& windowProperties, const DebugLevel& debugLevel);
         virtual void Update();
-        virtual void Render() = 0;
+        virtual void Render();
         virtual void Cleanup();
 
         [[nodiscard]] inline bool IsRunning() const;

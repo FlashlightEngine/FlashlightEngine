@@ -34,8 +34,7 @@ rule("cp-resources")
   end)
 
 target("FlashlightEngine")
-  -- Build as a static library
-  set_kind("static")
+  set_kind("binary")
 
   -- Set binary and object files directories.
   set_targetdir("build/" .. outputdir .. "/FlashlightEngine/bin")
@@ -56,18 +55,3 @@ target("FlashlightEngine")
   add_packages("volk","vk-bootstrap", "vulkan-memory-allocator", "vulkan-utility-libraries", "libsdl", "glm", "spdlog", {public = true})
   -- private dependencies
   add_packages("magic_enum")
-
-target("TestApplication")
-  set_kind("binary")
-  add_rules("cp-resources")
-
-  set_targetdir("build/" .. outputdir .. "/TestApplication/bin")
-  set_objectdir("build/" .. outputdir .. "/TestApplication/obj")
-
-  add_files("TestApplication/Source/**.cpp")
-  add_headerfiles("TestApplication/Include/**.hpp", "TestApplication/Include/**.h", "TestApplication/Include/**.inl")
-  add_includedirs("TestApplication/Include")
-  
-  add_headerfiles("TestApplication/Shaders/**") -- A little trick to make them show in the VS/Rider solution.
-  
-  add_deps("FlashlightEngine")

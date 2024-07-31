@@ -1,7 +1,7 @@
-﻿#include "TestApplication.hpp"
+﻿#include <FlashlightEngine/Application.hpp>
 
 int main(int argc, char* argv[]) {
-    TestApplication app{};
+    Flashlight::Application app{};
 
     const Flashlight::WindowProperties windowProperties {800, 600, "Test Application" };
     

@@ -39,6 +39,8 @@ namespace Flashlight {
         m_Window = std::make_unique<Window>(windowProperties);
         m_Renderer = std::make_unique<VulkanRenderer::VulkanRenderer>(*m_Window, debugLevel);
 
+        m_IsRunning = true;
+
         return true;
     }
 
@@ -61,6 +63,10 @@ namespace Flashlight {
         if (m_Window->ShouldStopRendering()) {
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
+    }
+
+    void Application::Render() {
+        m_Renderer->Draw();
     }
 
     void Application::Cleanup() {
