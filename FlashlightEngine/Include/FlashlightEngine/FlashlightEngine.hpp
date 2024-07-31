@@ -12,19 +12,26 @@
 #include <FlashlightEngine/VulkanRenderer/VulkanRenderer.hpp>
 
 namespace Flashlight {
-    class Application {
+    class FlashlightEngine {
     public:
-        virtual ~Application() = default;
+        FlashlightEngine() = default;
+        ~FlashlightEngine() = default;
 
+        FlashlightEngine(const FlashlightEngine&) noexcept = delete;
+        FlashlightEngine(FlashlightEngine&&) noexcept = delete;
+
+        FlashlightEngine& operator=(const FlashlightEngine&) noexcept = delete;
+        FlashlightEngine& operator=(FlashlightEngine&&) noexcept = delete;
+        
         void Run(const WindowProperties& windowProperties, const DebugLevel& debugLevel);
 
-        [[nodiscard]] static inline Application& GetRunningInstance();
+        [[nodiscard]] static inline FlashlightEngine& GetRunningInstance();
 
     protected:
-        virtual bool Init(const WindowProperties& windowProperties, const DebugLevel& debugLevel);
-        virtual void Update();
-        virtual void Render();
-        virtual void Cleanup();
+        bool Init(const WindowProperties& windowProperties, const DebugLevel& debugLevel);
+        void Update();
+        void Render();
+        void Cleanup();
 
         [[nodiscard]] inline bool IsRunning() const;
         inline void Close();
@@ -36,8 +43,8 @@ namespace Flashlight {
 
     private:
         std::chrono::high_resolution_clock::time_point m_CurrentTime;
-        static Application* m_SLoadedApplication;
+        static FlashlightEngine* m_SLoadedApplication;
     };
 
-#include "Application.inl"
+#include "FlashlightEngine.inl"
 }

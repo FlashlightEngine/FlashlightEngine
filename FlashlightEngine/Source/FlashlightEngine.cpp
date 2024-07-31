@@ -5,14 +5,14 @@
  * File : Application.cpp
  * Description : Definitions of methods from the Application class.
  */
-#include <FlashlightEngine/Application.hpp>
+#include <FlashlightEngine/FlashlightEngine.hpp>
 
 #include <FlashlightEngine/Core/Logger.hpp>
 
 namespace Flashlight {
-    Application* Application::m_SLoadedApplication = nullptr;
+    FlashlightEngine* FlashlightEngine::m_SLoadedApplication = nullptr;
 
-    void Application::Run(const WindowProperties& windowProperties, const DebugLevel& debugLevel) {
+    void FlashlightEngine::Run(const WindowProperties& windowProperties, const DebugLevel& debugLevel) {
         assert(!m_SLoadedApplication);
         m_SLoadedApplication = this;
 
@@ -33,7 +33,7 @@ namespace Flashlight {
         Cleanup();
     }
 
-    bool Application::Init(const WindowProperties& windowProperties, const DebugLevel& debugLevel) {
+    bool FlashlightEngine::Init(const WindowProperties& windowProperties, const DebugLevel& debugLevel) {
         Logger::Init();
 
         m_Window = std::make_unique<Window>(windowProperties);
@@ -44,7 +44,7 @@ namespace Flashlight {
         return true;
     }
 
-    void Application::Update() {
+    void FlashlightEngine::Update() {
         // Compute delta time.
         const auto oldTime = m_CurrentTime;
         m_CurrentTime = std::chrono::high_resolution_clock::now();
@@ -65,11 +65,11 @@ namespace Flashlight {
         }
     }
 
-    void Application::Render() {
+    void FlashlightEngine::Render() {
         m_Renderer->Draw();
     }
 
-    void Application::Cleanup() {
+    void FlashlightEngine::Cleanup() {
         m_SLoadedApplication = nullptr;
     }
 }
