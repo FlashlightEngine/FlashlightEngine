@@ -17,10 +17,10 @@ namespace Flashlight {
         m_SLoadedApplication = this;
 
         if (!Init(windowProperties, debugLevel)) {
-            Log::AppFatal({0x00, 0x01}, "Failed to initialize application.");
+            Log::EditorFatal({0x00, 0x01}, "Failed to initialize application.");
         }
 
-        Log::AppInfo("Launching application.");
+        Log::EditorInfo("Launching application.");
 
         while (m_IsRunning) {
             Update();
@@ -28,7 +28,7 @@ namespace Flashlight {
             Render();
         }
 
-        Log::AppInfo("Quitting application.");
+        Log::EditorInfo("Quitting application.");
 
         Cleanup();
     }
@@ -66,6 +66,14 @@ namespace Flashlight {
     }
 
     void FlashlightEngine::Render() const {
+        ImGui_ImplVulkan_NewFrame();
+        ImGui_ImplSDL2_NewFrame();
+        ImGui::NewFrame();
+
+        ImGui::ShowDemoWindow();
+
+        ImGui::Render();
+        
         m_Renderer->Draw();
     }
 

@@ -11,6 +11,9 @@
 
 #include <SDL.h>
 
+#include <imgui.h>
+#include <imgui_impl_sdl2.h>
+
 namespace Flashlight {
     Window::Window(const WindowProperties& windowProperties) {
         if (SDL_Init(SDL_INIT_VIDEO) != 0) {
@@ -61,6 +64,8 @@ namespace Flashlight {
                     m_Data.StopRendering = false;
                 }
             }
+
+            ImGui_ImplSDL2_ProcessEvent(&event);
         }
     }
 }

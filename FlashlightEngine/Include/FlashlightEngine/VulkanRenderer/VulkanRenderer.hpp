@@ -13,6 +13,10 @@
 
 #include <FlashlightEngine/Core/Window.hpp>
 
+#include <imgui.h>
+#include <imgui_impl_sdl2.h>
+#include <imgui_impl_vulkan.h>
+
 #include <VkBootstrap.h>
 
 namespace Flashlight::VulkanRenderer {
@@ -57,6 +61,10 @@ namespace Flashlight::VulkanRenderer {
         VkPipeline m_GradientPipeline;
         VkPipelineLayout m_GradientPipelineLayout;
 
+        VkFence m_ImmediateFence;
+        VkCommandBuffer m_ImmediateCommandBuffer;
+        VkCommandPool m_ImmediateCommandPool;
+
     public:
         VulkanRenderer(const Window& window, const DebugLevel& debugLevel);
         ~VulkanRenderer();
@@ -77,12 +85,16 @@ namespace Flashlight::VulkanRenderer {
         void InitializeDescriptors();
         void InitializePipelines();
         void InitializeBackgroundPipeline();
+        void InitializeImGui(const Window& window);
         
         void DrawBackground(VkCommandBuffer commandBuffer) const;
+        void DrawImGui(VkCommandBuffer commandBuffer, VkImageView targetImageView) const;
 
         FrameData& GetCurrentFrame() {
             return m_Frames[m_FrameNumber % g_FrameOverlap];
         }
+
+        void ImmediateSubmit(const std::function<void(VkCommandBuffer commandBuffer)>& function) const;
     };
 
 }

@@ -84,6 +84,7 @@ namespace Flashlight::VulkanRenderer {
         InitializeSynchronisationPrimitives();
         InitializeDescriptors();
         InitializePipelines();
+        InitializeImGui(window);
 
         m_RendererInitialized = true;
     }
@@ -171,9 +172,14 @@ namespace Flashlight::VulkanRenderer {
                                       m_SwapchainImages[frame.SwapchainImageIndex], m_DrawExtent,
                                       m_SwapchainExtent);
 
-        VulkanUtils::TransitionImage(frame.MainCommandBuffer,
-                                     m_SwapchainImages[frame.SwapchainImageIndex],
-                                     VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
+        VulkanUtils::TransitionImage(frame.MainCommandBuffer, m_SwapchainImages[frame.SwapchainImageIndex],
+                                     VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                                     VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+
+        DrawImGui(cmd, m_SwapchainImageViews[frame.SwapchainImageIndex]);
+
+        VulkanUtils::TransitionImage(frame.MainCommandBuffer, m_SwapchainImages[frame.SwapchainImageIndex],
+                                     VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
 
         VK_CHECK(vkEndCommandBuffer(frame.MainCommandBuffer))
 
@@ -207,8 +213,6 @@ namespace Flashlight::VulkanRenderer {
     }
 
     void VulkanRenderer::InitializeVulkan(const Window& window, const DebugLevel& debugLevel) {
-        volkInitialize();
-
         Log::EngineTrace("Creating Vulkan instance & debug messenger...");
         vkb::InstanceBuilder builder;
 
@@ -263,8 +267,6 @@ namespace Flashlight::VulkanRenderer {
         m_Instance = vkbInstance.instance;
         m_DebugMessenger = vkbInstance.debug_messenger;
 
-        volkLoadInstanceOnly(m_Instance);
-
         Log::EngineTrace("Creating Vulkan window surface...");
         SDL_Vulkan_CreateSurface(window.GetNativeWindow(), m_Instance, &m_Surface);
         Log::EngineTrace("Vulkan window surface created.");
@@ -300,8 +302,6 @@ namespace Flashlight::VulkanRenderer {
         Log::EngineTrace("Vulkan physical device selected & logical device created.");
         m_Device = vkbDevice.device;
         m_PhysicalDevice = physicalDevice.physical_device;
-
-        volkLoadDevice(m_Device);
 
         VkPhysicalDeviceProperties physicalDeviceProperties;
         vkGetPhysicalDeviceProperties(m_PhysicalDevice, &physicalDeviceProperties);
@@ -432,7 +432,7 @@ namespace Flashlight::VulkanRenderer {
     }
 
     void VulkanRenderer::InitializeCommands() {
-        const VkCommandPoolCreateInfo commandPoolInfo = VulkanInit::CommandPoolCreateInfo(
+        VkCommandPoolCreateInfo commandPoolInfo = VulkanInit::CommandPoolCreateInfo(
             m_GraphicsQueueFamily, VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
 
         Log::EngineTrace("Creating frames Vulkan command pool & command buffer...");
@@ -450,6 +450,26 @@ namespace Flashlight::VulkanRenderer {
                 ))
             Log::EngineTrace("Created Vulkan command command for frame #{0}", i);
         }
+
+        commandPoolInfo = VulkanInit::CommandPoolCreateInfo(m_GraphicsQueueFamily,
+                                                            VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT |
+                                                            VK_COMMAND_POOL_CREATE_TRANSIENT_BIT);
+
+        Log::EngineTrace("Creating Vulkan command pool for immediate command buffers...");
+        VK_CHECK(vkCreateCommandPool(m_Device, &commandPoolInfo, nullptr, &m_ImmediateCommandPool))
+        Log::EngineTrace("Vulkan command pool for immediate command buffers created.");
+
+        // Allocate command buffers for immediate submits.
+        const VkCommandBufferAllocateInfo cmdAllocInfo = VulkanInit::CommandBufferAllocateInfo(
+            m_ImmediateCommandPool);
+
+        Log::EngineTrace("Creating Vulkan immediate command buffer...");
+        VK_CHECK(vkAllocateCommandBuffers(m_Device, &cmdAllocInfo, &m_ImmediateCommandBuffer))
+        Log::EngineTrace("Vulkan immediate command buffer created.");
+
+        m_MainDeletionQueue.PushFunction([this]() {
+            vkDestroyCommandPool(m_Device, m_ImmediateCommandPool, nullptr);
+        });
     }
 
     void VulkanRenderer::InitializeSynchronisationPrimitives() {
@@ -471,6 +491,14 @@ namespace Flashlight::VulkanRenderer {
                     RenderSemaphore))
             Log::EngineTrace("Vulkan render semaphore created for frame #{0}", i);
         }
+
+        Log::EngineTrace("Creating Vulkan fence for immediate commands...");
+        VK_CHECK(vkCreateFence(m_Device, &fenceCreateInfo, nullptr, &m_ImmediateFence))
+        Log::EngineTrace("Vulkan fence for immediate commands created.");
+
+        m_MainDeletionQueue.PushFunction([this]() {
+            vkDestroyFence(m_Device, m_ImmediateFence, nullptr);
+        });
     }
 
     void VulkanRenderer::InitializeDescriptors() {
@@ -560,6 +588,68 @@ namespace Flashlight::VulkanRenderer {
         });
     }
 
+    void VulkanRenderer::InitializeImGui(const Window& window) {
+        // 1: Create descriptor pool for ImGui
+        //    The pool is very oversize, but it's copied from ImGui demo
+        //    itself.
+        const VkDescriptorPoolSize poolSizes[] = {
+            {VK_DESCRIPTOR_TYPE_SAMPLER, 1000},
+            {VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000},
+            {VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1000},
+            {VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1000},
+            {VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 1000},
+            {VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 1000},
+            {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1000},
+            {VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1000},
+            {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1000},
+            {VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 1000},
+            {VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1000}
+        };
+
+        VkDescriptorPoolCreateInfo poolInfo{};
+        poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+        poolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+        poolInfo.maxSets = 1000;
+        poolInfo.poolSizeCount = static_cast<u32>(std::size(poolSizes));
+        poolInfo.pPoolSizes = poolSizes;
+
+        VkDescriptorPool imguiPool;
+        VK_CHECK(vkCreateDescriptorPool(m_Device, &poolInfo, nullptr, &imguiPool))
+
+        // 2: Initialize ImGui library.
+
+        ImGui::CreateContext();
+
+        ImGui_ImplSDL2_InitForVulkan(window.GetNativeWindow());
+
+        ImGui_ImplVulkan_InitInfo initInfo = {};
+        initInfo.Instance = m_Instance;
+        initInfo.PhysicalDevice = m_PhysicalDevice;
+        initInfo.Device = m_Device;
+        initInfo.QueueFamily = m_GraphicsQueueFamily;
+        initInfo.Queue = m_GraphicsQueue;
+        initInfo.DescriptorPool = imguiPool;
+        initInfo.MinImageCount = 3;
+        initInfo.ImageCount = 3;
+        initInfo.UseDynamicRendering = true;
+
+        // Dynamic rendering parameters for ImGui to use.
+        initInfo.PipelineRenderingCreateInfo = {.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO};
+        initInfo.PipelineRenderingCreateInfo.colorAttachmentCount = 1;
+        initInfo.PipelineRenderingCreateInfo.pColorAttachmentFormats = &m_SwapchainImageFormat;
+
+        initInfo.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
+
+        ImGui_ImplVulkan_Init(&initInfo);
+
+        ImGui_ImplVulkan_CreateFontsTexture();
+
+        m_MainDeletionQueue.PushFunction([this, imguiPool]() {
+            ImGui_ImplVulkan_Shutdown();
+            vkDestroyDescriptorPool(m_Device, imguiPool, nullptr);
+        });
+    }
+
     void VulkanRenderer::DrawBackground(const VkCommandBuffer commandBuffer) const {
         // Bind the gradient drawing compute pipeline.
         vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_GradientPipeline);
@@ -571,5 +661,42 @@ namespace Flashlight::VulkanRenderer {
         // Execute the compute pipeline dispatch. The workgroup size is 16x16, so we need to divide by it.
         vkCmdDispatch(commandBuffer, static_cast<u32>(std::ceil(m_DrawExtent.width / 16.0)),
                       static_cast<u32>(std::ceil(m_DrawExtent.height / 16.0)), 1);
+    }
+
+    void VulkanRenderer::DrawImGui(const VkCommandBuffer commandBuffer, const VkImageView targetImageView) const {
+        const VkRenderingAttachmentInfo colorAttachment = VulkanInit::AttachmentInfo(targetImageView, nullptr,
+                                                                                     VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+        const VkRenderingInfo renderInfo = VulkanInit::RenderingInfo(m_SwapchainExtent, &colorAttachment, nullptr);
+
+        vkCmdBeginRendering(commandBuffer, &renderInfo);
+
+        ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer);
+
+        vkCmdEndRendering(commandBuffer);
+    }
+
+    void VulkanRenderer::ImmediateSubmit(const std::function<void(VkCommandBuffer commandBuffer)>& function) const {
+        VK_CHECK(vkResetFences(m_Device, 1, &m_ImmediateFence))
+        VK_CHECK(vkResetCommandBuffer(m_ImmediateCommandBuffer, 0))
+
+        const VkCommandBuffer commandBuffer = m_ImmediateCommandBuffer;
+
+        const VkCommandBufferBeginInfo cmdBeginInfo = VulkanInit::CommandBufferBeginInfo(
+            VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
+
+        VK_CHECK(vkBeginCommandBuffer(commandBuffer, &cmdBeginInfo))
+
+        function(commandBuffer);
+
+        VK_CHECK(vkEndCommandBuffer(commandBuffer))
+
+        const VkCommandBufferSubmitInfo cmdInfo = VulkanInit::CommandBufferSubmitInfo(commandBuffer);
+        const VkSubmitInfo2 submit = VulkanInit::SubmitInfo(&cmdInfo, nullptr, nullptr);
+
+        // Submit command buffer to the queue and execute it.
+        // m_RenderFence will now block until the graphics command finish executing.
+        VK_CHECK(vkQueueSubmit2(m_GraphicsQueue, 1, &submit, m_ImmediateFence))
+
+        VK_CHECK(vkWaitForFences(m_Device, 1, &m_ImmediateFence, true, 9999999999))
     }
 }
