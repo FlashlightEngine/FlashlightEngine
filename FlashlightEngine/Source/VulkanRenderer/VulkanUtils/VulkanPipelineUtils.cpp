@@ -2,11 +2,11 @@
  * This file is part of "Flashlight Engine"
  * For conditions of distribution and use, see copyright notice in LICENSE.
  *
- * File : VulkanPipelines.cpp
- * Description : Definitions of methods from VulkanPipelines.hpp.
+ * File : VulkanPipelineUtils.cpp
+ * Description : Definitions of methods from VulkanPipelineUtils.hpp.
  */
 #include <FlashlightEngine/VulkanRenderer/VulkanInitializers.hpp>
-#include <FlashlightEngine/VulkanRenderer/VulkanUtils/VulkanPipelines.hpp>
+#include <FlashlightEngine/VulkanRenderer/VulkanUtils/VulkanPipelineUtils.hpp>
 
 #include <fstream>
 

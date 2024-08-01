@@ -2,8 +2,8 @@
  * This file is part of "Flashlight Engine"
  * For conditions of distribution and use, see copyright notice in LICENSE.
  *
- * File : VulkanPipelines.hpp
- * Description : Abstraction of Vulkan pipelines.
+ * File : VulkanPipelineUtils.hpp
+ * Description : Abstraction and utilities for Vulkan pipelines.
  */
 #pragma once
 
