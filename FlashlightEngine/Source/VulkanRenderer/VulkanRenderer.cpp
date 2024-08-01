@@ -223,7 +223,12 @@ namespace Flashlight::VulkanRenderer {
     }
 
     void VulkanRenderer::InitializeCommands() {
-        VkCommandPoolCreateInfo commandPoolInfo = VulkanInit::CommandPoolCreateInfo(
+        InitializeFramesCommandBuffers();
+        InitializeImmediateCommandBuffer();
+    }
+
+    void VulkanRenderer::InitializeFramesCommandBuffers() {
+        const VkCommandPoolCreateInfo commandPoolInfo = VulkanInit::CommandPoolCreateInfo(
             m_Device->GetGraphicsQueueFamilyIndex(), VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
 
         Log::EngineTrace("Creating frames Vulkan command pool & command buffer...");
@@ -246,11 +251,13 @@ namespace Flashlight::VulkanRenderer {
                 vkDestroyCommandPool(m_Device->GetDevice(), m_Frames[i].CommandPool, nullptr);
             }
         });
+    }
 
+    void VulkanRenderer::InitializeImmediateCommandBuffer() {
         // Command pool/buffer for immediate commands like copy commands.
-        commandPoolInfo = VulkanInit::CommandPoolCreateInfo(m_Device->GetGraphicsQueueFamilyIndex(),
-                                                            VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT |
-                                                            VK_COMMAND_POOL_CREATE_TRANSIENT_BIT);
+        const VkCommandPoolCreateInfo commandPoolInfo = VulkanInit::CommandPoolCreateInfo(
+            m_Device->GetGraphicsQueueFamilyIndex(),
+            VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT | VK_COMMAND_POOL_CREATE_TRANSIENT_BIT);
 
         Log::EngineTrace("Creating Vulkan command pool for immediate command buffers...");
         VK_CHECK(vkCreateCommandPool(m_Device->GetDevice(), &commandPoolInfo, nullptr, &m_ImmediateCommandPool))
@@ -268,7 +275,7 @@ namespace Flashlight::VulkanRenderer {
             vkDestroyCommandPool(m_Device->GetDevice(), m_ImmediateCommandPool, nullptr);
         });
     }
-
+    
     void VulkanRenderer::InitializeSynchronisationPrimitives() {
         const VkFenceCreateInfo fenceCreateInfo = VulkanInit::FenceCreateInfo(VK_FENCE_CREATE_SIGNALED_BIT);
         const VkSemaphoreCreateInfo semaphoreCreateInfo = VulkanInit::SemaphoreCreateInfo();

@@ -90,6 +90,8 @@ namespace Flashlight::VulkanRenderer {
         void InitializeVulkan(const Window& window, const DebugLevel& debugLevel);
         void InitializeSwapchain(const Window& window);
         void InitializeCommands();
+        void InitializeFramesCommandBuffers();
+        void InitializeImmediateCommandBuffer();
         void InitializeSynchronisationPrimitives();
         void InitializeDescriptors();
         void InitializePipelines();
