@@ -75,6 +75,9 @@ namespace Flashlight::VulkanRenderer {
         std::vector<ComputeEffect> m_BackgroundEffects;
         i32 m_CurrentBackgroundEffect{0};
 
+        VkPipelineLayout m_TrianglePipelineLayout;
+        VkPipeline m_TrianglePipeline;
+
         VkFence m_ImmediateFence;
         VkCommandBuffer m_ImmediateCommandBuffer;
         VkCommandPool m_ImmediateCommandPool;
@@ -102,9 +105,12 @@ namespace Flashlight::VulkanRenderer {
         void InitializeSynchronisationPrimitives();
         void InitializeDescriptors();
         void InitializePipelines();
+        void InitializeComputePipelines();
+        void InitializeTrianglePipeline();
         void InitializeImGui(const Window& window);
         
         void DrawBackground(VkCommandBuffer commandBuffer) const;
+        void DrawGeometry(VkCommandBuffer commandBuffer) const;
         void DrawImGui(VkCommandBuffer commandBuffer, VkImageView targetImageView) const;
 
         [[nodiscard]] FrameData& GetCurrentFrame() {

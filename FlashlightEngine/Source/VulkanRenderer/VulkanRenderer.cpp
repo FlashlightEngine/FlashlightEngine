@@ -112,7 +112,7 @@ namespace Flashlight::VulkanRenderer {
 
         if (ImGui::Begin("Background effect data")) {
             ComputeEffect& selected = m_BackgroundEffects[m_CurrentBackgroundEffect];
-            
+
             ImGui::Text("Selected effect: %s", selected.Name);
 
             ImGui::SliderInt("Effect Index", &m_CurrentBackgroundEffect, 0,
@@ -163,7 +163,14 @@ namespace Flashlight::VulkanRenderer {
 
         // Transition the draw image and the swap chain image into their correct transfer layouts.
         VulkanUtils::TransitionImage(frame.MainCommandBuffer, m_DrawImage.Image, VK_IMAGE_LAYOUT_GENERAL,
+                                     VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+
+        DrawGeometry(cmd);
+
+        VulkanUtils::TransitionImage(frame.MainCommandBuffer, m_DrawImage.Image,
+                                     VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
                                      VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
+
         VulkanUtils::TransitionImage(frame.MainCommandBuffer, m_SwapchainImages[frame.SwapchainImageIndex],
                                      VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 
@@ -598,6 +605,11 @@ namespace Flashlight::VulkanRenderer {
     }
 
     void VulkanRenderer::InitializePipelines() {
+        InitializeComputePipelines();
+        InitializeTrianglePipeline();
+    }
+
+    void VulkanRenderer::InitializeComputePipelines() {
         // Create pipeline layout
         VkPipelineLayoutCreateInfo computeLayout{};
         computeLayout.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -687,7 +699,8 @@ namespace Flashlight::VulkanRenderer {
         grid.Data = {};
 
         VK_CHECK(
-            vkCreateComputePipelines(m_Device, VK_NULL_HANDLE, 1, &computePipelineCreateInfo, nullptr, &grid.Pipeline
+            vkCreateComputePipelines(m_Device, VK_NULL_HANDLE, 1, &computePipelineCreateInfo, nullptr, &grid.
+                Pipeline
             ))
 
         // Add the 2 effects into the array.
@@ -704,6 +717,49 @@ namespace Flashlight::VulkanRenderer {
             vkDestroyPipeline(m_Device, sky.Pipeline, nullptr);
             vkDestroyPipeline(m_Device, gradient.Pipeline, nullptr);
             vkDestroyPipeline(m_Device, grid.Pipeline, nullptr);
+        });
+    }
+
+    void VulkanRenderer::InitializeTrianglePipeline() {
+        VkShaderModule triangleVertexShader;
+        VulkanUtils::CreateShaderModule(m_Device, "Shaders/colored_triangle.vert", VulkanUtils::ShaderType::Vertex,
+                                        &triangleVertexShader);
+        if (!triangleVertexShader) {
+            Log::EngineFatal({0x02, 0x03}, "Failed to create triangle vertex shader.");
+        }
+
+        VkShaderModule triangleFragmentShader;
+        VulkanUtils::CreateShaderModule(m_Device, "Shaders/colored_triangle.frag",
+                                        VulkanUtils::ShaderType::Fragment, &triangleFragmentShader);
+        if (!triangleFragmentShader) {
+            Log::EngineFatal({0x02, 0x03}, "Failed to create triangle fragment shader.");
+        }
+
+        const VkPipelineLayoutCreateInfo pipelineLayoutInfo = VulkanInit::PipelineLayoutCreateInfo();
+        VK_CHECK(vkCreatePipelineLayout(m_Device, &pipelineLayoutInfo, nullptr, &m_TrianglePipelineLayout))
+
+        VulkanUtils::PipelineBuilder pipelineBuilder{};
+
+        pipelineBuilder.SetPipelineLayout(m_TrianglePipelineLayout);
+        pipelineBuilder.SetShaders(triangleVertexShader, triangleFragmentShader);
+        pipelineBuilder.SetInputTopology(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
+        pipelineBuilder.SetPolygonMode(VK_POLYGON_MODE_FILL);
+        pipelineBuilder.SetCullMode(VK_CULL_MODE_NONE, VK_FRONT_FACE_CLOCKWISE);
+        pipelineBuilder.SetMultisamplingNone();
+        pipelineBuilder.DisableBlending();
+        pipelineBuilder.DisableDepthTest();
+
+        pipelineBuilder.SetColorAttachmentFormat(m_DrawImage.ImageFormat);
+        pipelineBuilder.SetDepthFormat(VK_FORMAT_UNDEFINED);
+
+        m_TrianglePipeline = pipelineBuilder.BuildPipeline(m_Device);
+
+        vkDestroyShaderModule(m_Device, triangleVertexShader, nullptr);
+        vkDestroyShaderModule(m_Device, triangleFragmentShader, nullptr);
+
+        m_MainDeletionQueue.PushFunction([&]() {
+            vkDestroyPipelineLayout(m_Device, m_TrianglePipelineLayout, nullptr);
+            vkDestroyPipeline(m_Device, m_TrianglePipeline, nullptr);
         });
     }
 
@@ -789,6 +845,39 @@ namespace Flashlight::VulkanRenderer {
         // Execute the compute pipeline dispatch. The workgroup size is 16x16, so we need to divide by it.
         vkCmdDispatch(commandBuffer, static_cast<u32>(std::ceil(m_DrawExtent.width / 16.0)),
                       static_cast<u32>(std::ceil(m_DrawExtent.height / 16.0)), 1);
+    }
+
+    void VulkanRenderer::DrawGeometry(const VkCommandBuffer commandBuffer) const {
+        // Begin a render pass connected to the draw image.
+        const VkRenderingAttachmentInfo colorAttachment = VulkanInit::AttachmentInfo(
+            m_DrawImage.ImageView, nullptr, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+
+        const VkRenderingInfo renderingInfo = VulkanInit::RenderingInfo(m_DrawExtent, &colorAttachment, nullptr);
+        vkCmdBeginRendering(commandBuffer, &renderingInfo);
+
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_TrianglePipeline);
+
+        VkViewport viewport;
+        viewport.x = 0;
+        viewport.y = 0;
+        viewport.width = m_DrawExtent.width;
+        viewport.height = m_DrawExtent.height;
+        viewport.minDepth = 0.0f;
+        viewport.maxDepth = 1.0f;
+        
+        vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+
+        VkRect2D scissor;
+        scissor.offset.x = 0;
+        scissor.offset.y = 0;
+        scissor.extent.width = m_DrawExtent.width;
+        scissor.extent.height = m_DrawExtent.height;
+
+        vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+
+        vkCmdDraw(commandBuffer, 3, 1, 0, 0);
+
+        vkCmdEndRendering(commandBuffer);
     }
 
     void VulkanRenderer::DrawImGui(const VkCommandBuffer commandBuffer, const VkImageView targetImageView) const {
