@@ -9,10 +9,6 @@
 
 #include <FlashlightEngine/Core/Logger.hpp>
 
-#include <imgui.h>
-#include <imgui_impl_sdl2.h>
-#include <imgui_impl_vulkan.h>
-
 namespace Flashlight {
     FlashlightEngine* FlashlightEngine::m_SLoadedApplication = nullptr;
 
