@@ -8,6 +8,7 @@
 #include <FlashlightEngine/VulkanRenderer/VulkanRenderer.hpp>
 
 #include <FlashlightEngine/VulkanRenderer/VulkanInitializers.hpp>
+#include <FlashlightEngine/VulkanRenderer/VulkanUtils/VulkanBufferUtils.hpp>
 #include <FlashlightEngine/VulkanRenderer/VulkanUtils/VulkanImageUtils.hpp>
 
 #include <magic_enum.hpp>
@@ -32,6 +33,7 @@ namespace Flashlight::VulkanRenderer {
         InitializeDescriptors();
         InitializePipelines();
         InitializeImGui(window);
+        InitializeDefaultData();
 
         m_RendererInitialized = true;
     }
@@ -44,6 +46,72 @@ namespace Flashlight::VulkanRenderer {
 
             m_RendererInitialized = false;
         }
+    }
+
+    GPUMeshBuffers VulkanRenderer::UploadMesh(const std::span<u32> indices,
+                                              const std::span<Vertex> vertices) const {
+        const size vertexBufferSize = vertices.size() * sizeof(Vertex);
+        const size indexBufferSize = indices.size() * sizeof(u32);
+
+        GPUMeshBuffers meshBuffers;
+
+        // Create the vertex buffer
+        meshBuffers.VertexBuffer = VulkanUtils::CreateBuffer(m_Allocator, vertexBufferSize,
+                                                             VK_BUFFER_USAGE_STORAGE_BUFFER_BIT |
+                                                             VK_BUFFER_USAGE_TRANSFER_DST_BIT |
+                                                             VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
+                                                             VMA_MEMORY_USAGE_GPU_ONLY);
+
+        // Find the GPU address of the vertex buffer.
+        const VkBufferDeviceAddressInfo deviceAddressInfo = {
+            .sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO, .pNext = nullptr,
+            .buffer = meshBuffers.VertexBuffer.Buffer
+        };
+        meshBuffers.VertexBufferAddress = vkGetBufferDeviceAddress(m_Device->GetDevice(), &deviceAddressInfo);
+
+        // Create index buffer.
+        meshBuffers.IndexBuffer = VulkanUtils::CreateBuffer(m_Allocator, indexBufferSize,
+                                                            VK_BUFFER_USAGE_INDEX_BUFFER_BIT |
+                                                            VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+                                                            VMA_MEMORY_USAGE_GPU_ONLY);
+
+        // Staging buffer
+        const AllocatedBuffer staging = VulkanUtils::CreateBuffer(m_Allocator, vertexBufferSize + indexBufferSize,
+                                                                  VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                                                                  VMA_MEMORY_USAGE_CPU_ONLY);
+        void* data = staging.Allocation->GetMappedData();
+
+        // Copy vertex buffer.
+        memcpy(data, vertices.data(), vertexBufferSize);
+        // Copy index buffer.
+        memcpy(static_cast<char*>(data) + vertexBufferSize, indices.data(), indexBufferSize);
+
+        ImmediateSubmit([&](const VkCommandBuffer commandBuffer) {
+        VkBufferCopy vertexCopy;
+        vertexCopy.dstOffset = 0;
+        vertexCopy.srcOffset = 0;
+        vertexCopy.size = vertexBufferSize;
+
+        vkCmdCopyBuffer(commandBuffer, staging.Buffer, meshBuffers.VertexBuffer.Buffer, 1, &vertexCopy);
+
+        VkBufferCopy indexCopy;
+        indexCopy.dstOffset = 0;
+        indexCopy.srcOffset = vertexBufferSize;
+        indexCopy.size = indexBufferSize;
+
+        vkCmdCopyBuffer(commandBuffer, staging.Buffer, meshBuffers.IndexBuffer.Buffer, 1, &indexCopy);
+        });
+
+        VulkanUtils::DestroyBuffer(m_Allocator, staging);
+
+        return meshBuffers;
+    }
+
+    void VulkanRenderer::PlanMeshDeletion(GPUMeshBuffers mesh) {
+        m_MainDeletionQueue.PushFunction([this, mesh]() {
+            VulkanUtils::DestroyBuffer(m_Allocator, mesh.IndexBuffer);
+            VulkanUtils::DestroyBuffer(m_Allocator, mesh.VertexBuffer);
+        });
     }
 
     void VulkanRenderer::CreateUi() {
@@ -275,7 +343,7 @@ namespace Flashlight::VulkanRenderer {
             vkDestroyCommandPool(m_Device->GetDevice(), m_ImmediateCommandPool, nullptr);
         });
     }
-    
+
     void VulkanRenderer::InitializeSynchronisationPrimitives() {
         const VkFenceCreateInfo fenceCreateInfo = VulkanInit::FenceCreateInfo(VK_FENCE_CREATE_SIGNALED_BIT);
         const VkSemaphoreCreateInfo semaphoreCreateInfo = VulkanInit::SemaphoreCreateInfo();
@@ -362,6 +430,7 @@ namespace Flashlight::VulkanRenderer {
     void VulkanRenderer::InitializePipelines() {
         InitializeComputePipelines();
         InitializeTrianglePipeline();
+        InitializeMeshPipeline();
     }
 
     void VulkanRenderer::InitializeComputePipelines() {
@@ -518,6 +587,59 @@ namespace Flashlight::VulkanRenderer {
         });
     }
 
+    void VulkanRenderer::InitializeMeshPipeline() {
+        VkShaderModule meshVertexShader;
+        VulkanUtils::CreateShaderModule(m_Device->GetDevice(), "Shaders/colored_triangle_meshbuffer.vert",
+                                        VulkanUtils::ShaderType::Vertex, &meshVertexShader);
+        if (!meshVertexShader) {
+            Log::EngineFatal({0x02, 0x03}, "Failed to create triangle vertex shader.");
+        }
+
+        VkShaderModule meshFragmentShader;
+        VulkanUtils::CreateShaderModule(m_Device->GetDevice(), "Shaders/colored_triangle.frag",
+                                        VulkanUtils::ShaderType::Fragment, &meshFragmentShader);
+        if (!meshFragmentShader) {
+            Log::EngineFatal({0x02, 0x03}, "Failed to create triangle fragment shader.");
+        }
+
+        VkPipelineLayoutCreateInfo pipelineLayoutInfo = VulkanInit::PipelineLayoutCreateInfo();
+
+        VkPushConstantRange bufferRange{};
+        bufferRange.offset = 0;
+        bufferRange.size = sizeof(GPUDrawPushConstants);
+        bufferRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+        pipelineLayoutInfo.pushConstantRangeCount = 1;
+        pipelineLayoutInfo.pPushConstantRanges = &bufferRange;
+
+        VK_CHECK(
+            vkCreatePipelineLayout(m_Device->GetDevice(), &pipelineLayoutInfo, nullptr, &m_MeshPipelineLayout))
+
+        VulkanUtils::PipelineBuilder pipelineBuilder{};
+
+        pipelineBuilder.SetPipelineLayout(m_MeshPipelineLayout);
+        pipelineBuilder.SetShaders(meshVertexShader, meshFragmentShader);
+        pipelineBuilder.SetInputTopology(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
+        pipelineBuilder.SetPolygonMode(VK_POLYGON_MODE_FILL);
+        pipelineBuilder.SetCullMode(VK_CULL_MODE_NONE, VK_FRONT_FACE_CLOCKWISE);
+        pipelineBuilder.SetMultisamplingNone();
+        pipelineBuilder.DisableBlending();
+        pipelineBuilder.DisableDepthTest();
+
+        pipelineBuilder.SetColorAttachmentFormat(m_DrawImage.ImageFormat);
+        pipelineBuilder.SetDepthFormat(VK_FORMAT_UNDEFINED);
+
+        m_MeshPipeline = pipelineBuilder.BuildPipeline(m_Device->GetDevice());
+
+        vkDestroyShaderModule(m_Device->GetDevice(), meshVertexShader, nullptr);
+        vkDestroyShaderModule(m_Device->GetDevice(), meshFragmentShader, nullptr);
+
+        m_MainDeletionQueue.PushFunction([&]() {
+            vkDestroyPipelineLayout(m_Device->GetDevice(), m_MeshPipelineLayout, nullptr);
+            vkDestroyPipeline(m_Device->GetDevice(), m_MeshPipeline, nullptr);
+        });
+    }
+
     void VulkanRenderer::InitializeImGui(const Window& window) {
         // 1: Create descriptor pool for ImGui
         //    The pool is very oversize, but it's copied from ImGui demo
@@ -587,6 +709,35 @@ namespace Flashlight::VulkanRenderer {
         });
     }
 
+    void VulkanRenderer::InitializeDefaultData() {
+        std::array<Vertex, 4> rectangleVertices;
+
+        rectangleVertices[0].Position = {0.5f, -0.5f, 0.0f};
+        rectangleVertices[1].Position = {0.5f, 0.5f, 0.0f};
+        rectangleVertices[2].Position = {-0.5f, -0.5f, 0.0f};
+        rectangleVertices[3].Position = {-0.5f, 0.5f, 0.0f};
+
+        rectangleVertices[0].Color = {0.0f, 0.0f, 0.0f, 1.0f};
+        rectangleVertices[1].Color = {0.5f, 0.5f, 0.5f, 1.0f};
+        rectangleVertices[2].Color = {1.0f, 0.0f, 0.0f, 1.0f};
+        rectangleVertices[3].Color = {0.0f, 1.0f, 0.0f, 1.0f};
+
+        std::array<u32, 6> rectangleIndices;
+
+        rectangleIndices[0] = 0;
+        rectangleIndices[1] = 1;
+        rectangleIndices[2] = 2;
+
+        rectangleIndices[3] = 2;
+        rectangleIndices[4] = 1;
+        rectangleIndices[5] = 3;
+
+        m_Rectangle = UploadMesh(rectangleIndices, rectangleVertices);
+
+        PlanMeshDeletion(m_Rectangle);
+    }
+
+
     void VulkanRenderer::DrawBackground(const VkCommandBuffer commandBuffer) const {
         const ComputeEffect& effect = m_BackgroundEffects[m_CurrentBackgroundEffect];
 
@@ -632,8 +783,20 @@ namespace Flashlight::VulkanRenderer {
         scissor.extent.height = m_DrawExtent.height;
 
         vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
-
+        
         vkCmdDraw(commandBuffer, 3, 1, 0, 0);
+
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_MeshPipeline);
+
+        GPUDrawPushConstants pushConstants;
+        pushConstants.WorldMatrix = glm::mat4{1.0f};
+        pushConstants.VertexBuffer = m_Rectangle.VertexBufferAddress;
+
+        vkCmdPushConstants(commandBuffer, m_MeshPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0,
+                           sizeof(GPUDrawPushConstants), &pushConstants);
+        vkCmdBindIndexBuffer(commandBuffer, m_Rectangle.IndexBuffer.Buffer, 0, VK_INDEX_TYPE_UINT32);
+
+        vkCmdDrawIndexed(commandBuffer, 6, 1, 0, 0, 0);
 
         vkCmdEndRendering(commandBuffer);
     }

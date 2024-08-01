@@ -9,7 +9,7 @@
 
 #include <FlashlightEngine/VulkanRenderer/VulkanTypes.hpp>
 #include <FlashlightEngine/VulkanRenderer/VulkanDescriptors.hpp>
-#include <FlashlightEngine/VulkanRenderer/VulkanUtils/VulkanPipelines.hpp>
+#include <FlashlightEngine/VulkanRenderer/VulkanUtils/VulkanPipelineUtils.hpp>
 #include <FlashlightEngine/VulkanRenderer/VulkanWrapper/Instance.hpp>
 #include <FlashlightEngine/VulkanRenderer/VulkanWrapper/Device.hpp>
 #include <FlashlightEngine/VulkanRenderer/VulkanWrapper/Swapchain.hpp>
@@ -40,6 +40,8 @@ namespace Flashlight::VulkanRenderer {
 
     class VulkanRenderer {
         bool m_RendererInitialized = false;
+
+        DeletionQueue m_MainDeletionQueue;
         
         std::unique_ptr<VulkanWrapper::Instance> m_Instance;
         std::unique_ptr<VulkanWrapper::Device> m_Device;
@@ -48,10 +50,12 @@ namespace Flashlight::VulkanRenderer {
 
         std::unique_ptr<VulkanWrapper::Swapchain> m_Swapchain;
 
-        DeletionQueue m_MainDeletionQueue;
-
         FrameData m_Frames[g_FrameOverlap];
         i32 m_FrameNumber = 0;
+
+        VkFence m_ImmediateFence;
+        VkCommandBuffer m_ImmediateCommandBuffer;
+        VkCommandPool m_ImmediateCommandPool;
 
         AllocatedImage m_DrawImage;
         VkExtent2D m_DrawExtent;
@@ -69,9 +73,10 @@ namespace Flashlight::VulkanRenderer {
         VkPipelineLayout m_TrianglePipelineLayout;
         VkPipeline m_TrianglePipeline;
 
-        VkFence m_ImmediateFence;
-        VkCommandBuffer m_ImmediateCommandBuffer;
-        VkCommandPool m_ImmediateCommandPool;
+        VkPipelineLayout m_MeshPipelineLayout;
+        VkPipeline m_MeshPipeline;
+
+        GPUMeshBuffers m_Rectangle;
 
     public:
         VulkanRenderer(const Window& window, const DebugLevel& debugLevel);
@@ -83,6 +88,8 @@ namespace Flashlight::VulkanRenderer {
         VulkanRenderer& operator=(const VulkanRenderer&) = delete;
         VulkanRenderer& operator=(VulkanRenderer&&) = delete;
 
+        GPUMeshBuffers UploadMesh(std::span<u32> indices, std::span<Vertex> vertices) const;
+        void PlanMeshDeletion(GPUMeshBuffers mesh);
         void CreateUi();
         void Draw();
 
@@ -97,7 +104,9 @@ namespace Flashlight::VulkanRenderer {
         void InitializePipelines();
         void InitializeComputePipelines();
         void InitializeTrianglePipeline();
+        void InitializeMeshPipeline();
         void InitializeImGui(const Window& window);
+        void InitializeDefaultData();
         
         void DrawBackground(VkCommandBuffer commandBuffer) const;
         void DrawGeometry(VkCommandBuffer commandBuffer) const;

@@ -12,6 +12,7 @@
 #include <FlashlightEngine/Core/Logger.hpp>
 
 #include <vulkan/vulkan.h>
+// ReSharper disable once CppUnusedIncludeDirective
 #include <vulkan/vk_enum_string_helper.h>
 #include <vk_mem_alloc.h>
 
@@ -29,42 +30,71 @@ namespace Flashlight {
         Debug = 4
     };
 
-    struct DeletionQueue {
-        std::deque<std::function<void()>> Deletors;
+    namespace VulkanRenderer {
+        struct DeletionQueue {
+            std::deque<std::function<void()>> Deletors;
 
-        void PushFunction(std::function<void()>&& function) {
-            Deletors.push_back(std::move(function));
-        }
-
-        void Flush() {
-            // Reverse iterate the deletion queue to execute all the functions.
-            for (auto& deletor : std::ranges::reverse_view(Deletors)) {
-                deletor();
+            void PushFunction(std::function<void()>&& function) {
+                Deletors.push_back(std::move(function));
             }
 
-            Deletors.clear();
-        }
-    };
+            void Flush() {
+                // Reverse iterate the deletion queue to execute all the functions.
+                for (auto& deletor : std::ranges::reverse_view(Deletors)) {
+                    deletor();
+                }
 
-    struct AllocatedImage {
-        VkImage Image;
-        VkImageView ImageView;
-        VmaAllocation Allocation;
-        VkExtent3D ImageExtent;
-        VkFormat ImageFormat;
-    };
+                Deletors.clear();
+            }
+        };
 
-    struct FrameData {
-        VkCommandPool CommandPool;
-        VkCommandBuffer MainCommandBuffer;
+        struct AllocatedImage {
+            VkImage Image;
+            VkImageView ImageView;
+            VmaAllocation Allocation;
+            VkExtent3D ImageExtent;
+            VkFormat ImageFormat;
+        };
 
-        VkSemaphore SwapchainSemaphore, RenderSemaphore;
-        VkFence RenderFence;
+        struct AllocatedBuffer {
+            VkBuffer Buffer;
+            VmaAllocation Allocation;
+            VmaAllocationInfo Info;
+        };
 
-        u32 SwapchainImageIndex;
+        struct FrameData {
+            VkCommandPool CommandPool;
+            VkCommandBuffer MainCommandBuffer;
 
-        DeletionQueue DeletionQueue;
-    };
+            VkSemaphore SwapchainSemaphore, RenderSemaphore;
+            VkFence RenderFence;
+
+            u32 SwapchainImageIndex;
+
+            DeletionQueue DeletionQueue;
+        };
+
+        struct Vertex {
+            glm::vec3 Position;
+            f32 UvX;
+            glm::vec3 Normal;
+            f32 UvY;
+            glm::vec4 Color;
+        };
+
+        // Holds the resources needed for a mesh.
+        struct GPUMeshBuffers {
+            AllocatedBuffer IndexBuffer;
+            AllocatedBuffer VertexBuffer;
+            VkDeviceAddress VertexBufferAddress;
+        };
+
+        // Push constants for mesh objects draws
+        struct GPUDrawPushConstants {
+            glm::mat4 WorldMatrix;
+            VkDeviceAddress VertexBuffer;
+        };
+    }
 }
 
 #define VK_CHECK(x)                                                                 \

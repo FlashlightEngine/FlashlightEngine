@@ -41,6 +41,8 @@ namespace Flashlight {
         std::unique_ptr<Window> m_Window;
         std::unique_ptr<VulkanRenderer::VulkanRenderer> m_Renderer;
 
+        VulkanRenderer::GPUMeshBuffers m_Rectangle;
+
     private:
         std::chrono::high_resolution_clock::time_point m_CurrentTime;
         static FlashlightEngine* m_SLoadedApplication;
