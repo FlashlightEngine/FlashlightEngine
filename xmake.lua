@@ -58,7 +58,7 @@ target("FlashlightEngine")
   add_headerfiles("FlashlightEngine/Resources/**") -- A trick to make them show up in VS/Rider solutions.
 
   -- Precompiled header
-  set_pcxxheader("FlashlightEngine/Include/FlashlightEngine/pch.hpp")
+  set_pcxxheader("FlashlightEngine/Include/FlashlightEngine/flpch.hpp")
 
   -- target dependencies
   add_packages("vulkan-loader","vk-bootstrap", "vulkan-memory-allocator", "vulkan-utility-libraries", "libsdl", "glm",

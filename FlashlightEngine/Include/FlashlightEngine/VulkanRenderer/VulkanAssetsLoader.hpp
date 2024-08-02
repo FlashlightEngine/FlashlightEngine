@@ -9,6 +9,8 @@
 
 #include <FlashlightEngine/VulkanRenderer/VulkanTypes.hpp>
 
+#include <filesystem>
+
 namespace Flashlight::VulkanRenderer {
     struct GeoSurface {
         u32 StartIndex;

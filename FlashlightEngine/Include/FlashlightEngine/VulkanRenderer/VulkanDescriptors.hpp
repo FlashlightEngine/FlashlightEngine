@@ -9,6 +9,8 @@
 
 #include <FlashlightEngine/VulkanRenderer/VulkanTypes.hpp>
 
+#include <span>
+
 namespace Flashlight::VulkanRenderer {
 #pragma region Descriptor Layout Builder
     struct DescriptorLayoutBuilder {

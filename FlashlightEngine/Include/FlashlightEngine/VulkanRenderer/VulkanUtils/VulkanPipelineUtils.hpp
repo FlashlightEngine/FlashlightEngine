@@ -11,6 +11,9 @@
 
 #include <shaderc/shaderc.hpp>
 
+#include <filesystem>
+#include <fstream>
+
 namespace Flashlight::VulkanRenderer::VulkanUtils {
     enum class ShaderType {
         Vertex = shaderc_glsl_vertex_shader,

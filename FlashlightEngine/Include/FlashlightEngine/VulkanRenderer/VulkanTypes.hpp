@@ -8,7 +8,7 @@
  */
 #pragma once
 
-#include <FlashlightEngine/pch.hpp>
+#include <FlashlightEngine/flpch.hpp>
 #include <FlashlightEngine/Core/Logger.hpp>
 
 #include <vulkan/vulkan.h>
@@ -18,6 +18,9 @@
 
 #include <glm/mat4x4.hpp>
 #include <glm/vec4.hpp>
+
+#include <deque>
+#include <functional>
 #include <ranges>
 
 namespace Flashlight {

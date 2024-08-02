@@ -3,10 +3,9 @@
  * For conditions of distribution and use, see copyright notice in FlashLightEngine.hpp
  *
  * File : pch.hpp - Precompiled Header
- * Desciption : This header file is precompiled to speed up build speeds. It should only contain
+ * Description : This header file is precompiled to speed up build speeds. It should only contain
  * headers from the standard library, headers from external libraries or from the engine
  * that are used a lot and that are not often modified.
- *
  */
 
 #pragma once
@@ -16,18 +15,8 @@
 #include <array>
 #include <cassert>
 #include <chrono>
-#include <cstring>
-#include <deque>
-#include <filesystem>
-#include <fstream>
-#include <functional>
 #include <iostream>
-#include <map>
 #include <memory>
 #include <optional>
-#include <set>
-#include <span>
 #include <string>
-#include <unordered_set>
-#include <unordered_map>
 #include <vector>

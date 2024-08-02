@@ -11,7 +11,7 @@
 
 #include <FlashlightEngine/VulkanRenderer/VulkanTypes.hpp>
 
-#include <FlashlightEngine/pch.hpp>
+#include <FlashlightEngine/flpch.hpp>
 
 struct SDL_Window;
 
