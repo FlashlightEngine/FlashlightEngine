@@ -146,13 +146,25 @@ namespace Flashlight::VulkanRenderer::VulkanUtils {
     }
     
     void PipelineBuilder::SetDepthFormat(const VkFormat format) {
-        m_RenderInfo.depthAttachmentFormat = format;
+        m_DepthAttachmentFormat = format;
     }
 
     void PipelineBuilder::DisableDepthTest() {
         m_DepthStencil.depthTestEnable = VK_FALSE;
         m_DepthStencil.depthWriteEnable = VK_FALSE;
         m_DepthStencil.depthCompareOp = VK_COMPARE_OP_NEVER;
+        m_DepthStencil.depthBoundsTestEnable = VK_FALSE;
+        m_DepthStencil.stencilTestEnable = VK_FALSE;
+        m_DepthStencil.front = {};
+        m_DepthStencil.back = {};
+        m_DepthStencil.minDepthBounds = 0.0f;
+        m_DepthStencil.maxDepthBounds = 1.0f;
+    }
+
+    void PipelineBuilder::EnableDepthTest(const bool depthWriteEnable, const VkCompareOp op) {
+        m_DepthStencil.depthTestEnable = VK_TRUE;
+        m_DepthStencil.depthWriteEnable = depthWriteEnable;
+        m_DepthStencil.depthCompareOp = op;
         m_DepthStencil.depthBoundsTestEnable = VK_FALSE;
         m_DepthStencil.stencilTestEnable = VK_FALSE;
         m_DepthStencil.front = {};
@@ -195,6 +207,7 @@ namespace Flashlight::VulkanRenderer::VulkanUtils {
         
         m_RenderInfo.colorAttachmentCount = 1;
         m_RenderInfo.pColorAttachmentFormats = &m_ColorAttachmentFormat;
+        m_RenderInfo.depthAttachmentFormat = m_DepthAttachmentFormat; // For some reason this works.
         
         pipelineInfo.pNext = &m_RenderInfo;
 

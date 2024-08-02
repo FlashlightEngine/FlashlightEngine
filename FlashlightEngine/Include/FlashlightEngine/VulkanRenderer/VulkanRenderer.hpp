@@ -7,11 +7,8 @@
  */
 #pragma once
 
-#include <FlashlightEngine/VulkanRenderer/VulkanTypes.hpp>
+#include <FlashlightEngine/VulkanRenderer/VulkanAssetsLoader.hpp>
 #include <FlashlightEngine/VulkanRenderer/VulkanDescriptors.hpp>
-#include <FlashlightEngine/VulkanRenderer/VulkanUtils/VulkanPipelineUtils.hpp>
-#include <FlashlightEngine/VulkanRenderer/VulkanWrapper/Instance.hpp>
-#include <FlashlightEngine/VulkanRenderer/VulkanWrapper/Device.hpp>
 #include <FlashlightEngine/VulkanRenderer/VulkanWrapper/Swapchain.hpp>
 
 #include <FlashlightEngine/Core/Window.hpp>
@@ -58,6 +55,7 @@ namespace Flashlight::VulkanRenderer {
         VkCommandPool m_ImmediateCommandPool;
 
         AllocatedImage m_DrawImage;
+        AllocatedImage m_DepthImage;
         VkExtent2D m_DrawExtent;
 
         DescriptorAllocator m_GlobalDescriptorAllocator;
@@ -70,13 +68,11 @@ namespace Flashlight::VulkanRenderer {
         std::vector<ComputeEffect> m_BackgroundEffects;
         i32 m_CurrentBackgroundEffect{0};
 
-        VkPipelineLayout m_TrianglePipelineLayout;
-        VkPipeline m_TrianglePipeline;
-
         VkPipelineLayout m_MeshPipelineLayout;
         VkPipeline m_MeshPipeline;
 
-        GPUMeshBuffers m_Rectangle;
+        std::vector<std::shared_ptr<MeshAsset>> m_TestMeshes;
+        i32 m_CurrentMeshIndex{0};
 
     public:
         VulkanRenderer(const Window& window, const DebugLevel& debugLevel);
@@ -103,7 +99,6 @@ namespace Flashlight::VulkanRenderer {
         void InitializeDescriptors();
         void InitializePipelines();
         void InitializeComputePipelines();
-        void InitializeTrianglePipeline();
         void InitializeMeshPipeline();
         void InitializeImGui(const Window& window);
         void InitializeDefaultData();

@@ -36,6 +36,7 @@ namespace Flashlight::VulkanRenderer::VulkanUtils {
         VkPipelineDepthStencilStateCreateInfo  m_DepthStencil;
         VkPipelineRenderingCreateInfo          m_RenderInfo;
         VkFormat                               m_ColorAttachmentFormat;
+        VkFormat                               m_DepthAttachmentFormat;
 
     public:
         PipelineBuilder() { Clear(); }
@@ -51,6 +52,7 @@ namespace Flashlight::VulkanRenderer::VulkanUtils {
         void SetColorAttachmentFormat(VkFormat format);
         void SetDepthFormat(VkFormat format);
         void DisableDepthTest();
+        void EnableDepthTest(bool depthWriteEnable, VkCompareOp op);
         void SetPipelineLayout(VkPipelineLayout layout);
         
         VkPipeline BuildPipeline(VkDevice device);

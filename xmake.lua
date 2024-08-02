@@ -19,10 +19,13 @@ if (is_mode("debug")) then
     add_defines("FL_DEBUG")
 end
 
+add_repositories("pixfri https://github.com/Pixfri/xmake-repo.git")
+
 -- Define packages to download.
 add_requires("vulkan-loader 1.3.290+0", "vk-bootstrap v1.3.290", "vulkan-memory-allocator v3.1.0", 
              "vulkan-utility-libraries v1.3.290", "libsdl 2.30.5", "glm 1.0.1", "spdlog v1.9.0", "magic_enum v0.9.5",
              "shaderc v2024.1")
+add_requires("fastgltf v0.6.1")
 add_requires("imgui v1.91.0", {configs = {sdl2_no_renderer = true, vulkan = true, debug = is_mode("debug")}})
 
 local outputdir = "$(mode)-$(os)-$(arch)"
@@ -30,7 +33,7 @@ local outputdir = "$(mode)-$(os)-$(arch)"
 -- A rule to copy resources from a target's 'Resources' directory.
 rule("cp-resources")
   after_build(function (target)
-    -- os.cp(target:name() .. "/Resources", "build/" .. outputdir .. "/" .. target:name() .. "/bin")
+    os.cp(target:name() .. "/Resources", "build/" .. outputdir .. "/" .. target:name() .. "/bin")
     os.cp(target:name() .. "/Shaders", "build/" .. outputdir .. "/" .. target:name() .. "/bin")
   end)
 
@@ -49,12 +52,15 @@ target("FlashlightEngine")
   -- targets.
   add_headerfiles("FlashlightEngine/Include/**.hpp", "FlashlightEngine/Include/**.h", "FlashlightEngine/Include/**.inl")
   add_includedirs("FlashlightEngine/Include", {public = true})
+  add_headerfiles("FlashlightEngine/ThirdParty/**.h")
+  add_includedirs("FlashlightEngine/ThirdParty", {public = true})
   
   add_headerfiles("FlashlightEngine/Shaders/**") -- A trick to make them show up in VS/Rider solutions.
+  add_headerfiles("FlashlightEngine/Resources/**") -- A trick to make them show up in VS/Rider solutions.
 
   -- Precompiled header
   set_pcxxheader("FlashlightEngine/Include/FlashlightEngine/pch.hpp")
 
   -- target dependencies
   add_packages("vulkan-loader","vk-bootstrap", "vulkan-memory-allocator", "vulkan-utility-libraries", "libsdl", "glm",
-               "spdlog", "magic_enum", "shaderc", "imgui")
+               "spdlog", "magic_enum", "shaderc", "imgui", "fastgltf")

@@ -10,16 +10,18 @@
 #include <FlashlightEngine/VulkanRenderer/VulkanInitializers.hpp>
 #include <FlashlightEngine/VulkanRenderer/VulkanUtils/VulkanBufferUtils.hpp>
 #include <FlashlightEngine/VulkanRenderer/VulkanUtils/VulkanImageUtils.hpp>
+#include <FlashlightEngine/VulkanRenderer/VulkanUtils/VulkanPipelineUtils.hpp>
 
 #include <magic_enum.hpp>
 
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/transform.hpp>
 
 #include <SDL.h>
 
 #define VMA_IMPLEMENTATION
 #include <vk_mem_alloc.h>
 
-#include <imgui.h>
 #include <imgui_impl_vulkan.h>
 #include <imgui_impl_sdl2.h>
 
@@ -87,19 +89,19 @@ namespace Flashlight::VulkanRenderer {
         memcpy(static_cast<char*>(data) + vertexBufferSize, indices.data(), indexBufferSize);
 
         ImmediateSubmit([&](const VkCommandBuffer commandBuffer) {
-        VkBufferCopy vertexCopy;
-        vertexCopy.dstOffset = 0;
-        vertexCopy.srcOffset = 0;
-        vertexCopy.size = vertexBufferSize;
+            VkBufferCopy vertexCopy;
+            vertexCopy.dstOffset = 0;
+            vertexCopy.srcOffset = 0;
+            vertexCopy.size = vertexBufferSize;
 
-        vkCmdCopyBuffer(commandBuffer, staging.Buffer, meshBuffers.VertexBuffer.Buffer, 1, &vertexCopy);
+            vkCmdCopyBuffer(commandBuffer, staging.Buffer, meshBuffers.VertexBuffer.Buffer, 1, &vertexCopy);
 
-        VkBufferCopy indexCopy;
-        indexCopy.dstOffset = 0;
-        indexCopy.srcOffset = vertexBufferSize;
-        indexCopy.size = indexBufferSize;
+            VkBufferCopy indexCopy;
+            indexCopy.dstOffset = 0;
+            indexCopy.srcOffset = vertexBufferSize;
+            indexCopy.size = indexBufferSize;
 
-        vkCmdCopyBuffer(commandBuffer, staging.Buffer, meshBuffers.IndexBuffer.Buffer, 1, &indexCopy);
+            vkCmdCopyBuffer(commandBuffer, staging.Buffer, meshBuffers.IndexBuffer.Buffer, 1, &indexCopy);
         });
 
         VulkanUtils::DestroyBuffer(m_Allocator, staging);
@@ -135,6 +137,13 @@ namespace Flashlight::VulkanRenderer {
         }
         ImGui::End();
 
+        if (ImGui::Begin("Selected mesh")) {
+            ImGui::Text("Selected mesh: %s", m_TestMeshes[m_CurrentMeshIndex]->Name.c_str());
+
+            ImGui::SliderInt("Mesh Index", &m_CurrentMeshIndex, 0, static_cast<i32>(m_TestMeshes.size() - 1));
+        }
+        ImGui::End();
+
         ImGui::Render();
     }
 
@@ -163,6 +172,8 @@ namespace Flashlight::VulkanRenderer {
         // Transition the draw image and the swap chain image into their correct transfer layouts.
         VulkanUtils::TransitionImage(frame.MainCommandBuffer, m_DrawImage.Image, VK_IMAGE_LAYOUT_GENERAL,
                                      VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+        VulkanUtils::TransitionImage(frame.MainCommandBuffer, m_DepthImage.Image, VK_IMAGE_LAYOUT_UNDEFINED,
+                                     VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL);
 
         DrawGeometry(cmd);
 
@@ -283,10 +294,30 @@ namespace Flashlight::VulkanRenderer {
 
         VK_CHECK(vkCreateImageView(m_Device->GetDevice(), &drawImageViewInfo, nullptr, &m_DrawImage.ImageView))
 
+        m_DepthImage.ImageFormat = VK_FORMAT_D32_SFLOAT;
+        m_DepthImage.ImageExtent = drawImageExtent;
+        VkImageUsageFlags depthImageUsage{};
+        depthImageUsage |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+
+        VkImageCreateInfo depthImageInfo = VulkanInit::ImageCreateInfo(
+            m_DepthImage.ImageFormat, depthImageUsage, drawImageExtent);
+
+        // Allocate and create the image.
+        vmaCreateImage(m_Allocator, &depthImageInfo, &drawImageAllocInfo, &m_DepthImage.Image,
+                       &m_DepthImage.Allocation, nullptr);
+
+        const VkImageViewCreateInfo depthImageViewInfo = VulkanInit::ImageViewCreateInfo(
+            m_DepthImage.ImageFormat, m_DepthImage.Image, VK_IMAGE_ASPECT_DEPTH_BIT);
+
+        VK_CHECK(vkCreateImageView(m_Device->GetDevice(), &depthImageViewInfo, nullptr, &m_DepthImage.ImageView))
+
         // Add to deletion queue.
         m_MainDeletionQueue.PushFunction([this]() {
             vkDestroyImageView(m_Device->GetDevice(), m_DrawImage.ImageView, nullptr);
             vmaDestroyImage(m_Allocator, m_DrawImage.Image, m_DrawImage.Allocation);
+
+            vkDestroyImageView(m_Device->GetDevice(), m_DepthImage.ImageView, nullptr);
+            vmaDestroyImage(m_Allocator, m_DepthImage.Image, m_DepthImage.Allocation);
         });
     }
 
@@ -429,7 +460,6 @@ namespace Flashlight::VulkanRenderer {
 
     void VulkanRenderer::InitializePipelines() {
         InitializeComputePipelines();
-        InitializeTrianglePipeline();
         InitializeMeshPipeline();
     }
 
@@ -494,8 +524,8 @@ namespace Flashlight::VulkanRenderer {
         gradient.Data = {};
 
         // default colors
-        gradient.Data.Data1 = glm::vec4(1, 0, 0, 1);
-        gradient.Data.Data2 = glm::vec4(0, 0, 1, 1);
+        gradient.Data.Data1 = glm::vec4(0, 0, 1, 1);
+        gradient.Data.Data2 = glm::vec4(0, 1.75, 1, 1);
 
         VK_CHECK(
             vkCreateComputePipelines(m_Device->GetDevice(), VK_NULL_HANDLE, 1, &computePipelineCreateInfo, nullptr,
@@ -543,60 +573,16 @@ namespace Flashlight::VulkanRenderer {
         });
     }
 
-    void VulkanRenderer::InitializeTrianglePipeline() {
-        VkShaderModule triangleVertexShader;
-        VulkanUtils::CreateShaderModule(m_Device->GetDevice(), "Shaders/colored_triangle.vert",
-                                        VulkanUtils::ShaderType::Vertex, &triangleVertexShader);
-        if (!triangleVertexShader) {
-            Log::EngineFatal({0x02, 0x03}, "Failed to create triangle vertex shader.");
-        }
-
-        VkShaderModule triangleFragmentShader;
-        VulkanUtils::CreateShaderModule(m_Device->GetDevice(), "Shaders/colored_triangle.frag",
-                                        VulkanUtils::ShaderType::Fragment, &triangleFragmentShader);
-        if (!triangleFragmentShader) {
-            Log::EngineFatal({0x02, 0x03}, "Failed to create triangle fragment shader.");
-        }
-
-        const VkPipelineLayoutCreateInfo pipelineLayoutInfo = VulkanInit::PipelineLayoutCreateInfo();
-        VK_CHECK(
-            vkCreatePipelineLayout(m_Device->GetDevice(), &pipelineLayoutInfo, nullptr, &m_TrianglePipelineLayout))
-
-        VulkanUtils::PipelineBuilder pipelineBuilder{};
-
-        pipelineBuilder.SetPipelineLayout(m_TrianglePipelineLayout);
-        pipelineBuilder.SetShaders(triangleVertexShader, triangleFragmentShader);
-        pipelineBuilder.SetInputTopology(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
-        pipelineBuilder.SetPolygonMode(VK_POLYGON_MODE_FILL);
-        pipelineBuilder.SetCullMode(VK_CULL_MODE_NONE, VK_FRONT_FACE_CLOCKWISE);
-        pipelineBuilder.SetMultisamplingNone();
-        pipelineBuilder.DisableBlending();
-        pipelineBuilder.DisableDepthTest();
-
-        pipelineBuilder.SetColorAttachmentFormat(m_DrawImage.ImageFormat);
-        pipelineBuilder.SetDepthFormat(VK_FORMAT_UNDEFINED);
-
-        m_TrianglePipeline = pipelineBuilder.BuildPipeline(m_Device->GetDevice());
-
-        vkDestroyShaderModule(m_Device->GetDevice(), triangleVertexShader, nullptr);
-        vkDestroyShaderModule(m_Device->GetDevice(), triangleFragmentShader, nullptr);
-
-        m_MainDeletionQueue.PushFunction([&]() {
-            vkDestroyPipelineLayout(m_Device->GetDevice(), m_TrianglePipelineLayout, nullptr);
-            vkDestroyPipeline(m_Device->GetDevice(), m_TrianglePipeline, nullptr);
-        });
-    }
-
     void VulkanRenderer::InitializeMeshPipeline() {
         VkShaderModule meshVertexShader;
-        VulkanUtils::CreateShaderModule(m_Device->GetDevice(), "Shaders/colored_triangle_meshbuffer.vert",
+        VulkanUtils::CreateShaderModule(m_Device->GetDevice(), "Shaders/basic_meshbuffer.vert",
                                         VulkanUtils::ShaderType::Vertex, &meshVertexShader);
         if (!meshVertexShader) {
             Log::EngineFatal({0x02, 0x03}, "Failed to create triangle vertex shader.");
         }
 
         VkShaderModule meshFragmentShader;
-        VulkanUtils::CreateShaderModule(m_Device->GetDevice(), "Shaders/colored_triangle.frag",
+        VulkanUtils::CreateShaderModule(m_Device->GetDevice(), "Shaders/basic.frag",
                                         VulkanUtils::ShaderType::Fragment, &meshFragmentShader);
         if (!meshFragmentShader) {
             Log::EngineFatal({0x02, 0x03}, "Failed to create triangle fragment shader.");
@@ -624,10 +610,10 @@ namespace Flashlight::VulkanRenderer {
         pipelineBuilder.SetCullMode(VK_CULL_MODE_NONE, VK_FRONT_FACE_CLOCKWISE);
         pipelineBuilder.SetMultisamplingNone();
         pipelineBuilder.DisableBlending();
-        pipelineBuilder.DisableDepthTest();
+        pipelineBuilder.EnableDepthTest(true, VK_COMPARE_OP_GREATER_OR_EQUAL);
 
         pipelineBuilder.SetColorAttachmentFormat(m_DrawImage.ImageFormat);
-        pipelineBuilder.SetDepthFormat(VK_FORMAT_UNDEFINED);
+        pipelineBuilder.SetDepthFormat(m_DepthImage.ImageFormat);
 
         m_MeshPipeline = pipelineBuilder.BuildPipeline(m_Device->GetDevice());
 
@@ -710,33 +696,13 @@ namespace Flashlight::VulkanRenderer {
     }
 
     void VulkanRenderer::InitializeDefaultData() {
-        std::array<Vertex, 4> rectangleVertices;
-
-        rectangleVertices[0].Position = {0.5f, -0.5f, 0.0f};
-        rectangleVertices[1].Position = {0.5f, 0.5f, 0.0f};
-        rectangleVertices[2].Position = {-0.5f, -0.5f, 0.0f};
-        rectangleVertices[3].Position = {-0.5f, 0.5f, 0.0f};
-
-        rectangleVertices[0].Color = {0.0f, 0.0f, 0.0f, 1.0f};
-        rectangleVertices[1].Color = {0.5f, 0.5f, 0.5f, 1.0f};
-        rectangleVertices[2].Color = {1.0f, 0.0f, 0.0f, 1.0f};
-        rectangleVertices[3].Color = {0.0f, 1.0f, 0.0f, 1.0f};
-
-        std::array<u32, 6> rectangleIndices;
-
-        rectangleIndices[0] = 0;
-        rectangleIndices[1] = 1;
-        rectangleIndices[2] = 2;
-
-        rectangleIndices[3] = 2;
-        rectangleIndices[4] = 1;
-        rectangleIndices[5] = 3;
-
-        m_Rectangle = UploadMesh(rectangleIndices, rectangleVertices);
-
-        PlanMeshDeletion(m_Rectangle);
+        if (const auto loaded = LoadGltfMeshes(this, "Resources/Models/basicmesh.glb");
+            loaded.has_value()) {
+            m_TestMeshes = loaded.value();
+        } else {
+            Log::EngineError("Failed to load model.");
+        }
     }
-
 
     void VulkanRenderer::DrawBackground(const VkCommandBuffer commandBuffer) const {
         const ComputeEffect& effect = m_BackgroundEffects[m_CurrentBackgroundEffect];
@@ -760,11 +726,12 @@ namespace Flashlight::VulkanRenderer {
         // Begin a render pass connected to the draw image.
         const VkRenderingAttachmentInfo colorAttachment = VulkanInit::AttachmentInfo(
             m_DrawImage.ImageView, nullptr, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+        const VkRenderingAttachmentInfo depthAttachment = VulkanInit::DepthAttachmentInfo(
+            m_DepthImage.ImageView, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL);
 
-        const VkRenderingInfo renderingInfo = VulkanInit::RenderingInfo(m_DrawExtent, &colorAttachment, nullptr);
+        const VkRenderingInfo renderingInfo = VulkanInit::RenderingInfo(
+            m_DrawExtent, &colorAttachment, &depthAttachment);
         vkCmdBeginRendering(commandBuffer, &renderingInfo);
-
-        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_TrianglePipeline);
 
         VkViewport viewport;
         viewport.x = 0;
@@ -783,20 +750,32 @@ namespace Flashlight::VulkanRenderer {
         scissor.extent.height = m_DrawExtent.height;
 
         vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
-        
-        vkCmdDraw(commandBuffer, 3, 1, 0, 0);
 
         vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_MeshPipeline);
 
+
+        const auto view = translate(glm::vec3{0, 0, -5});
+        // camera projection
+        glm::mat4 projection = glm::perspective(glm::radians(70.f),
+                                                static_cast<float>(m_DrawExtent.width) / static_cast<float>(
+                                                    m_DrawExtent.height), 0.1f, 10000.0f);
+
+        // invert the Y direction on projection matrix so that we are more similar
+        // to opengl and gltf axis
+        projection[1][1] *= -1;
+
         GPUDrawPushConstants pushConstants;
-        pushConstants.WorldMatrix = glm::mat4{1.0f};
-        pushConstants.VertexBuffer = m_Rectangle.VertexBufferAddress;
+        pushConstants.WorldMatrix = projection * view;
+
+        pushConstants.VertexBuffer = m_TestMeshes[m_CurrentMeshIndex]->MeshBuffers.VertexBufferAddress;
 
         vkCmdPushConstants(commandBuffer, m_MeshPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0,
                            sizeof(GPUDrawPushConstants), &pushConstants);
-        vkCmdBindIndexBuffer(commandBuffer, m_Rectangle.IndexBuffer.Buffer, 0, VK_INDEX_TYPE_UINT32);
+        vkCmdBindIndexBuffer(commandBuffer, m_TestMeshes[m_CurrentMeshIndex]->MeshBuffers.IndexBuffer.Buffer, 0,
+                             VK_INDEX_TYPE_UINT32);
 
-        vkCmdDrawIndexed(commandBuffer, 6, 1, 0, 0, 0);
+        vkCmdDrawIndexed(commandBuffer, m_TestMeshes[m_CurrentMeshIndex]->Surfaces[0].Count, 1,
+                         m_TestMeshes[m_CurrentMeshIndex]->Surfaces[0].StartIndex, 0, 0);
 
         vkCmdEndRendering(commandBuffer);
     }
