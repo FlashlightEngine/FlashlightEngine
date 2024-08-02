@@ -86,7 +86,7 @@ namespace Flashlight::VulkanRenderer {
         VulkanRenderer& operator=(const VulkanRenderer&) = delete;
         VulkanRenderer& operator=(VulkanRenderer&&) = delete;
 
-        GPUMeshBuffers UploadMesh(std::span<u32> indices, std::span<Vertex> vertices) const;
+        [[nodiscard]] GPUMeshBuffers UploadMesh(std::span<u32> indices, std::span<Vertex> vertices) const;
         void PlanMeshDeletion(GPUMeshBuffers mesh);
         void CreateUi();
         void Draw(Window& window);

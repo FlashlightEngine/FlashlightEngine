@@ -500,21 +500,21 @@ namespace Flashlight::VulkanRenderer {
 
         // Create shader modules.
         VkShaderModule gradientShaderModule;
-        CreateShaderModule(m_Device->GetDevice(), "Shaders/gradient_color.comp", VulkanUtils::ShaderType::Compute,
+        CreateShaderModule(m_Device->GetDevice(), "Resources/Shaders/gradient_color.comp", VulkanUtils::ShaderType::Compute,
                            &gradientShaderModule);
         if (!gradientShaderModule) {
             Log::EngineFatal({0x02, 0x00}, "Failed to build the gradient compute shader module.");
         }
 
         VkShaderModule skyShaderModule;
-        CreateShaderModule(m_Device->GetDevice(), "Shaders/sky.comp", VulkanUtils::ShaderType::Compute,
+        CreateShaderModule(m_Device->GetDevice(), "Resources/Shaders/sky.comp", VulkanUtils::ShaderType::Compute,
                            &skyShaderModule);
         if (!skyShaderModule) {
             Log::EngineFatal({0x02, 0x01}, "Failed to build the sky compute shader module.");
         }
 
         VkShaderModule gridShaderModule;
-        CreateShaderModule(m_Device->GetDevice(), "Shaders/gradient_grid.comp", VulkanUtils::ShaderType::Compute,
+        CreateShaderModule(m_Device->GetDevice(), "Resources/Shaders/gradient_grid.comp", VulkanUtils::ShaderType::Compute,
                            &gridShaderModule);
         if (!skyShaderModule) {
             Log::EngineFatal({0x02, 0x02}, "Failed to build the grid compute shader module.");
@@ -591,14 +591,14 @@ namespace Flashlight::VulkanRenderer {
 
     void VulkanRenderer::InitializeMeshPipeline() {
         VkShaderModule meshVertexShader;
-        VulkanUtils::CreateShaderModule(m_Device->GetDevice(), "Shaders/basic_meshbuffer.vert",
+        VulkanUtils::CreateShaderModule(m_Device->GetDevice(), "Resources/Shaders/basic_meshbuffer.vert",
                                         VulkanUtils::ShaderType::Vertex, &meshVertexShader);
         if (!meshVertexShader) {
             Log::EngineFatal({0x02, 0x03}, "Failed to create triangle vertex shader.");
         }
 
         VkShaderModule meshFragmentShader;
-        VulkanUtils::CreateShaderModule(m_Device->GetDevice(), "Shaders/basic.frag",
+        VulkanUtils::CreateShaderModule(m_Device->GetDevice(), "Resources/Shaders/basic.frag",
                                         VulkanUtils::ShaderType::Fragment, &meshFragmentShader);
         if (!meshFragmentShader) {
             Log::EngineFatal({0x02, 0x03}, "Failed to create triangle fragment shader.");
