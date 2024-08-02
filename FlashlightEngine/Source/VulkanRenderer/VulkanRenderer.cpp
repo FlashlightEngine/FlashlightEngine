@@ -122,6 +122,11 @@ namespace Flashlight::VulkanRenderer {
 
         ImGui::NewFrame();
 
+        if (ImGui::Begin("Background")) {
+            ImGui::SliderFloat("Render Scale: ", &m_RenderScale, 0.3f, 1.0f);
+        }
+        ImGui::End();
+
         if (ImGui::Begin("Background effect data")) {
             ComputeEffect& selected = m_BackgroundEffects[m_CurrentBackgroundEffect];
 
@@ -148,10 +153,16 @@ namespace Flashlight::VulkanRenderer {
     }
 
 
-    void VulkanRenderer::Draw() {
+    void VulkanRenderer::Draw(Window& window) {        
+        m_DrawExtent.width = static_cast<u32>(static_cast<f32>(std::min(m_Swapchain->GetSwapchainExtent().width, m_DrawImage.ImageExtent.width)) * m_RenderScale);
+        m_DrawExtent.height = static_cast<u32>(static_cast<f32>(std::min(m_Swapchain->GetSwapchainExtent().height, m_DrawImage.ImageExtent.height)) * m_RenderScale);
+        
         auto& frame = GetCurrentFrame();
 
-        m_Swapchain->AcquireNextImage(*m_Device, frame);
+        VkResult lastVkError = m_Swapchain->AcquireNextImage(*m_Device, frame);
+        if (lastVkError == VK_ERROR_OUT_OF_DATE_KHR || lastVkError == VK_SUBOPTIMAL_KHR || window.ShouldInvalidateSwapchain()) {
+            m_SwapchainResizeRequired = true;
+        }
 
         const VkCommandBuffer cmd = frame.MainCommandBuffer;
 
@@ -159,9 +170,6 @@ namespace Flashlight::VulkanRenderer {
 
         const VkCommandBufferBeginInfo cmdBeginInfo = VulkanInit::CommandBufferBeginInfo(
             VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
-
-        m_DrawExtent.width = m_DrawImage.ImageExtent.width;
-        m_DrawExtent.height = m_DrawImage.ImageExtent.height;
 
         VK_CHECK(vkBeginCommandBuffer(cmd, &cmdBeginInfo))
 
@@ -226,7 +234,15 @@ namespace Flashlight::VulkanRenderer {
 
         presentInfo.pImageIndices = &frame.SwapchainImageIndex;
 
-        VK_CHECK(vkQueuePresentKHR(m_Device->GetPresentQueue(), &presentInfo))
+        lastVkError = vkQueuePresentKHR(m_Device->GetPresentQueue(), &presentInfo);
+        if (lastVkError == VK_ERROR_OUT_OF_DATE_KHR || lastVkError == VK_SUBOPTIMAL_KHR || window.ShouldInvalidateSwapchain()) {
+            m_SwapchainResizeRequired = true;
+        }
+
+        if (m_SwapchainResizeRequired) {
+            RecreateSwapchain(window);
+            m_SwapchainResizeRequired = false;
+        }
 
         m_FrameNumber++;
     }
@@ -816,5 +832,15 @@ namespace Flashlight::VulkanRenderer {
         VK_CHECK(vkQueueSubmit2(m_Device->GetGraphicsQueue(), 1, &submit, m_ImmediateFence))
 
         VK_CHECK(vkWaitForFences(m_Device->GetDevice(), 1, &m_ImmediateFence, true, 9999999999))
+    }
+
+    void VulkanRenderer::RecreateSwapchain(Window& window) {
+        vkDeviceWaitIdle(m_Device->GetDevice());
+
+        m_Swapchain->Destroy();
+
+        m_Swapchain = std::make_unique<VulkanWrapper::Swapchain>(window, *m_Instance, *m_Device);
+
+        window.SwapchainInvalidated();
     }
 }

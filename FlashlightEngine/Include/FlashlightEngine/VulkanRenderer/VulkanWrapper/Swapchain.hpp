@@ -7,7 +7,6 @@
  */
 #pragma once
 
-#include <FlashlightEngine/VulkanRenderer/VulkanTypes.hpp>
 #include <FlashlightEngine/VulkanRenderer/VulkanWrapper/Device.hpp>
 
 namespace Flashlight::VulkanRenderer::VulkanWrapper {
@@ -41,7 +40,9 @@ namespace Flashlight::VulkanRenderer::VulkanWrapper {
         [[nodiscard]] inline VkImageView GetImageViewAtIndex(u32 index) const;
         [[nodiscard]] inline VkExtent2D GetSwapchainExtent() const;
 
-        void AcquireNextImage(const Device& device, FrameData& frame) const;
+        [[nodiscard]] VkResult AcquireNextImage(const Device& device, FrameData& frame) const;
+
+        void Destroy();
     };
 
 #include <FlashlightEngine/VulkanRenderer/VulkanWrapper/Swapchain.inl>

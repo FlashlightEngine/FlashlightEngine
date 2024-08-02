@@ -11,7 +11,6 @@
 
 #include <SDL.h>
 
-#include <imgui.h>
 #include <imgui_impl_sdl2.h>
 
 namespace Flashlight {
@@ -20,7 +19,7 @@ namespace Flashlight {
             Log::EngineFatal({0x01, 0x00}, "Failed to initialize SDL. Error : {}", SDL_GetError());
         }
 
-        constexpr SDL_WindowFlags windowFlags = SDL_WINDOW_VULKAN;
+        constexpr auto windowFlags = static_cast<SDL_WindowFlags>(SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
 
         Log::EngineTrace("Creating window...");
         m_Window = SDL_CreateWindow(windowProperties.Title.c_str(), SDL_WINDOWPOS_UNDEFINED,
@@ -62,6 +61,11 @@ namespace Flashlight {
 
                 if (event.window.event == SDL_WINDOWEVENT_RESTORED) {
                     m_Data.StopRendering = false;
+                }
+
+                if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
+                    m_Data.ShouldInvalidateSwapchain = true;
+                    SDL_GetWindowSize(m_Window, &m_Data.Width, &m_Data.Height);
                 }
             }
 

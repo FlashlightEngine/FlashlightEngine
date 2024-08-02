@@ -39,13 +39,14 @@ namespace Flashlight::VulkanRenderer {
         bool m_RendererInitialized = false;
 
         DeletionQueue m_MainDeletionQueue;
-        
+
         std::unique_ptr<VulkanWrapper::Instance> m_Instance;
         std::unique_ptr<VulkanWrapper::Device> m_Device;
-        
+
         VmaAllocator m_Allocator;
 
         std::unique_ptr<VulkanWrapper::Swapchain> m_Swapchain;
+        bool m_SwapchainResizeRequired{false};
 
         FrameData m_Frames[g_FrameOverlap];
         i32 m_FrameNumber = 0;
@@ -57,6 +58,7 @@ namespace Flashlight::VulkanRenderer {
         AllocatedImage m_DrawImage;
         AllocatedImage m_DepthImage;
         VkExtent2D m_DrawExtent;
+        float m_RenderScale = 1.0f;
 
         DescriptorAllocator m_GlobalDescriptorAllocator;
 
@@ -87,7 +89,7 @@ namespace Flashlight::VulkanRenderer {
         GPUMeshBuffers UploadMesh(std::span<u32> indices, std::span<Vertex> vertices) const;
         void PlanMeshDeletion(GPUMeshBuffers mesh);
         void CreateUi();
-        void Draw();
+        void Draw(Window& window);
 
     private:
         void InitializeVulkan(const Window& window, const DebugLevel& debugLevel);
@@ -102,7 +104,7 @@ namespace Flashlight::VulkanRenderer {
         void InitializeMeshPipeline();
         void InitializeImGui(const Window& window);
         void InitializeDefaultData();
-        
+
         void DrawBackground(VkCommandBuffer commandBuffer) const;
         void DrawGeometry(VkCommandBuffer commandBuffer) const;
         void DrawImGui(VkCommandBuffer commandBuffer, VkImageView targetImageView) const;
@@ -112,6 +114,8 @@ namespace Flashlight::VulkanRenderer {
         }
 
         void ImmediateSubmit(const std::function<void(VkCommandBuffer commandBuffer)>& function) const;
+
+        void RecreateSwapchain(Window& window);
     };
 
 }

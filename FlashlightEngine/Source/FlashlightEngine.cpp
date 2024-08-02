@@ -25,6 +25,11 @@ namespace Flashlight {
         while (m_IsRunning) {
             Update();
 
+            if (m_Window->ShouldStopRendering()) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                continue;
+            }
+
             Render();
         }
 
@@ -59,16 +64,12 @@ namespace Flashlight {
 
         // Poll window events.
         m_Window->Update();
-
-        if (m_Window->ShouldStopRendering()) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        }
     }
 
     void FlashlightEngine::Render() const {
         m_Renderer->CreateUi();
         
-        m_Renderer->Draw();
+        m_Renderer->Draw(*m_Window);
     }
 
     void FlashlightEngine::Cleanup() {

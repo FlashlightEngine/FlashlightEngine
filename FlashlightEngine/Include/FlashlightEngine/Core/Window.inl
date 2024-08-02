@@ -15,6 +15,14 @@ inline bool Window::ShouldStopRendering() const {
     return m_Data.StopRendering;
 }
 
+inline bool Window::ShouldInvalidateSwapchain() const {
+    return m_Data.ShouldInvalidateSwapchain;
+}
+
+inline void Window::SwapchainInvalidated() {
+    m_Data.ShouldInvalidateSwapchain = false;
+}
+
 inline SDL_Window* Window::GetNativeWindow() const {
     return m_Window;
 }

@@ -30,6 +30,8 @@ namespace Flashlight {
         std::string Title;
         bool ShouldClose = false;
         bool StopRendering = false;
+        bool RestartRendering = false;
+        bool ShouldInvalidateSwapchain = false;
     };
 
     class Window {
@@ -48,6 +50,8 @@ namespace Flashlight {
 
         [[nodiscard]] inline bool ShouldClose() const;
         [[nodiscard]] inline bool ShouldStopRendering() const;
+        [[nodiscard]] inline bool ShouldInvalidateSwapchain() const;
+        inline void SwapchainInvalidated();
         [[nodiscard]] inline SDL_Window* GetNativeWindow() const;
         [[nodiscard]] inline i32 GetWidth() const;
         [[nodiscard]] inline i32 GetHeight() const;
@@ -58,5 +62,5 @@ namespace Flashlight {
         inline void Close();
     };
 
-#include "Window.inl"
+#include <FlashlightEngine/Core/Window.inl>
 }

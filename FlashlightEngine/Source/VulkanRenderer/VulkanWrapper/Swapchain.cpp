@@ -47,20 +47,24 @@ namespace Flashlight::VulkanRenderer::VulkanWrapper {
     }
 
     Swapchain::~Swapchain() {
-        if (m_Initialized) {
-            m_DeletionQueue.Flush();
-        }
+        Destroy();
     }
 
-    void Swapchain::AcquireNextImage(const Device& device, FrameData& frame) const {
+    VkResult Swapchain::AcquireNextImage(const Device& device, FrameData& frame) const {
         VK_CHECK(vkWaitForFences(device.GetDevice(), 1, &frame.RenderFence, true, 1000000000))
 
         frame.DeletionQueue.Flush();
 
         VK_CHECK(vkResetFences(device.GetDevice(), 1, &frame.RenderFence))
+        
+        return vkAcquireNextImageKHR(device.GetDevice(), m_Swapchain, 1000000000, frame.SwapchainSemaphore, nullptr, &
+                frame.SwapchainImageIndex);
+    }
 
-        VK_CHECK(
-            vkAcquireNextImageKHR(device.GetDevice(), m_Swapchain, 1000000000, frame.SwapchainSemaphore, nullptr, &
-                frame.SwapchainImageIndex))
+    void Swapchain::Destroy() {
+        if (m_Initialized) {
+            m_DeletionQueue.Flush();
+            m_Initialized = false;
+        }
     }
 }
