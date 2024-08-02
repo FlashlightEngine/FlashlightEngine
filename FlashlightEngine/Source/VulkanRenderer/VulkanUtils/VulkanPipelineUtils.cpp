@@ -140,11 +140,35 @@ namespace Flashlight::VulkanRenderer::VulkanUtils {
             VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
         m_ColorBlendAttachment.blendEnable = VK_FALSE;
     }
-    
+
+    void PipelineBuilder::EnableAdditiveBlending() {
+        m_ColorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT |
+            VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+        m_ColorBlendAttachment.blendEnable = VK_TRUE;
+        m_ColorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+        m_ColorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE;
+        m_ColorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;
+        m_ColorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+        m_ColorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+        m_ColorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;
+    }
+
+    void PipelineBuilder::EnableBlendingAlphaBlend() {
+        m_ColorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT |
+            VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+        m_ColorBlendAttachment.blendEnable = VK_TRUE;
+        m_ColorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+        m_ColorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+        m_ColorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;
+        m_ColorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+        m_ColorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+        m_ColorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;
+    }
+
     void PipelineBuilder::SetColorAttachmentFormat(const VkFormat format) {
         m_ColorAttachmentFormat = format;
     }
-    
+
     void PipelineBuilder::SetDepthFormat(const VkFormat format) {
         m_DepthAttachmentFormat = format;
     }
@@ -176,7 +200,7 @@ namespace Flashlight::VulkanRenderer::VulkanUtils {
     void PipelineBuilder::SetPipelineLayout(const VkPipelineLayout layout) {
         m_PipelineLayout = layout;
     }
-    
+
     VkPipeline PipelineBuilder::BuildPipeline(const VkDevice device) {
         // Make viewport state from the stored viewport and scissor.
         // At the moment we won't support multiple viewports or scissors.
@@ -204,11 +228,11 @@ namespace Flashlight::VulkanRenderer::VulkanUtils {
         };
 
         VkGraphicsPipelineCreateInfo pipelineInfo = {.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO};
-        
+
         m_RenderInfo.colorAttachmentCount = 1;
         m_RenderInfo.pColorAttachmentFormats = &m_ColorAttachmentFormat;
         m_RenderInfo.depthAttachmentFormat = m_DepthAttachmentFormat; // For some reason this works.
-        
+
         pipelineInfo.pNext = &m_RenderInfo;
 
         pipelineInfo.stageCount = static_cast<u32>(m_ShaderStages.size());

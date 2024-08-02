@@ -609,7 +609,7 @@ namespace Flashlight::VulkanRenderer {
         pipelineBuilder.SetPolygonMode(VK_POLYGON_MODE_FILL);
         pipelineBuilder.SetCullMode(VK_CULL_MODE_NONE, VK_FRONT_FACE_CLOCKWISE);
         pipelineBuilder.SetMultisamplingNone();
-        pipelineBuilder.DisableBlending();
+        pipelineBuilder.EnableAdditiveBlending();
         pipelineBuilder.EnableDepthTest(true, VK_COMPARE_OP_GREATER_OR_EQUAL);
 
         pipelineBuilder.SetColorAttachmentFormat(m_DrawImage.ImageFormat);

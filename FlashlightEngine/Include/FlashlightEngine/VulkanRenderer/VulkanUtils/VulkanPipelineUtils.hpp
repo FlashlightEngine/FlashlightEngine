@@ -49,6 +49,8 @@ namespace Flashlight::VulkanRenderer::VulkanUtils {
         void SetCullMode(VkCullModeFlags cullMode, VkFrontFace frontFace);
         void SetMultisamplingNone();
         void DisableBlending();
+        void EnableAdditiveBlending();
+        void EnableBlendingAlphaBlend();
         void SetColorAttachmentFormat(VkFormat format);
         void SetDepthFormat(VkFormat format);
         void DisableDepthTest();
