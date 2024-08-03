@@ -123,7 +123,7 @@ namespace Flashlight::VulkanRenderer {
             }
 
             // display the vertex normals
-            constexpr bool overrideColors = true;
+            constexpr bool overrideColors = false;
             if (overrideColors) {
                 for (Vertex& vtx : vertices) {
                     vtx.Color = glm::vec4(vtx.Normal, 1.f);

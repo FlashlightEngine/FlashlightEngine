@@ -12,9 +12,14 @@
 #include <filesystem>
 
 namespace Flashlight::VulkanRenderer {
+    struct GLTFMaterial {
+        MaterialInstance Data;
+    };
+    
     struct GeoSurface {
         u32 StartIndex;
         u32 Count;
+        std::shared_ptr<GLTFMaterial> Material;
     };
 
     struct MeshAsset {

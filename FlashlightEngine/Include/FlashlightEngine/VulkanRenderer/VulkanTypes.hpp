@@ -94,6 +94,48 @@ namespace Flashlight {
             glm::vec4 SunlightDirection; // w for light intensity.
             glm::vec4 SunlightColor;
         };
+
+        enum class MaterialPass : u8 {
+            MainColor,
+            Transparent,
+            Other
+        };
+        
+        struct MaterialPipeline {
+            VkPipeline Pipeline;
+            VkPipelineLayout PipelineLayout;
+        };
+
+        struct MaterialInstance {
+            MaterialPipeline* Pipeline;
+            VkDescriptorSet MaterialSet;
+            MaterialPass PassType;
+        };
+
+        struct DrawContext;
+
+        // Base class for a renderable dynamic object.
+        class IRenderable {
+        public:
+            virtual ~IRenderable() = default;
+
+        private:
+            virtual void Draw(const glm::mat4& topMatrix, DrawContext& context) = 0;
+        };
+
+        // Implementation of a drawable scene node.
+        // The scene node can hold children and will also keep a transform to propagate to them.
+        struct Node : IRenderable {
+            // Parent pointer must be a weak pointer to avoid circular dependencies.
+            std::weak_ptr<Node> Parent;
+            std::vector<std::shared_ptr<Node>> Children;
+
+            glm::mat4 LocalTransform;
+            glm::mat4 WorldTransform;
+
+            void RefreshTransform(const glm::mat4& parentMatrix);
+            void Draw(const glm::mat4& topMatrix, DrawContext& context) override;
+        };
     }
 }
 

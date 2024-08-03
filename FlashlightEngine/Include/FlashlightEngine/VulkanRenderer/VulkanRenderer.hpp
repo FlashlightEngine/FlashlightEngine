@@ -18,7 +18,7 @@
 namespace Flashlight::VulkanRenderer {
 
     constexpr u32 g_FrameOverlap = 2;
-    
+
     struct FrameData {
         VkCommandPool CommandPool;
         VkCommandBuffer MainCommandBuffer;
@@ -48,6 +48,58 @@ namespace Flashlight::VulkanRenderer {
         ComputePushConstants Data;
     };
 
+    struct GLTFMetallic_Roughness {
+        MaterialPipeline OpaquePipeline;
+        MaterialPipeline TransparentPipeline;
+
+        VkDescriptorSetLayout MaterialLayout;
+
+        struct MaterialConstants {
+            glm::vec4 ColorFactors;
+            glm::vec4 MetalRoughFactors;
+            // Padding, we need it anyway for uniform buffers.
+            glm::vec4 Padding[14];
+        };
+
+        struct MaterialResources {
+            AllocatedImage ColorImage;
+            VkSampler ColorSampler;
+            AllocatedImage MetalRoughnessImage;
+            VkSampler MetalRoughnessSampler;
+            VkBuffer DataBuffer;
+            u32 DataBufferOffset;
+        };
+
+        DescriptorWriter Writer;
+
+        void BuildPipelines(VulkanRenderer* renderer);
+        void ClearResources(VkDevice device);
+
+        MaterialInstance WriteMaterial(VkDevice device, MaterialPass pass, const MaterialResources& resources,
+                                       DescriptorAllocatorGrowable& descriptorAllocator);
+    };
+
+    struct RenderObject {
+        u32 IndexCount;
+        u32 FirstIndex;
+        VkBuffer IndexBuffer;
+
+        MaterialInstance* Material;
+
+        glm::mat4 Transform;
+        VkDeviceAddress VertexBufferAddress;
+    };
+
+    struct DrawContext {
+        std::vector<RenderObject> OpaqueSurfaces;
+    };
+
+    struct MeshNode : public Node {
+        std::shared_ptr<MeshAsset> Mesh;
+
+        void Draw(const glm::mat4& topMatrix, DrawContext& context) override;
+    };
+
     class VulkanRenderer {
         bool m_RendererInitialized = false;
 
@@ -73,14 +125,11 @@ namespace Flashlight::VulkanRenderer {
         VkExtent2D m_DrawExtent;
         float m_RenderScale = 1.0f;
 
-        DescriptorAllocator m_GlobalDescriptorAllocator;
+        DescriptorAllocatorGrowable m_GlobalDescriptorAllocator;
 
         VkDescriptorSet m_DrawImageDescriptors;
         VkDescriptorSetLayout m_DrawImageDescriptorLayout;
 
-        GPUSceneData m_SceneData;
-        VkDescriptorSetLayout m_GpuSceneDataLayout;
-        
         VkPipelineLayout m_ComputePipelineLayout;
 
         std::vector<ComputeEffect> m_BackgroundEffects;
@@ -92,8 +141,7 @@ namespace Flashlight::VulkanRenderer {
         VkDescriptorSetLayout m_SingleImageDescriptorLayout;
 
         std::vector<std::shared_ptr<MeshAsset>> m_TestMeshes;
-        i32 m_CurrentMeshIndex{0};
-        
+
         AllocatedImage m_WhiteImage;
         AllocatedImage m_BlackImage;
         AllocatedImage m_GrayImage;
@@ -102,7 +150,16 @@ namespace Flashlight::VulkanRenderer {
         VkSampler m_DefaultSamplerLinear;
         VkSampler m_DefaultSamplerNearest;
 
+        MaterialInstance m_DefaultData;
+        GLTFMetallic_Roughness m_MetalRoughMaterial;
+
     public:
+        GPUSceneData SceneData;
+        VkDescriptorSetLayout GpuSceneDataLayout;
+
+        DrawContext MainDrawContext;
+        std::unordered_map<std::string, std::shared_ptr<Node>> LoadedNodes;
+        
         VulkanRenderer(const Window& window, const DebugLevel& debugLevel);
         ~VulkanRenderer();
 
@@ -114,10 +171,17 @@ namespace Flashlight::VulkanRenderer {
 
         [[nodiscard]] GPUMeshBuffers UploadMesh(std::span<u32> indices, std::span<Vertex> vertices) const;
         void PlanMeshDeletion(GPUMeshBuffers mesh);
+        void AddDeletion(std::function<void()>&& deletor);
         void CreateUi();
+        void UpdateScene(const Window& window);
         void Draw(Window& window);
 
         void ImmediateSubmit(const std::function<void(VkCommandBuffer commandBuffer)>& function) const;
+
+        [[nodiscard]] inline VulkanWrapper::Instance& GetInstance() const;
+        [[nodiscard]] inline VulkanWrapper::Device& GetDevice() const;
+        [[nodiscard]] inline VkFormat GetDrawImageFormat() const;
+        [[nodiscard]] inline VkFormat GetDepthImageFormat() const;
 
     private:
         void InitializeVulkan(const Window& window, const DebugLevel& debugLevel);
@@ -144,4 +208,5 @@ namespace Flashlight::VulkanRenderer {
         void RecreateSwapchain(Window& window);
     };
 
+#include <FlashlightEngine/VulkanRenderer/VulkanRenderer.inl>
 }

@@ -26,6 +26,137 @@
 #include <imgui_impl_sdl2.h>
 
 namespace Flashlight::VulkanRenderer {
+    void GLTFMetallic_Roughness::BuildPipelines(VulkanRenderer* renderer) {
+        VkShaderModule meshFragShader;
+        CreateShaderModule(renderer->GetDevice().GetDevice(), "Resources/Shaders/mesh.frag",
+                           VulkanUtils::ShaderType::Fragment, &meshFragShader);
+        if (!meshFragShader) {
+            Log::EngineError("Failed to load mesh fragment shader.");
+        }
+
+        VkShaderModule meshVertexShader;
+        CreateShaderModule(renderer->GetDevice().GetDevice(), "Resources/Shaders/mesh.vert",
+                           VulkanUtils::ShaderType::Vertex, &meshVertexShader);
+        if (!meshVertexShader) {
+            Log::EngineError("Failed to load mesh vertex shader.");
+        }
+
+        VkPushConstantRange matrixRange;
+        matrixRange.offset = 0;
+        matrixRange.size = sizeof(GPUDrawPushConstants);
+        matrixRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+        DescriptorLayoutBuilder layoutBuilder;
+        layoutBuilder.AddBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+        layoutBuilder.AddBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
+        layoutBuilder.AddBinding(2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
+
+        MaterialLayout = layoutBuilder.Build(renderer->GetDevice().GetDevice(),
+                                             VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT);
+
+        renderer->AddDeletion([this, renderer]() {
+            vkDestroyDescriptorSetLayout(renderer->GetDevice().GetDevice(), MaterialLayout, nullptr);
+        });
+        
+        const VkDescriptorSetLayout layouts[] = {renderer->GpuSceneDataLayout, MaterialLayout};
+
+        VkPipelineLayoutCreateInfo meshLayoutInfo = VulkanInit::PipelineLayoutCreateInfo();
+        meshLayoutInfo.setLayoutCount = 2;
+        meshLayoutInfo.pSetLayouts = layouts;
+        meshLayoutInfo.pushConstantRangeCount = 1;
+        meshLayoutInfo.pPushConstantRanges = &matrixRange;
+
+        VkPipelineLayout newLayout;
+        VK_CHECK(vkCreatePipelineLayout(renderer->GetDevice().GetDevice(), &meshLayoutInfo, nullptr, &newLayout))
+
+        OpaquePipeline.PipelineLayout = newLayout;
+        TransparentPipeline.PipelineLayout = newLayout;
+
+        // Configure the pipelines.
+        VulkanUtils::PipelineBuilder pipelineBuilder;
+        pipelineBuilder.SetShaders(meshVertexShader, meshFragShader);
+        pipelineBuilder.SetInputTopology(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
+        pipelineBuilder.SetPolygonMode(VK_POLYGON_MODE_FILL);
+        pipelineBuilder.SetCullMode(VK_CULL_MODE_BACK_BIT, VK_FRONT_FACE_COUNTER_CLOCKWISE);
+        pipelineBuilder.SetMultisamplingNone();
+        pipelineBuilder.DisableBlending();
+        pipelineBuilder.EnableDepthTest(true, VK_COMPARE_OP_GREATER_OR_EQUAL);
+
+        // Render format
+        pipelineBuilder.SetColorAttachmentFormat(renderer->GetDrawImageFormat());
+        pipelineBuilder.SetDepthFormat(renderer->GetDepthImageFormat());
+
+        pipelineBuilder.SetPipelineLayout(newLayout);
+
+        // Build pipeline
+        OpaquePipeline.Pipeline = pipelineBuilder.BuildPipeline(renderer->GetDevice().GetDevice());
+
+        // Create the transparent variant.
+        pipelineBuilder.EnableAdditiveBlending();
+
+        pipelineBuilder.EnableDepthTest(false, VK_COMPARE_OP_GREATER_OR_EQUAL);
+
+        TransparentPipeline.Pipeline = pipelineBuilder.BuildPipeline(renderer->GetDevice().GetDevice());
+
+        vkDestroyShaderModule(renderer->GetDevice().GetDevice(), meshFragShader, nullptr);
+        vkDestroyShaderModule(renderer->GetDevice().GetDevice(), meshVertexShader, nullptr);
+
+        renderer->AddDeletion([this, renderer, newLayout]() {
+            vkDestroyPipelineLayout(renderer->GetDevice().GetDevice(), newLayout, nullptr);
+            vkDestroyPipeline(renderer->GetDevice().GetDevice(), OpaquePipeline.Pipeline, nullptr);
+            vkDestroyPipeline(renderer->GetDevice().GetDevice(), TransparentPipeline.Pipeline, nullptr);
+        });
+    }
+
+    void GLTFMetallic_Roughness::ClearResources(VkDevice device) {
+    }
+
+    MaterialInstance GLTFMetallic_Roughness::WriteMaterial(const VkDevice device, const MaterialPass pass,
+                                                           const MaterialResources& resources,
+                                                           DescriptorAllocatorGrowable& descriptorAllocator) {
+        MaterialInstance matData;
+        matData.PassType = pass;
+
+        matData.Pipeline = &OpaquePipeline;
+        if (pass == MaterialPass::Transparent) {
+            matData.Pipeline = &TransparentPipeline;
+        }
+
+        matData.MaterialSet = descriptorAllocator.Allocate(device, MaterialLayout);
+
+        Writer.Clear();
+
+        Writer.WriteBuffer(0, resources.DataBuffer, sizeof(MaterialConstants), resources.DataBufferOffset,
+                           VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+        Writer.WriteImage(1, resources.ColorImage.ImageView, resources.ColorSampler,
+                          VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
+        Writer.WriteImage(2, resources.MetalRoughnessImage.ImageView, resources.MetalRoughnessSampler,
+                          VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
+
+        Writer.UpdateSet(device, matData.MaterialSet);
+
+        return matData;
+    }
+
+    void MeshNode::Draw(const glm::mat4& topMatrix, DrawContext& context) {
+        glm::mat4 nodeMatrix = topMatrix * WorldTransform;
+
+        for (auto& s : Mesh->Surfaces) {
+            RenderObject def;
+            def.IndexCount = s.Count;
+            def.FirstIndex = s.StartIndex;
+            def.IndexBuffer = Mesh->MeshBuffers.IndexBuffer.Buffer;
+            def.Material = &s.Material->Data;
+
+            def.Transform = nodeMatrix;
+            def.VertexBufferAddress = Mesh->MeshBuffers.VertexBufferAddress;
+
+            context.OpaqueSurfaces.push_back(def);
+        }
+
+        // Recurse down.
+        Node::Draw(topMatrix, context);
+    }
 
     VulkanRenderer::VulkanRenderer(const Window& window, const DebugLevel& debugLevel) {
         InitializeVulkan(window, debugLevel);
@@ -116,6 +247,10 @@ namespace Flashlight::VulkanRenderer {
         });
     }
 
+    void VulkanRenderer::AddDeletion(std::function<void()>&& deletor) {
+        m_MainDeletionQueue.PushFunction(std::move(deletor));
+    }
+    
     void VulkanRenderer::CreateUi() {
         ImGui_ImplVulkan_NewFrame();
         ImGui_ImplSDL2_NewFrame();
@@ -142,16 +277,26 @@ namespace Flashlight::VulkanRenderer {
         }
         ImGui::End();
 
-        if (ImGui::Begin("Selected mesh")) {
-            ImGui::Text("Selected mesh: %s", m_TestMeshes[m_CurrentMeshIndex]->Name.c_str());
-
-            ImGui::SliderInt("Mesh Index", &m_CurrentMeshIndex, 0, static_cast<i32>(m_TestMeshes.size() - 1));
-        }
-        ImGui::End();
-
         ImGui::Render();
     }
 
+    void VulkanRenderer::UpdateScene(const Window& window) {
+        MainDrawContext.OpaqueSurfaces.clear();
+
+        LoadedNodes["Suzanne"]->Draw(glm::mat4{1.f}, MainDrawContext);
+
+        SceneData.View = glm::translate(glm::vec3(0, 0, -5));
+        SceneData.Projection = glm::perspective(glm::radians(70.f),
+                                                static_cast<f32>(window.GetWidth()) / static_cast<f32>(window.
+                                                    GetHeight()), 0.1f, 10000.0f);
+
+        SceneData.Projection[1][1] *= -1;
+        SceneData.ViewProjection = SceneData.Projection * SceneData.View;
+
+        SceneData.AmbientColor = glm::vec4(.1f);
+        SceneData.SunlightColor = glm::vec4(1.f);
+        SceneData.SunlightDirection = glm::vec4(0, 1, 0.5f, 1.0f);
+    }
 
     void VulkanRenderer::Draw(Window& window) {
         m_DrawExtent.width = static_cast<u32>(static_cast<f32>(std::min(
@@ -159,6 +304,8 @@ namespace Flashlight::VulkanRenderer {
         m_DrawExtent.height = static_cast<u32>(static_cast<f32>(std::min(
             m_Swapchain->GetSwapchainExtent().height, m_DrawImage.ImageExtent.height)) * m_RenderScale);
 
+        UpdateScene(window);
+        
         auto& frame = GetCurrentFrame();
 
         VkResult lastVkError = m_Swapchain->AcquireNextImage(*m_Device, frame);
@@ -304,7 +451,6 @@ namespace Flashlight::VulkanRenderer {
             vmaDestroyAllocator(m_Allocator);
         });
     }
-
 
     void VulkanRenderer::InitializeSwapchain(const Window& window) {
         m_Swapchain = std::make_unique<VulkanWrapper::Swapchain>(window, *m_Instance, *m_Device);
@@ -465,11 +611,11 @@ namespace Flashlight::VulkanRenderer {
 
     void VulkanRenderer::InitializeDescriptors() {
         // Create a descriptor pool that will hold 10 sets with 1 image each.
-        std::vector<DescriptorAllocator::PoolSizeRatio> sizes = {
+        std::vector<DescriptorAllocatorGrowable::PoolSizeRatio> sizes = {
             {VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1}
         };
 
-        m_GlobalDescriptorAllocator.InitPool(m_Device->GetDevice(), 10, sizes);
+        m_GlobalDescriptorAllocator.Initialize(m_Device->GetDevice(), 10, sizes);
 
         // Make the descriptor set layout for the compute draw.
         {
@@ -489,7 +635,7 @@ namespace Flashlight::VulkanRenderer {
 
         // Make sure both the descriptor allocator and the new layout get cleaned up properly.
         m_MainDeletionQueue.PushFunction([&]() {
-            m_GlobalDescriptorAllocator.DestroyPool(m_Device->GetDevice());
+            m_GlobalDescriptorAllocator.DestroyPools(m_Device->GetDevice());
 
             vkDestroyDescriptorSetLayout(m_Device->GetDevice(), m_DrawImageDescriptorLayout, nullptr);
         });
@@ -519,11 +665,11 @@ namespace Flashlight::VulkanRenderer {
             // Create scene data descriptor layout.
             DescriptorLayoutBuilder builder;
             builder.AddBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
-            m_GpuSceneDataLayout = builder.Build(m_Device->GetDevice(),
-                                                 VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT);
+            GpuSceneDataLayout = builder.Build(m_Device->GetDevice(),
+                                               VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT);
 
             m_MainDeletionQueue.PushFunction([this]() {
-                vkDestroyDescriptorSetLayout(m_Device->GetDevice(), m_GpuSceneDataLayout, nullptr);
+                vkDestroyDescriptorSetLayout(m_Device->GetDevice(), GpuSceneDataLayout, nullptr);
             });
         }
 
@@ -541,6 +687,8 @@ namespace Flashlight::VulkanRenderer {
     void VulkanRenderer::InitializePipelines() {
         InitializeComputePipelines();
         InitializeMeshPipeline();
+
+        m_MetalRoughMaterial.BuildPipelines(this);
     }
 
     void VulkanRenderer::InitializeComputePipelines() {
@@ -836,6 +984,45 @@ namespace Flashlight::VulkanRenderer {
             VulkanUtils::DestroyImage(m_Allocator, m_Device->GetDevice(), m_BlackImage);
             VulkanUtils::DestroyImage(m_Allocator, m_Device->GetDevice(), m_ErrorCheckerboardImage);
         });
+
+        GLTFMetallic_Roughness::MaterialResources materialResources;
+        materialResources.ColorImage = m_WhiteImage;
+        materialResources.ColorSampler = m_DefaultSamplerLinear;
+        materialResources.MetalRoughnessImage = m_WhiteImage;
+        materialResources.MetalRoughnessSampler = m_DefaultSamplerLinear;
+
+        const AllocatedBuffer materialConstants = VulkanUtils::CreateBuffer(
+            m_Allocator, sizeof(GLTFMetallic_Roughness::MaterialConstants), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+            VMA_MEMORY_USAGE_CPU_TO_GPU);
+
+        GLTFMetallic_Roughness::MaterialConstants* sceneUniformData = static_cast<
+            GLTFMetallic_Roughness::MaterialConstants*>(materialConstants.Allocation->GetMappedData());
+        sceneUniformData->ColorFactors = glm::vec4(1, 1, 1, 1);
+        sceneUniformData->MetalRoughFactors = glm::vec4(1, 0.5, 0, 0);
+
+        m_MainDeletionQueue.PushFunction([this, materialConstants]() {
+            VulkanUtils::DestroyBuffer(m_Allocator, materialConstants);
+        });
+
+        materialResources.DataBuffer = materialConstants.Buffer;
+        materialResources.DataBufferOffset = 0;
+
+        m_DefaultData = m_MetalRoughMaterial.WriteMaterial(m_Device->GetDevice(), MaterialPass::MainColor,
+                                                           materialResources, m_GlobalDescriptorAllocator);
+
+        for (auto& m : m_TestMeshes) {
+            std::shared_ptr<MeshNode> newNode = std::make_shared<MeshNode>();
+            newNode->Mesh = m;
+
+            newNode->LocalTransform = glm::mat4{1.f};
+            newNode->WorldTransform = glm::mat4{1.f};
+
+            for (auto& s : newNode->Mesh->Surfaces) {
+                s.Material = std::make_shared<GLTFMaterial>(m_DefaultData);
+            }
+
+            LoadedNodes[m->Name] = std::move(newNode);
+        }
     }
 
     void VulkanRenderer::DrawBackground(const VkCommandBuffer commandBuffer) const {
@@ -878,12 +1065,12 @@ namespace Flashlight::VulkanRenderer {
         });
 
         // Write the buffer.
-        GPUSceneData* sceneUniformData = static_cast<GPUSceneData*>(gpuSceneDataBuffer.Allocation->GetMappedData());
-        *sceneUniformData = m_SceneData;
+        auto sceneUniformData = static_cast<GPUSceneData*>(gpuSceneDataBuffer.Allocation->GetMappedData());
+        *sceneUniformData = SceneData;
 
         // Create a descriptor set that binds that buffer and update it.
         VkDescriptorSet globalDescriptor = frame.FrameDescriptors.Allocate(
-            m_Device->GetDevice(), m_GpuSceneDataLayout);
+            m_Device->GetDevice(), GpuSceneDataLayout);
         {
             DescriptorWriter writer;
             writer.WriteBuffer(0, gpuSceneDataBuffer.Buffer, sizeof(GPUSceneData), 0,
@@ -891,61 +1078,42 @@ namespace Flashlight::VulkanRenderer {
             writer.UpdateSet(m_Device->GetDevice(), globalDescriptor);
         }
 
-        VkViewport viewport;
+        VkViewport viewport = {};
         viewport.x = 0;
         viewport.y = 0;
         viewport.width = static_cast<f32>(m_DrawExtent.width);
         viewport.height = static_cast<f32>(m_DrawExtent.height);
-        viewport.minDepth = 0.0f;
-        viewport.maxDepth = 1.0f;
+        viewport.minDepth = 0.f;
+        viewport.maxDepth = 1.f;
 
         vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
 
-        VkRect2D scissor;
+        VkRect2D scissor = {};
         scissor.offset.x = 0;
         scissor.offset.y = 0;
-        scissor.extent.width = m_DrawExtent.width;
-        scissor.extent.height = m_DrawExtent.height;
+        scissor.extent.width = static_cast<u32>(viewport.width);
+        scissor.extent.height = static_cast<u32>(viewport.height);
 
         vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
-        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_MeshPipeline);
+        for (const RenderObject& draw : MainDrawContext.OpaqueSurfaces) {
+            vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, draw.Material->Pipeline->Pipeline);
+            vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                    draw.Material->Pipeline->PipelineLayout, 0, 1, &globalDescriptor, 0, nullptr);
+            vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                    draw.Material->Pipeline->PipelineLayout, 1, 1, &draw.Material->MaterialSet, 0,
+                                    nullptr);
 
-        //bind a texture
-        VkDescriptorSet imageSet = GetCurrentFrame().FrameDescriptors.Allocate(
-            m_Device->GetDevice(), m_SingleImageDescriptorLayout);
-        {
-            DescriptorWriter writer;
-            writer.WriteImage(0, m_ErrorCheckerboardImage.ImageView, m_DefaultSamplerNearest,
-                              VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
+            vkCmdBindIndexBuffer(commandBuffer, draw.IndexBuffer, 0, VK_INDEX_TYPE_UINT32);
 
-            writer.UpdateSet(m_Device->GetDevice(), imageSet);
+            GPUDrawPushConstants pushConstants;
+            pushConstants.VertexBuffer = draw.VertexBufferAddress;
+            pushConstants.WorldMatrix = draw.Transform;
+            vkCmdPushConstants(commandBuffer, draw.Material->Pipeline->PipelineLayout, VK_SHADER_STAGE_VERTEX_BIT,
+                               0, sizeof(GPUDrawPushConstants), &pushConstants);
+
+            vkCmdDrawIndexed(commandBuffer, draw.IndexCount, 1, draw.FirstIndex, 0, 0);
         }
-
-        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_MeshPipelineLayout, 0, 1,
-                                &imageSet, 0, nullptr);
-
-        const auto view = glm::translate(glm::vec3{0, 0, -5});
-        // camera projection
-        glm::mat4 projection = glm::perspective(glm::radians(70.f),
-                                                static_cast<f32>(m_DrawExtent.width) / static_cast<f32>(m_DrawExtent
-                                                    .height), 0.1f, 10000.0f);
-
-        // invert the Y direction on projection matrix so that we are more similar
-        // to opengl and gltf axis
-        projection[1][1] *= -1;
-
-        GPUDrawPushConstants pushConstants;
-        pushConstants.WorldMatrix = projection * view;
-        pushConstants.VertexBuffer = m_TestMeshes[m_CurrentMeshIndex]->MeshBuffers.VertexBufferAddress;
-
-        vkCmdPushConstants(commandBuffer, m_MeshPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0,
-                           sizeof(GPUDrawPushConstants), &pushConstants);
-        vkCmdBindIndexBuffer(commandBuffer, m_TestMeshes[m_CurrentMeshIndex]->MeshBuffers.IndexBuffer.Buffer, 0,
-                             VK_INDEX_TYPE_UINT32);
-
-        vkCmdDrawIndexed(commandBuffer, m_TestMeshes[m_CurrentMeshIndex]->Surfaces[0].Count, 1,
-                         m_TestMeshes[m_CurrentMeshIndex]->Surfaces[0].StartIndex, 0, 0);
 
         vkCmdEndRendering(commandBuffer);
     }
