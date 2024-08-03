@@ -89,10 +89,18 @@ namespace Flashlight::VulkanRenderer {
         VkPipelineLayout m_MeshPipelineLayout;
         VkPipeline m_MeshPipeline;
 
-        GPUMeshBuffers m_RectangleMesh;
+        VkDescriptorSetLayout m_SingleImageDescriptorLayout;
 
         std::vector<std::shared_ptr<MeshAsset>> m_TestMeshes;
         i32 m_CurrentMeshIndex{0};
+        
+        AllocatedImage m_WhiteImage;
+        AllocatedImage m_BlackImage;
+        AllocatedImage m_GrayImage;
+        AllocatedImage m_ErrorCheckerboardImage;
+
+        VkSampler m_DefaultSamplerLinear;
+        VkSampler m_DefaultSamplerNearest;
 
     public:
         VulkanRenderer(const Window& window, const DebugLevel& debugLevel);
@@ -108,6 +116,8 @@ namespace Flashlight::VulkanRenderer {
         void PlanMeshDeletion(GPUMeshBuffers mesh);
         void CreateUi();
         void Draw(Window& window);
+
+        void ImmediateSubmit(const std::function<void(VkCommandBuffer commandBuffer)>& function) const;
 
     private:
         void InitializeVulkan(const Window& window, const DebugLevel& debugLevel);
@@ -130,8 +140,6 @@ namespace Flashlight::VulkanRenderer {
         [[nodiscard]] FrameData& GetCurrentFrame() {
             return m_Frames[m_FrameNumber % g_FrameOverlap];
         }
-
-        void ImmediateSubmit(const std::function<void(VkCommandBuffer commandBuffer)>& function) const;
 
         void RecreateSwapchain(Window& window);
     };

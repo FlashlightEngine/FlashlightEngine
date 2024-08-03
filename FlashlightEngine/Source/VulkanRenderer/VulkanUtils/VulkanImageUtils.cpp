@@ -9,6 +9,8 @@
 #include <FlashlightEngine/VulkanRenderer/VulkanUtils/VulkanImageUtils.hpp>
 
 #include <FlashlightEngine/VulkanRenderer/VulkanInitializers.hpp>
+#include <FlashlightEngine/VulkanRenderer/VulkanRenderer.hpp>
+#include <FlashlightEngine/VulkanRenderer/VulkanUtils/VulkanBufferUtils.hpp>
 
 namespace Flashlight::VulkanRenderer::VulkanUtils {
     void TransitionImage(const VkCommandBuffer commandBuffer, const VkImage image,
@@ -76,4 +78,83 @@ namespace Flashlight::VulkanRenderer::VulkanUtils {
         vkCmdBlitImage2(commandBuffer, &blitInfo);
     }
 
+    AllocatedImage CreateImage(const VmaAllocator allocator, const VkDevice device, const VkExtent3D size,
+                               const VkFormat format, const VkImageUsageFlags usage, const bool mipmapped) {
+        AllocatedImage newImage;
+        newImage.ImageFormat = format;
+        newImage.ImageExtent = size;
+
+        VkImageCreateInfo imageInfo = VulkanInit::ImageCreateInfo(format, usage, size);
+        if (mipmapped) {
+            imageInfo.mipLevels = static_cast<u32>(std::floor(std::log2(std::max(size.width, size.height)))) + 1;
+        }
+
+        // Always allocate images on dedicated GPU memory.
+        VmaAllocationCreateInfo allocationInfo{};
+        allocationInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+        allocationInfo.requiredFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+
+        VK_CHECK(
+            vmaCreateImage(allocator, &imageInfo, &allocationInfo, &newImage.Image, &newImage.Allocation, nullptr))
+
+        // If the format is a depth format, we will need to have it use the correct aspect flag.
+        VkImageAspectFlags aspectFlag = VK_IMAGE_ASPECT_COLOR_BIT;
+        if (format == VK_FORMAT_D32_SFLOAT) {
+            aspectFlag = VK_IMAGE_ASPECT_DEPTH_BIT;
+        }
+
+        // Build an image view for the image.
+        VkImageViewCreateInfo imageViewInfo = VulkanInit::ImageViewCreateInfo(format, newImage.Image, aspectFlag);
+        imageViewInfo.subresourceRange.levelCount = imageInfo.mipLevels;
+
+        VK_CHECK(vkCreateImageView(device, &imageViewInfo, nullptr, &newImage.ImageView))
+
+        return newImage;
+    }
+
+    AllocatedImage CreateImage(const VmaAllocator allocator, const VkDevice device, const VulkanRenderer* renderer,
+                               const void* data, const VkExtent3D size, const VkFormat format,
+                               const VkImageUsageFlags usage, const bool mipmapped) {
+        const std::size_t dataSize = static_cast<std::size_t>(size.depth * size.width * size.height) * 4;
+        const AllocatedBuffer uploadBuffer = CreateBuffer(allocator, dataSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                                                          VMA_MEMORY_USAGE_CPU_TO_GPU);
+
+        memcpy(uploadBuffer.Info.pMappedData, data, dataSize);
+
+        const AllocatedImage newImage = CreateImage(allocator, device, size, format,
+                                                    usage | VK_IMAGE_USAGE_TRANSFER_DST_BIT |
+                                                    VK_IMAGE_USAGE_TRANSFER_SRC_BIT, mipmapped);
+
+        renderer->ImmediateSubmit([&](VkCommandBuffer commandBuffer) {
+            TransitionImage(commandBuffer, newImage.Image, VK_IMAGE_LAYOUT_UNDEFINED,
+                            VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+
+            VkBufferImageCopy copyRegion{};
+            copyRegion.bufferOffset = 0;
+            copyRegion.bufferRowLength = 0;
+            copyRegion.bufferImageHeight = 0;
+
+            copyRegion.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            copyRegion.imageSubresource.mipLevel = 0;
+            copyRegion.imageSubresource.baseArrayLayer = 0;
+            copyRegion.imageSubresource.layerCount = 1;
+            copyRegion.imageExtent = size;
+
+            // Copy the buffer into the image.
+            vkCmdCopyBufferToImage(commandBuffer, uploadBuffer.Buffer, newImage.Image,
+                                   VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &copyRegion);
+
+            TransitionImage(commandBuffer, newImage.Image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                            VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        });
+
+        DestroyBuffer(allocator, uploadBuffer);
+
+        return newImage;
+    }
+
+    void DestroyImage(const VmaAllocator allocator, const VkDevice device, const AllocatedImage& image) {
+        vkDestroyImageView(device, image.ImageView, nullptr);
+        vmaDestroyImage(allocator, image.Image, image.Allocation);
+    }
 }

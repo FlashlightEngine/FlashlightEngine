@@ -44,15 +44,16 @@ namespace Flashlight::VulkanRenderer {
 
         std::vector<std::shared_ptr<MeshAsset>> meshes;
 
-        // Use the same vectors for all meshes so that the memory isn't reallocated too often.
-        std::vector<u32> indices;
+        // use the same vectors for all meshes so that the memory doesn't reallocate as
+        // often
+        std::vector<uint32_t> indices;
         std::vector<Vertex> vertices;
-
         for (fastgltf::Mesh& mesh : gltf.meshes) {
             MeshAsset newMesh;
+
             newMesh.Name = mesh.name;
 
-            // Clear the mesh arrays for each mesh so that they don't get merged by error.
+            // clear the mesh arrays each mesh, we don't want to merge them by error
             indices.clear();
             vertices.clear();
 
@@ -61,79 +62,78 @@ namespace Flashlight::VulkanRenderer {
                 newSurface.StartIndex = static_cast<u32>(indices.size());
                 newSurface.Count = static_cast<u32>(gltf.accessors[primitive.indicesAccessor.value()].count);
 
-                size initialVertex = vertices.size();
+                size_t initialVertex = vertices.size();
 
-                // Load indices
+                // load indexes
                 {
                     fastgltf::Accessor& indexAccessor = gltf.accessors[primitive.indicesAccessor.value()];
                     indices.reserve(indices.size() + indexAccessor.count);
 
-                    fastgltf::iterateAccessor<u32>(gltf, indexAccessor, [&](const u32 index) {
-                        indices.push_back(index + static_cast<u32>(initialVertex));
-                    });
+                    fastgltf::iterateAccessor<std::uint32_t>(gltf, indexAccessor,
+                                                             [&](u32 idx) {
+                                                                 indices.push_back(idx + initialVertex);
+                                                             });
                 }
 
-                // Load vertex positions.
+                // load vertex positions
                 {
                     fastgltf::Accessor& posAccessor = gltf.accessors[primitive.findAttribute("POSITION")->second];
                     vertices.resize(vertices.size() + posAccessor.count);
 
                     fastgltf::iterateAccessorWithIndex<glm::vec3>(gltf, posAccessor,
-                                                                  [&](const glm::vec3 pos, const size index) {
+                                                                  [&](glm::vec3 v, size_t index) {
                                                                       Vertex newVertex;
-                                                                      newVertex.Position = pos;
+                                                                      newVertex.Position = v;
                                                                       newVertex.Normal = {1, 0, 0};
-                                                                      newVertex.Color = glm::vec4(1.f);
+                                                                      newVertex.Color = glm::vec4{1.f};
                                                                       newVertex.UvX = 0;
                                                                       newVertex.UvY = 0;
                                                                       vertices[initialVertex + index] = newVertex;
                                                                   });
                 }
 
-                // Load vertex normals.
+                // load vertex normals
                 auto normals = primitive.findAttribute("NORMAL");
                 if (normals != primitive.attributes.end()) {
-                    fastgltf::iterateAccessorWithIndex<glm::vec3>(gltf, gltf.accessors[normals->second],
-                                                                  [&](const glm::vec3 normal, const size index) {
-                                                                      vertices[initialVertex + index].Normal =
-                                                                          normal;
+                    fastgltf::iterateAccessorWithIndex<glm::vec3>(gltf, gltf.accessors[(*normals).second],
+                                                                  [&](glm::vec3 v, size_t index) {
+                                                                      vertices[initialVertex + index].Normal = v;
                                                                   });
                 }
 
-                // Load UVs
+                // load UVs
                 auto uv = primitive.findAttribute("TEXCOORD_0");
                 if (uv != primitive.attributes.end()) {
-                    fastgltf::iterateAccessorWithIndex<glm::vec2>(gltf, gltf.accessors[uv->second],
-                                                                  [&](const glm::vec2 vec, const size index) {
-                                                                      vertices[initialVertex + index].UvX = vec.x;
-                                                                      vertices[initialVertex + index].UvY = vec.y;
+                    fastgltf::iterateAccessorWithIndex<glm::vec2>(gltf, gltf.accessors[(*uv).second],
+                                                                  [&](glm::vec2 v, size_t index) {
+                                                                      vertices[initialVertex + index].UvX = v.x;
+                                                                      vertices[initialVertex + index].UvY = v.y;
                                                                   });
                 }
 
-                // Load vertex colors.
+                // load vertex colors
                 auto colors = primitive.findAttribute("COLOR_0");
                 if (colors != primitive.attributes.end()) {
-                    fastgltf::iterateAccessorWithIndex<glm::vec4>(gltf, gltf.accessors[colors->second],
-                                                                  [&](const glm::vec4 color, const size index) {
-                                                                      vertices[initialVertex + index].Color = color;
+                    fastgltf::iterateAccessorWithIndex<glm::vec4>(gltf, gltf.accessors[(*colors).second],
+                                                                  [&](glm::vec4 v, size_t index) {
+                                                                      vertices[initialVertex + index].Color = v;
                                                                   });
                 }
                 newMesh.Surfaces.push_back(newSurface);
             }
 
-            // Display the vertex normals
-            if (true) {
-                for (Vertex& vertex : vertices) {
-                    vertex.Color = glm::vec4(vertex.Normal, 0.5f);
+            // display the vertex normals
+            constexpr bool overrideColors = true;
+            if (overrideColors) {
+                for (Vertex& vtx : vertices) {
+                    vtx.Color = glm::vec4(vtx.Normal, 1.f);
                 }
             }
             newMesh.MeshBuffers = renderer->UploadMesh(indices, vertices);
 
-            meshes.emplace_back(std::make_shared<MeshAsset>(std::move(newMesh)));
-        }
+            renderer->PlanMeshDeletion(newMesh.MeshBuffers);
 
-        for (auto& mesh : meshes) {
-            renderer->PlanMeshDeletion(mesh->MeshBuffers);
+            meshes.emplace_back(std::make_shared<MeshAsset>(std::move(newMesh)));
         }
 
         return meshes;

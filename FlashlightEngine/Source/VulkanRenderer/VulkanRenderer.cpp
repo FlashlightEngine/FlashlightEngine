@@ -254,6 +254,31 @@ namespace Flashlight::VulkanRenderer {
         m_FrameNumber++;
     }
 
+    void VulkanRenderer::ImmediateSubmit(const std::function<void(VkCommandBuffer commandBuffer)>& function) const {
+        VK_CHECK(vkResetFences(m_Device->GetDevice(), 1, &m_ImmediateFence))
+        VK_CHECK(vkResetCommandBuffer(m_ImmediateCommandBuffer, 0))
+
+        const VkCommandBuffer commandBuffer = m_ImmediateCommandBuffer;
+
+        const VkCommandBufferBeginInfo cmdBeginInfo = VulkanInit::CommandBufferBeginInfo(
+            VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
+
+        VK_CHECK(vkBeginCommandBuffer(commandBuffer, &cmdBeginInfo))
+
+        function(commandBuffer);
+
+        VK_CHECK(vkEndCommandBuffer(commandBuffer))
+
+        const VkCommandBufferSubmitInfo cmdInfo = VulkanInit::CommandBufferSubmitInfo(commandBuffer);
+        const VkSubmitInfo2 submit = VulkanInit::SubmitInfo(&cmdInfo, nullptr, nullptr);
+
+        // Submit command buffer to the queue and execute it.
+        // m_RenderFence will now block until the graphics command finish executing.
+        VK_CHECK(vkQueueSubmit2(m_Device->GetGraphicsQueue(), 1, &submit, m_ImmediateFence))
+
+        VK_CHECK(vkWaitForFences(m_Device->GetDevice(), 1, &m_ImmediateFence, true, 9999999999))
+    }
+
     void VulkanRenderer::InitializeVulkan(const Window& window, const DebugLevel& debugLevel) {
         m_Instance = std::make_unique<VulkanWrapper::Instance>(window, debugLevel);
         m_Device = std::make_unique<VulkanWrapper::Device>(*m_Instance);
@@ -483,22 +508,34 @@ namespace Flashlight::VulkanRenderer {
             frame.FrameDescriptors.Initialize(m_Device->GetDevice(), 1000, frameSizes);
         }
 
-        
+
         m_MainDeletionQueue.PushFunction([this]() {
             for (auto& frame : m_Frames) {
                 frame.FrameDescriptors.DestroyPools(m_Device->GetDevice());
             }
         });
 
-        // Create scene data descriptor layout.
-        DescriptorLayoutBuilder builder;
-        builder.AddBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
-        m_GpuSceneDataLayout = builder.Build(m_Device->GetDevice(),
-                                             VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT);
+        {
+            // Create scene data descriptor layout.
+            DescriptorLayoutBuilder builder;
+            builder.AddBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+            m_GpuSceneDataLayout = builder.Build(m_Device->GetDevice(),
+                                                 VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT);
 
-        m_MainDeletionQueue.PushFunction([this]() {
-            vkDestroyDescriptorSetLayout(m_Device->GetDevice(), m_GpuSceneDataLayout, nullptr);
-        });
+            m_MainDeletionQueue.PushFunction([this]() {
+                vkDestroyDescriptorSetLayout(m_Device->GetDevice(), m_GpuSceneDataLayout, nullptr);
+            });
+        }
+
+        {
+            DescriptorLayoutBuilder builder;
+            builder.AddBinding(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
+            m_SingleImageDescriptorLayout = builder.Build(m_Device->GetDevice(), VK_SHADER_STAGE_FRAGMENT_BIT);
+
+            m_MainDeletionQueue.PushFunction([this]() {
+                vkDestroyDescriptorSetLayout(m_Device->GetDevice(), m_SingleImageDescriptorLayout, nullptr);
+            });
+        }
     }
 
     void VulkanRenderer::InitializePipelines() {
@@ -627,7 +664,7 @@ namespace Flashlight::VulkanRenderer {
         }
 
         VkShaderModule meshFragmentShader;
-        VulkanUtils::CreateShaderModule(m_Device->GetDevice(), "Resources/Shaders/basic.frag",
+        VulkanUtils::CreateShaderModule(m_Device->GetDevice(), "Resources/Shaders/tex_image.frag",
                                         VulkanUtils::ShaderType::Fragment, &meshFragmentShader);
         if (!meshFragmentShader) {
             Log::EngineFatal({0x02, 0x03}, "Failed to create triangle fragment shader.");
@@ -642,6 +679,8 @@ namespace Flashlight::VulkanRenderer {
 
         pipelineLayoutInfo.pushConstantRangeCount = 1;
         pipelineLayoutInfo.pPushConstantRanges = &bufferRange;
+        pipelineLayoutInfo.setLayoutCount = 1;
+        pipelineLayoutInfo.pSetLayouts = &m_SingleImageDescriptorLayout;
 
         VK_CHECK(
             vkCreatePipelineLayout(m_Device->GetDevice(), &pipelineLayoutInfo, nullptr, &m_MeshPipelineLayout))
@@ -652,9 +691,9 @@ namespace Flashlight::VulkanRenderer {
         pipelineBuilder.SetShaders(meshVertexShader, meshFragmentShader);
         pipelineBuilder.SetInputTopology(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
         pipelineBuilder.SetPolygonMode(VK_POLYGON_MODE_FILL);
-        pipelineBuilder.SetCullMode(VK_CULL_MODE_NONE, VK_FRONT_FACE_CLOCKWISE);
+        pipelineBuilder.SetCullMode(VK_CULL_MODE_BACK_BIT, VK_FRONT_FACE_COUNTER_CLOCKWISE);
         pipelineBuilder.SetMultisamplingNone();
-        pipelineBuilder.EnableBlendingAlphaBlend();
+        pipelineBuilder.DisableBlending();
         pipelineBuilder.EnableDepthTest(true, VK_COMPARE_OP_GREATER_OR_EQUAL);
 
         pipelineBuilder.SetColorAttachmentFormat(m_DrawImage.ImageFormat);
@@ -741,38 +780,62 @@ namespace Flashlight::VulkanRenderer {
     }
 
     void VulkanRenderer::InitializeDefaultData() {
-        std::array<Vertex, 4> rectangleVertices;
-
-        rectangleVertices[0].Position = {0.5, -0.5, 0};
-        rectangleVertices[1].Position = {0.5, 0.5, 0};
-        rectangleVertices[2].Position = {-0.5, -0.5, 0};
-        rectangleVertices[3].Position = {-0.5, 0.5, 0};
-
-        rectangleVertices[0].Color = {0, 0, 0, 0.5};
-        rectangleVertices[1].Color = {0.5, 0.5, 0.5, 0.5};
-        rectangleVertices[2].Color = {1, 0, 0, 0.5};
-        rectangleVertices[3].Color = {0, 1, 0, 0.5};
-
-        std::array<uint32_t, 6> rectangleIndices;
-
-        rectangleIndices[0] = 0;
-        rectangleIndices[1] = 1;
-        rectangleIndices[2] = 2;
-
-        rectangleIndices[3] = 2;
-        rectangleIndices[4] = 1;
-        rectangleIndices[5] = 3;
-
-        m_RectangleMesh = UploadMesh(rectangleIndices, rectangleVertices);
-
-        PlanMeshDeletion(m_RectangleMesh);
-
         if (const auto loaded = LoadGltfMeshes(this, "Resources/Models/basicmesh.glb");
             loaded.has_value()) {
             m_TestMeshes = loaded.value();
         } else {
             Log::EngineError("Failed to load model.");
         }
+
+        // 3 default textures, white, gray, black. 1 pixel each.
+        const u32 white = glm::packUnorm4x8(glm::vec4(1, 1, 1, 1));
+        m_WhiteImage = VulkanUtils::CreateImage(m_Allocator, m_Device->GetDevice(), this,
+                                                &white, VkExtent3D{1, 1, 1},
+                                                VK_FORMAT_B8G8R8A8_UNORM, VK_IMAGE_USAGE_SAMPLED_BIT);
+
+        const u32 gray = glm::packUnorm4x8(glm::vec4(0.66f, 0.66f, 0.66f, 1));
+        m_GrayImage = VulkanUtils::CreateImage(m_Allocator, m_Device->GetDevice(), this,
+                                               &gray, VkExtent3D{1, 1, 1},
+                                               VK_FORMAT_B8G8R8A8_UNORM, VK_IMAGE_USAGE_SAMPLED_BIT);
+
+        const u32 black = glm::packUnorm4x8(glm::vec4(0, 0, 0, 1));
+        m_BlackImage = VulkanUtils::CreateImage(m_Allocator, m_Device->GetDevice(), this,
+                                                &black, VkExtent3D{1, 1, 1},
+                                                VK_FORMAT_B8G8R8A8_UNORM, VK_IMAGE_USAGE_SAMPLED_BIT);
+
+        // Checkerboard image.
+        const u32 magenta = glm::packUnorm4x8(glm::vec4(1, 0, 1, 1));
+        std::array<u32, static_cast<size_t>(16) * 16> pixels; // For 16x16 checkerboard texture.
+        for (i32 x = 0; x < 16; x++) {
+            for (i32 y = 0; y < 16; y++) {
+                pixels[y * 16 + x] = ((x % 2) ^ (y % 2)) ? magenta : black;
+            }
+        }
+
+        m_ErrorCheckerboardImage = VulkanUtils::CreateImage(m_Allocator, m_Device->GetDevice(), this, pixels.data(),
+                                                            VkExtent3D{16, 16, 1}, VK_FORMAT_B8G8R8A8_UNORM,
+                                                            VK_IMAGE_USAGE_SAMPLED_BIT);
+
+        VkSamplerCreateInfo samplerInfo = {.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO};
+        samplerInfo.magFilter = VK_FILTER_NEAREST;
+        samplerInfo.minFilter = VK_FILTER_NEAREST;
+
+        vkCreateSampler(m_Device->GetDevice(), &samplerInfo, nullptr, &m_DefaultSamplerNearest);
+
+        samplerInfo.magFilter = VK_FILTER_LINEAR;
+        samplerInfo.minFilter = VK_FILTER_LINEAR;
+
+        vkCreateSampler(m_Device->GetDevice(), &samplerInfo, nullptr, &m_DefaultSamplerLinear);
+
+        m_MainDeletionQueue.PushFunction([this]() {
+            vkDestroySampler(m_Device->GetDevice(), m_DefaultSamplerNearest, nullptr);
+            vkDestroySampler(m_Device->GetDevice(), m_DefaultSamplerLinear, nullptr);
+
+            VulkanUtils::DestroyImage(m_Allocator, m_Device->GetDevice(), m_WhiteImage);
+            VulkanUtils::DestroyImage(m_Allocator, m_Device->GetDevice(), m_GrayImage);
+            VulkanUtils::DestroyImage(m_Allocator, m_Device->GetDevice(), m_BlackImage);
+            VulkanUtils::DestroyImage(m_Allocator, m_Device->GetDevice(), m_ErrorCheckerboardImage);
+        });
     }
 
     void VulkanRenderer::DrawBackground(const VkCommandBuffer commandBuffer) const {
@@ -821,11 +884,12 @@ namespace Flashlight::VulkanRenderer {
         // Create a descriptor set that binds that buffer and update it.
         VkDescriptorSet globalDescriptor = frame.FrameDescriptors.Allocate(
             m_Device->GetDevice(), m_GpuSceneDataLayout);
-
-        DescriptorWriter writer;
-        writer.WriteBuffer(0, gpuSceneDataBuffer.Buffer, sizeof(GPUSceneData), 0,
-                           VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
-        writer.UpdateSet(m_Device->GetDevice(), globalDescriptor);
+        {
+            DescriptorWriter writer;
+            writer.WriteBuffer(0, gpuSceneDataBuffer.Buffer, sizeof(GPUSceneData), 0,
+                               VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+            writer.UpdateSet(m_Device->GetDevice(), globalDescriptor);
+        }
 
         VkViewport viewport;
         viewport.x = 0;
@@ -847,28 +911,32 @@ namespace Flashlight::VulkanRenderer {
 
         vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_MeshPipeline);
 
-        GPUDrawPushConstants pushConstants;
-        pushConstants.WorldMatrix = glm::mat4(1.0f);
-        pushConstants.VertexBuffer = m_RectangleMesh.VertexBufferAddress;
-        vkCmdPushConstants(commandBuffer, m_MeshPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0,
-                           sizeof(GPUDrawPushConstants), &pushConstants);
-        vkCmdBindIndexBuffer(commandBuffer, m_RectangleMesh.IndexBuffer.Buffer, 0, VK_INDEX_TYPE_UINT32);
+        //bind a texture
+        VkDescriptorSet imageSet = GetCurrentFrame().FrameDescriptors.Allocate(
+            m_Device->GetDevice(), m_SingleImageDescriptorLayout);
+        {
+            DescriptorWriter writer;
+            writer.WriteImage(0, m_ErrorCheckerboardImage.ImageView, m_DefaultSamplerNearest,
+                              VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
 
-        vkCmdDrawIndexed(commandBuffer, 6, 1, 0, 0, 0);
+            writer.UpdateSet(m_Device->GetDevice(), imageSet);
+        }
 
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_MeshPipelineLayout, 0, 1,
+                                &imageSet, 0, nullptr);
 
-        const auto view = translate(glm::vec3{0, 0, -5});
+        const auto view = glm::translate(glm::vec3{0, 0, -5});
         // camera projection
         glm::mat4 projection = glm::perspective(glm::radians(70.f),
-                                                static_cast<float>(m_DrawExtent.width) / static_cast<float>(
-                                                    m_DrawExtent.height), 0.1f, 10000.0f);
+                                                static_cast<f32>(m_DrawExtent.width) / static_cast<f32>(m_DrawExtent
+                                                    .height), 0.1f, 10000.0f);
 
         // invert the Y direction on projection matrix so that we are more similar
         // to opengl and gltf axis
         projection[1][1] *= -1;
 
+        GPUDrawPushConstants pushConstants;
         pushConstants.WorldMatrix = projection * view;
-
         pushConstants.VertexBuffer = m_TestMeshes[m_CurrentMeshIndex]->MeshBuffers.VertexBufferAddress;
 
         vkCmdPushConstants(commandBuffer, m_MeshPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0,
@@ -893,31 +961,6 @@ namespace Flashlight::VulkanRenderer {
         ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer);
 
         vkCmdEndRendering(commandBuffer);
-    }
-
-    void VulkanRenderer::ImmediateSubmit(const std::function<void(VkCommandBuffer commandBuffer)>& function) const {
-        VK_CHECK(vkResetFences(m_Device->GetDevice(), 1, &m_ImmediateFence))
-        VK_CHECK(vkResetCommandBuffer(m_ImmediateCommandBuffer, 0))
-
-        const VkCommandBuffer commandBuffer = m_ImmediateCommandBuffer;
-
-        const VkCommandBufferBeginInfo cmdBeginInfo = VulkanInit::CommandBufferBeginInfo(
-            VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
-
-        VK_CHECK(vkBeginCommandBuffer(commandBuffer, &cmdBeginInfo))
-
-        function(commandBuffer);
-
-        VK_CHECK(vkEndCommandBuffer(commandBuffer))
-
-        const VkCommandBufferSubmitInfo cmdInfo = VulkanInit::CommandBufferSubmitInfo(commandBuffer);
-        const VkSubmitInfo2 submit = VulkanInit::SubmitInfo(&cmdInfo, nullptr, nullptr);
-
-        // Submit command buffer to the queue and execute it.
-        // m_RenderFence will now block until the graphics command finish executing.
-        VK_CHECK(vkQueueSubmit2(m_Device->GetGraphicsQueue(), 1, &submit, m_ImmediateFence))
-
-        VK_CHECK(vkWaitForFences(m_Device->GetDevice(), 1, &m_ImmediateFence, true, 9999999999))
     }
 
     void VulkanRenderer::RecreateSwapchain(Window& window) {
