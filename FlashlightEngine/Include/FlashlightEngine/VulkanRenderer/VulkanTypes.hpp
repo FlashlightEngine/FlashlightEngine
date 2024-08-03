@@ -65,18 +65,6 @@ namespace Flashlight {
             VmaAllocationInfo Info;
         };
 
-        struct FrameData {
-            VkCommandPool CommandPool;
-            VkCommandBuffer MainCommandBuffer;
-
-            VkSemaphore SwapchainSemaphore, RenderSemaphore;
-            VkFence RenderFence;
-
-            u32 SwapchainImageIndex;
-
-            DeletionQueue DeletionQueue;
-        };
-
         struct Vertex {
             glm::vec3 Position;
             f32 UvX;
@@ -96,6 +84,15 @@ namespace Flashlight {
         struct GPUDrawPushConstants {
             glm::mat4 WorldMatrix;
             VkDeviceAddress VertexBuffer;
+        };
+
+        struct GPUSceneData {
+            glm::mat4 View;
+            glm::mat4 Projection;
+            glm::mat4 ViewProjection;
+            glm::vec4 AmbientColor;
+            glm::vec4 SunlightDirection; // w for light intensity.
+            glm::vec4 SunlightColor;
         };
     }
 }

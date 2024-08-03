@@ -124,7 +124,7 @@ namespace Flashlight::VulkanRenderer {
             // Display the vertex normals
             if (true) {
                 for (Vertex& vertex : vertices) {
-                    vertex.Color = glm::vec4(vertex.Normal, 1.0f);
+                    vertex.Color = glm::vec4(vertex.Normal, 0.5f);
                 }
             }
             newMesh.MeshBuffers = renderer->UploadMesh(indices, vertices);

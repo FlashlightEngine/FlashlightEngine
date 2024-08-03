@@ -18,6 +18,19 @@
 namespace Flashlight::VulkanRenderer {
 
     constexpr u32 g_FrameOverlap = 2;
+    
+    struct FrameData {
+        VkCommandPool CommandPool;
+        VkCommandBuffer MainCommandBuffer;
+
+        VkSemaphore SwapchainSemaphore, RenderSemaphore;
+        VkFence RenderFence;
+
+        u32 SwapchainImageIndex;
+
+        DeletionQueue DeletionQueue;
+        DescriptorAllocatorGrowable FrameDescriptors;
+    };
 
     struct ComputePushConstants {
         glm::vec4 Data1;
@@ -65,6 +78,9 @@ namespace Flashlight::VulkanRenderer {
         VkDescriptorSet m_DrawImageDescriptors;
         VkDescriptorSetLayout m_DrawImageDescriptorLayout;
 
+        GPUSceneData m_SceneData;
+        VkDescriptorSetLayout m_GpuSceneDataLayout;
+        
         VkPipelineLayout m_ComputePipelineLayout;
 
         std::vector<ComputeEffect> m_BackgroundEffects;
@@ -72,6 +88,8 @@ namespace Flashlight::VulkanRenderer {
 
         VkPipelineLayout m_MeshPipelineLayout;
         VkPipeline m_MeshPipeline;
+
+        GPUMeshBuffers m_RectangleMesh;
 
         std::vector<std::shared_ptr<MeshAsset>> m_TestMeshes;
         i32 m_CurrentMeshIndex{0};
@@ -106,7 +124,7 @@ namespace Flashlight::VulkanRenderer {
         void InitializeDefaultData();
 
         void DrawBackground(VkCommandBuffer commandBuffer) const;
-        void DrawGeometry(VkCommandBuffer commandBuffer) const;
+        void DrawGeometry(VkCommandBuffer commandBuffer);
         void DrawImGui(VkCommandBuffer commandBuffer, VkImageView targetImageView) const;
 
         [[nodiscard]] FrameData& GetCurrentFrame() {

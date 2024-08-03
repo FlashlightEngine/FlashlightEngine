@@ -153,16 +153,22 @@ namespace Flashlight::VulkanRenderer {
     }
 
 
-    void VulkanRenderer::Draw(Window& window) {        
-        m_DrawExtent.width = static_cast<u32>(static_cast<f32>(std::min(m_Swapchain->GetSwapchainExtent().width, m_DrawImage.ImageExtent.width)) * m_RenderScale);
-        m_DrawExtent.height = static_cast<u32>(static_cast<f32>(std::min(m_Swapchain->GetSwapchainExtent().height, m_DrawImage.ImageExtent.height)) * m_RenderScale);
-        
+    void VulkanRenderer::Draw(Window& window) {
+        m_DrawExtent.width = static_cast<u32>(static_cast<f32>(std::min(
+            m_Swapchain->GetSwapchainExtent().width, m_DrawImage.ImageExtent.width)) * m_RenderScale);
+        m_DrawExtent.height = static_cast<u32>(static_cast<f32>(std::min(
+            m_Swapchain->GetSwapchainExtent().height, m_DrawImage.ImageExtent.height)) * m_RenderScale);
+
         auto& frame = GetCurrentFrame();
 
         VkResult lastVkError = m_Swapchain->AcquireNextImage(*m_Device, frame);
-        if (lastVkError == VK_ERROR_OUT_OF_DATE_KHR || lastVkError == VK_SUBOPTIMAL_KHR || window.ShouldInvalidateSwapchain()) {
+        if (lastVkError == VK_ERROR_OUT_OF_DATE_KHR || lastVkError == VK_SUBOPTIMAL_KHR || window.
+            ShouldInvalidateSwapchain()) {
             m_SwapchainResizeRequired = true;
         }
+
+        frame.DeletionQueue.Flush();
+        frame.FrameDescriptors.ClearPools(m_Device->GetDevice());
 
         const VkCommandBuffer cmd = frame.MainCommandBuffer;
 
@@ -235,7 +241,8 @@ namespace Flashlight::VulkanRenderer {
         presentInfo.pImageIndices = &frame.SwapchainImageIndex;
 
         lastVkError = vkQueuePresentKHR(m_Device->GetPresentQueue(), &presentInfo);
-        if (lastVkError == VK_ERROR_OUT_OF_DATE_KHR || lastVkError == VK_SUBOPTIMAL_KHR || window.ShouldInvalidateSwapchain()) {
+        if (lastVkError == VK_ERROR_OUT_OF_DATE_KHR || lastVkError == VK_SUBOPTIMAL_KHR || window.
+            ShouldInvalidateSwapchain()) {
             m_SwapchainResizeRequired = true;
         }
 
@@ -450,27 +457,47 @@ namespace Flashlight::VulkanRenderer {
         m_DrawImageDescriptors = m_GlobalDescriptorAllocator.Allocate(
             m_Device->GetDevice(), m_DrawImageDescriptorLayout);
 
-        VkDescriptorImageInfo imageInfo{};
-        imageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-        imageInfo.imageView = m_DrawImage.ImageView;
-
-        VkWriteDescriptorSet drawImageWrite{};
-        drawImageWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        drawImageWrite.pNext = nullptr;
-
-        drawImageWrite.dstBinding = 0;
-        drawImageWrite.dstSet = m_DrawImageDescriptors;
-        drawImageWrite.descriptorCount = 1;
-        drawImageWrite.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
-        drawImageWrite.pImageInfo = &imageInfo;
-
-        vkUpdateDescriptorSets(m_Device->GetDevice(), 1, &drawImageWrite, 0, nullptr);
+        DescriptorWriter writer;
+        writer.WriteImage(0, m_DrawImage.ImageView, VK_NULL_HANDLE, VK_IMAGE_LAYOUT_GENERAL,
+                          VK_DESCRIPTOR_TYPE_STORAGE_IMAGE);
+        writer.UpdateSet(m_Device->GetDevice(), m_DrawImageDescriptors);
 
         // Make sure both the descriptor allocator and the new layout get cleaned up properly.
         m_MainDeletionQueue.PushFunction([&]() {
             m_GlobalDescriptorAllocator.DestroyPool(m_Device->GetDevice());
 
             vkDestroyDescriptorSetLayout(m_Device->GetDevice(), m_DrawImageDescriptorLayout, nullptr);
+        });
+
+        // Create frame descriptors.
+        for (auto& frame : m_Frames) {
+            // Create a descriptor pool.
+            std::vector<DescriptorAllocatorGrowable::PoolSizeRatio> frameSizes = {
+                {VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 3},
+                {VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 3},
+                {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 3},
+                {VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 4},
+            };
+
+            frame.FrameDescriptors = DescriptorAllocatorGrowable{};
+            frame.FrameDescriptors.Initialize(m_Device->GetDevice(), 1000, frameSizes);
+        }
+
+        
+        m_MainDeletionQueue.PushFunction([this]() {
+            for (auto& frame : m_Frames) {
+                frame.FrameDescriptors.DestroyPools(m_Device->GetDevice());
+            }
+        });
+
+        // Create scene data descriptor layout.
+        DescriptorLayoutBuilder builder;
+        builder.AddBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+        m_GpuSceneDataLayout = builder.Build(m_Device->GetDevice(),
+                                             VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT);
+
+        m_MainDeletionQueue.PushFunction([this]() {
+            vkDestroyDescriptorSetLayout(m_Device->GetDevice(), m_GpuSceneDataLayout, nullptr);
         });
     }
 
@@ -500,7 +527,8 @@ namespace Flashlight::VulkanRenderer {
 
         // Create shader modules.
         VkShaderModule gradientShaderModule;
-        CreateShaderModule(m_Device->GetDevice(), "Resources/Shaders/gradient_color.comp", VulkanUtils::ShaderType::Compute,
+        CreateShaderModule(m_Device->GetDevice(), "Resources/Shaders/gradient_color.comp",
+                           VulkanUtils::ShaderType::Compute,
                            &gradientShaderModule);
         if (!gradientShaderModule) {
             Log::EngineFatal({0x02, 0x00}, "Failed to build the gradient compute shader module.");
@@ -514,7 +542,8 @@ namespace Flashlight::VulkanRenderer {
         }
 
         VkShaderModule gridShaderModule;
-        CreateShaderModule(m_Device->GetDevice(), "Resources/Shaders/gradient_grid.comp", VulkanUtils::ShaderType::Compute,
+        CreateShaderModule(m_Device->GetDevice(), "Resources/Shaders/gradient_grid.comp",
+                           VulkanUtils::ShaderType::Compute,
                            &gridShaderModule);
         if (!skyShaderModule) {
             Log::EngineFatal({0x02, 0x02}, "Failed to build the grid compute shader module.");
@@ -625,7 +654,7 @@ namespace Flashlight::VulkanRenderer {
         pipelineBuilder.SetPolygonMode(VK_POLYGON_MODE_FILL);
         pipelineBuilder.SetCullMode(VK_CULL_MODE_NONE, VK_FRONT_FACE_CLOCKWISE);
         pipelineBuilder.SetMultisamplingNone();
-        pipelineBuilder.EnableAdditiveBlending();
+        pipelineBuilder.EnableBlendingAlphaBlend();
         pipelineBuilder.EnableDepthTest(true, VK_COMPARE_OP_GREATER_OR_EQUAL);
 
         pipelineBuilder.SetColorAttachmentFormat(m_DrawImage.ImageFormat);
@@ -712,6 +741,32 @@ namespace Flashlight::VulkanRenderer {
     }
 
     void VulkanRenderer::InitializeDefaultData() {
+        std::array<Vertex, 4> rectangleVertices;
+
+        rectangleVertices[0].Position = {0.5, -0.5, 0};
+        rectangleVertices[1].Position = {0.5, 0.5, 0};
+        rectangleVertices[2].Position = {-0.5, -0.5, 0};
+        rectangleVertices[3].Position = {-0.5, 0.5, 0};
+
+        rectangleVertices[0].Color = {0, 0, 0, 0.5};
+        rectangleVertices[1].Color = {0.5, 0.5, 0.5, 0.5};
+        rectangleVertices[2].Color = {1, 0, 0, 0.5};
+        rectangleVertices[3].Color = {0, 1, 0, 0.5};
+
+        std::array<uint32_t, 6> rectangleIndices;
+
+        rectangleIndices[0] = 0;
+        rectangleIndices[1] = 1;
+        rectangleIndices[2] = 2;
+
+        rectangleIndices[3] = 2;
+        rectangleIndices[4] = 1;
+        rectangleIndices[5] = 3;
+
+        m_RectangleMesh = UploadMesh(rectangleIndices, rectangleVertices);
+
+        PlanMeshDeletion(m_RectangleMesh);
+
         if (const auto loaded = LoadGltfMeshes(this, "Resources/Models/basicmesh.glb");
             loaded.has_value()) {
             m_TestMeshes = loaded.value();
@@ -738,7 +793,9 @@ namespace Flashlight::VulkanRenderer {
                       static_cast<u32>(std::ceil(m_DrawExtent.height / 16.0)), 1);
     }
 
-    void VulkanRenderer::DrawGeometry(const VkCommandBuffer commandBuffer) const {
+    void VulkanRenderer::DrawGeometry(const VkCommandBuffer commandBuffer) {
+        auto& frame = GetCurrentFrame();
+
         // Begin a render pass connected to the draw image.
         const VkRenderingAttachmentInfo colorAttachment = VulkanInit::AttachmentInfo(
             m_DrawImage.ImageView, nullptr, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
@@ -748,6 +805,27 @@ namespace Flashlight::VulkanRenderer {
         const VkRenderingInfo renderingInfo = VulkanInit::RenderingInfo(
             m_DrawExtent, &colorAttachment, &depthAttachment);
         vkCmdBeginRendering(commandBuffer, &renderingInfo);
+
+        AllocatedBuffer gpuSceneDataBuffer = VulkanUtils::CreateBuffer(
+            m_Allocator, sizeof(GPUSceneData), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VMA_MEMORY_USAGE_CPU_TO_GPU);
+
+        // Add it to the deletion queue of this frame so that it gets deleted once it's been used.
+        frame.DeletionQueue.PushFunction([this, gpuSceneDataBuffer]() {
+            VulkanUtils::DestroyBuffer(m_Allocator, gpuSceneDataBuffer);
+        });
+
+        // Write the buffer.
+        GPUSceneData* sceneUniformData = static_cast<GPUSceneData*>(gpuSceneDataBuffer.Allocation->GetMappedData());
+        *sceneUniformData = m_SceneData;
+
+        // Create a descriptor set that binds that buffer and update it.
+        VkDescriptorSet globalDescriptor = frame.FrameDescriptors.Allocate(
+            m_Device->GetDevice(), m_GpuSceneDataLayout);
+
+        DescriptorWriter writer;
+        writer.WriteBuffer(0, gpuSceneDataBuffer.Buffer, sizeof(GPUSceneData), 0,
+                           VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+        writer.UpdateSet(m_Device->GetDevice(), globalDescriptor);
 
         VkViewport viewport;
         viewport.x = 0;
@@ -769,6 +847,15 @@ namespace Flashlight::VulkanRenderer {
 
         vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_MeshPipeline);
 
+        GPUDrawPushConstants pushConstants;
+        pushConstants.WorldMatrix = glm::mat4(1.0f);
+        pushConstants.VertexBuffer = m_RectangleMesh.VertexBufferAddress;
+        vkCmdPushConstants(commandBuffer, m_MeshPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0,
+                           sizeof(GPUDrawPushConstants), &pushConstants);
+        vkCmdBindIndexBuffer(commandBuffer, m_RectangleMesh.IndexBuffer.Buffer, 0, VK_INDEX_TYPE_UINT32);
+
+        vkCmdDrawIndexed(commandBuffer, 6, 1, 0, 0, 0);
+
 
         const auto view = translate(glm::vec3{0, 0, -5});
         // camera projection
@@ -780,7 +867,6 @@ namespace Flashlight::VulkanRenderer {
         // to opengl and gltf axis
         projection[1][1] *= -1;
 
-        GPUDrawPushConstants pushConstants;
         pushConstants.WorldMatrix = projection * view;
 
         pushConstants.VertexBuffer = m_TestMeshes[m_CurrentMeshIndex]->MeshBuffers.VertexBufferAddress;

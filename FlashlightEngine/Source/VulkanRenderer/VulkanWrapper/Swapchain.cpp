@@ -7,6 +7,8 @@
  */
 #include <FlashlightEngine/VulkanRenderer/VulkanWrapper/Swapchain.hpp>
 
+#include <FlashlightEngine/VulkanRenderer/VulkanRenderer.hpp>
+
 namespace Flashlight::VulkanRenderer::VulkanWrapper {
     Swapchain::Swapchain(const Window& window, const Instance& instance, const Device& device) {
         Log::EngineTrace("Creating Vulkan swapchain...");

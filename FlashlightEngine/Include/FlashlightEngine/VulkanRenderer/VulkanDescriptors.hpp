@@ -18,8 +18,9 @@ namespace Flashlight::VulkanRenderer {
 
         void AddBinding(u32 binding, VkDescriptorType type);
         void Clear();
-        VkDescriptorSetLayout Build(VkDevice device, VkShaderStageFlags shaderStages, const void* pNext = nullptr,
-                                    VkDescriptorSetLayoutCreateFlags flags = 0);
+        [[nodiscard]] VkDescriptorSetLayout Build(VkDevice device, VkShaderStageFlags shaderStages,
+                                                  const void* pNext = nullptr,
+                                                  VkDescriptorSetLayoutCreateFlags flags = 0);
     };
 #pragma endregion Descriptor Layout Builder
 
@@ -36,7 +37,49 @@ namespace Flashlight::VulkanRenderer {
         void ClearDescriptors(VkDevice device) const;
         void DestroyPool(VkDevice device) const;
 
-        VkDescriptorSet Allocate(VkDevice device, VkDescriptorSetLayout layout) const;
+        [[nodiscard]] VkDescriptorSet Allocate(VkDevice device, VkDescriptorSetLayout layout) const;
     };
 #pragma endregion Descriptor Pool
+
+#pragma region Growable Descriptor Allocator
+    struct DescriptorAllocatorGrowable {
+        struct PoolSizeRatio {
+            VkDescriptorType Type;
+            f32 Ratio;
+        };
+
+        void Initialize(VkDevice device, u32 initialSets, std::span<PoolSizeRatio> poolSizes);
+        void ClearPools(VkDevice device);
+        void DestroyPools(VkDevice device);
+
+        [[nodiscard]] VkDescriptorSet Allocate(VkDevice device, VkDescriptorSetLayout layout,
+                                               const void* pNext = nullptr);
+
+    private:
+        [[nodiscard]] VkDescriptorPool GetPool(VkDevice device);
+        [[nodiscard]] static VkDescriptorPool CreatePool(VkDevice device, u32 setCount,
+                                                         std::span<PoolSizeRatio> poolSizes);
+
+        std::vector<PoolSizeRatio> m_Sizes;
+        std::vector<VkDescriptorPool> m_FullPools;
+        std::vector<VkDescriptorPool> m_ReadyPools;
+        u32 m_SetsPerPool{0};
+    };
+#pragma endregion Growable Descriptor Allocator
+
+#pragma region Descriptor Writer
+    struct DescriptorWriter {
+        std::deque<VkDescriptorImageInfo> ImageInfos;
+        std::deque<VkDescriptorBufferInfo> BufferInfos;
+        std::vector<VkWriteDescriptorSet> Writes;
+
+        void WriteImage(u32 binding, VkImageView imageView, VkSampler sampler, VkImageLayout layout,
+                        VkDescriptorType type);
+        void WriteBuffer(u32 binding, VkBuffer buffer, VkDeviceSize size, VkDeviceSize offset,
+                         VkDescriptorType type);
+
+        void Clear();
+        void UpdateSet(VkDevice device, VkDescriptorSet set);
+    };
+#pragma endregion Descriptor Writer
 }
