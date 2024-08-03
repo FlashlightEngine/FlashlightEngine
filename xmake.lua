@@ -23,8 +23,8 @@ add_repositories("pixfri https://github.com/Pixfri/xmake-repo.git")
 
 -- Define packages to download.
 add_requires("vulkan-loader 1.3.290+0", "vk-bootstrap v1.3.290", "vulkan-memory-allocator v3.1.0", 
-             "vulkan-utility-libraries v1.3.290", "libsdl 2.30.5", "glm 1.0.1", "spdlog v1.9.0", "magic_enum v0.9.5",
-             "shaderc v2024.1")
+             "vulkan-utility-libraries v1.3.290", "libsdl 2.30.5", "glm 1.0.1", "spdlog v1.9.0", "magic_enum v0.9.5")
+add_requires("glslang 1.3.290+0", {configs = {binaryonly = true}})
 add_requires("fastgltf v0.6.1")
 add_requires("imgui v1.91.0", {configs = {sdl2_no_renderer = true, vulkan = true, debug = is_mode("debug")}})
 
@@ -39,6 +39,7 @@ rule("cp-resources")
 target("FlashlightEngine")
   set_kind("binary")
   add_rules("cp-resources")
+  add_rules("utils.glsl2spv", {outputdir = "build/" .. outputdir .. "/FlashlightEngine/bin/Shaders"})
 
   -- Set binary and object files directories.
   set_targetdir("build/" .. outputdir .. "/FlashlightEngine/bin")
@@ -54,6 +55,7 @@ target("FlashlightEngine")
   add_headerfiles("FlashlightEngine/ThirdParty/**.h")
   add_includedirs("FlashlightEngine/ThirdParty", {public = true})
   
+  add_files("FlashlightEngine/Shaders/**.vert", "FlashlightEngine/Shaders/**.frag", "FlashlightEngine/Shaders/**.comp") -- Tell glsl2spv to compile the files.
   add_headerfiles("FlashlightEngine/Shaders/**") -- A trick to make them show up in VS/Rider solutions.
   add_headerfiles("FlashlightEngine/Resources/**") -- A trick to make them show up in VS/Rider solutions.
 
@@ -62,4 +64,4 @@ target("FlashlightEngine")
 
   -- target dependencies
   add_packages("vulkan-loader","vk-bootstrap", "vulkan-memory-allocator", "vulkan-utility-libraries", "libsdl", "glm",
-               "spdlog", "magic_enum", "shaderc", "imgui", "fastgltf")
+               "spdlog", "magic_enum", "imgui", "fastgltf")

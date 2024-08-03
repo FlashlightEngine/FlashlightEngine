@@ -11,77 +11,51 @@
 #include <fstream>
 
 namespace Flashlight::VulkanRenderer::VulkanUtils {
-    void CreateShaderModule(const VkDevice device, const std::filesystem::path& filePath,
-                            const ShaderType& shaderType, VkShaderModule* outShaderModule) {
-        const std::string shaderSourceCode = ReadFile(filePath);
+    bool CreateShaderModule(const VkDevice device, const std::filesystem::path& filePath,
+                            VkShaderModule* outShaderModule) {
+        // Open the file with the cursor at the end.
+        std::ifstream file(filePath, std::ios::ate | std::ios::binary);
 
-#if defined(FL_DEBUG)
-        constexpr bool optimizeShader = false;
-#else
-        constexpr bool optimizeShader = true;
-#endif
+        if (!file.is_open()) {
+            Log::EngineError("Failed to load shader at path {}.", filePath.string());
+            return false;
+        }
 
-        const auto compiledShader = CompileShaderCode(shaderSourceCode, shaderType, filePath.filename().string(),
-                                                      optimizeShader);
+        // Find what the size of the file is by looking up the location of the cursor. Because the cursor is at the
+        // end, it gives the size directly in bytes.
+        const size fileSize = file.tellg();
 
-        // Create a new shader module using the compiled shader.
+        // SPIR-V expects the buffer to be on uint32, so make sure to reserve an int vector big enough for the entire
+        // file.
+        std::vector<u32> buffer(fileSize / sizeof(u32));
+
+        // Put the cursor at the beginning.
+        file.seekg(0);
+
+        // Load the entire file into the buffer.
+        file.read(reinterpret_cast<char*>(buffer.data()), static_cast<std::streamsize>(fileSize));
+
+        // Now that the file is loaded into the buffer, we can close it.
+        file.close();
+
+        // Create a new shader module, using the buffer we loaded.
         VkShaderModuleCreateInfo createInfo{};
         createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
         createInfo.pNext = nullptr;
 
-        createInfo.codeSize = compiledShader.size() * sizeof(u32);
-        createInfo.pCode = compiledShader.data();
+        // Codesize has to be in bytes, so multiply the capacity of the buffer by the size of int to know the real size
+        // of the buffer.
+        createInfo.codeSize = buffer.size() * sizeof(u32);
+        createInfo.pCode = buffer.data();
 
         VkShaderModule shaderModule;
-        VK_CHECK(vkCreateShaderModule(device, &createInfo, nullptr, &shaderModule))
+        if (vkCreateShaderModule(device, &createInfo, nullptr, &shaderModule) != VK_SUCCESS) {
+            Log::EngineError("Failed to create shader module.");
+            return false;
+        }
 
         *outShaderModule = shaderModule;
-    }
-
-    std::string ReadFile(const std::filesystem::path& path) {
-        std::ifstream file(path, std::ios::ate);
-
-        if (!file.is_open()) {
-            Log::EngineError("Failed to open shader file at path {}.", path.string());
-        }
-
-        const size fileSize = file.tellg();
-        std::vector<char> buffer(fileSize / sizeof(char));
-
-        file.seekg(0);
-        file.read(buffer.data(), static_cast<std::streamsize>(fileSize));
-
-        file.close();
-
-        std::string result;
-
-        // Remove null characters if there is any.
-        std::ranges::copy_if(buffer, std::back_inserter(result), [](const char c) -> bool {
-            return c != '\0';
-        });
-
-        return result;
-    }
-
-    std::vector<u32> CompileShaderCode(const std::string& code, const ShaderType& shaderType,
-                                       const std::string& sourceFileName, const bool optimize) {
-        const shaderc::Compiler compiler;
-        shaderc::CompileOptions options;
-
-        if (optimize) {
-            options.SetOptimizationLevel(shaderc_optimization_level_size);
-        }
-
-        options.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_3);
-
-        const auto spirvCompilationResult = compiler.CompileGlslToSpv(
-            code, static_cast<shaderc_shader_kind>(shaderType), sourceFileName.c_str(), options);
-        if (spirvCompilationResult.GetCompilationStatus() != shaderc_compilation_status_success) {
-            Log::EngineError("Failed to compile shader to SPIR-V.\n Error: {}",
-                             spirvCompilationResult.GetErrorMessage());
-        }
-
-        return {spirvCompilationResult.cbegin(), spirvCompilationResult.cend()};
+        return true;
     }
 
     void PipelineBuilder::Clear() {
