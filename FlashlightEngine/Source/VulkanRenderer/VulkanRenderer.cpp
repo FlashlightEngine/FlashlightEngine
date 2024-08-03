@@ -78,7 +78,7 @@ namespace Flashlight::VulkanRenderer {
         pipelineBuilder.SetCullMode(VK_CULL_MODE_BACK_BIT, VK_FRONT_FACE_COUNTER_CLOCKWISE);
         pipelineBuilder.SetMultisamplingNone();
         pipelineBuilder.DisableBlending();
-        pipelineBuilder.EnableDepthTest(true, VK_COMPARE_OP_GREATER_OR_EQUAL);
+        pipelineBuilder.EnableDepthTest(true, VK_COMPARE_OP_LESS);
 
         // Render format
         pipelineBuilder.SetColorAttachmentFormat(renderer->GetDrawImageFormat());
@@ -92,7 +92,7 @@ namespace Flashlight::VulkanRenderer {
         // Create the transparent variant.
         pipelineBuilder.EnableAdditiveBlending();
 
-        pipelineBuilder.EnableDepthTest(false, VK_COMPARE_OP_GREATER_OR_EQUAL);
+        pipelineBuilder.EnableDepthTest(false, VK_COMPARE_OP_LESS);
 
         TransparentPipeline.Pipeline = pipelineBuilder.BuildPipeline(renderer->GetDevice().GetDevice());
 
@@ -294,6 +294,13 @@ namespace Flashlight::VulkanRenderer {
         SceneData.AmbientColor = glm::vec4(.1f);
         SceneData.SunlightColor = glm::vec4(1.f);
         SceneData.SunlightDirection = glm::vec4(0, 1, 0.5f, 1.0f);
+
+        for (i32 x = -3; x < 4; x++) {
+            glm::mat4 scale = glm::scale(glm::vec3{0.2f});
+            glm::mat4 translation = glm::translate(glm::vec3{x, 1, 0});
+
+            LoadedNodes["Cube"]->Draw(translation * scale, MainDrawContext);
+        }
     }
 
     void VulkanRenderer::Draw(Window& window) {
@@ -833,7 +840,7 @@ namespace Flashlight::VulkanRenderer {
         pipelineBuilder.SetCullMode(VK_CULL_MODE_BACK_BIT, VK_FRONT_FACE_COUNTER_CLOCKWISE);
         pipelineBuilder.SetMultisamplingNone();
         pipelineBuilder.DisableBlending();
-        pipelineBuilder.EnableDepthTest(true, VK_COMPARE_OP_GREATER_OR_EQUAL);
+        pipelineBuilder.EnableDepthTest(true, VK_COMPARE_OP_LESS);
 
         pipelineBuilder.SetColorAttachmentFormat(m_DrawImage.ImageFormat);
         pipelineBuilder.SetDepthFormat(m_DepthImage.ImageFormat);
