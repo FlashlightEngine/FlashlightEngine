@@ -44,6 +44,12 @@ namespace Flashlight {
         m_Window = std::make_unique<Window>(windowProperties);
         m_Renderer = std::make_unique<VulkanRenderer::VulkanRenderer>(*m_Window, debugLevel);
 
+        m_Camera.Velocity = glm::vec3(0.f);
+        m_Camera.Position = glm::vec3(0, 0, 5);
+
+        m_Camera.Pitch = 0;
+        m_Camera.Yaw = 0;
+
         m_IsRunning = true;
 
         return true;
@@ -62,14 +68,15 @@ namespace Flashlight {
             m_IsRunning = false;
         }
 
-        // Poll window events.
-        m_Window->Update();
+        // Poll window events and update objects using SDL events.
+        // TODO: Make a better input system.
+        m_Window->Update(m_Camera, m_DeltaTime);
     }
 
-    void FlashlightEngine::Render() const {
+    void FlashlightEngine::Render() {
         m_Renderer->CreateUi();
         
-        m_Renderer->Draw(*m_Window);
+        m_Renderer->Draw(*m_Window, m_Camera);
     }
 
     void FlashlightEngine::Cleanup() {

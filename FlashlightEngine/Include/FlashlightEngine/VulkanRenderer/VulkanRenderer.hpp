@@ -135,9 +135,6 @@ namespace Flashlight::VulkanRenderer {
         std::vector<ComputeEffect> m_BackgroundEffects;
         i32 m_CurrentBackgroundEffect{0};
 
-        VkPipelineLayout m_MeshPipelineLayout;
-        VkPipeline m_MeshPipeline;
-
         VkDescriptorSetLayout m_SingleImageDescriptorLayout;
 
         std::vector<std::shared_ptr<MeshAsset>> m_TestMeshes;
@@ -173,8 +170,8 @@ namespace Flashlight::VulkanRenderer {
         void PlanMeshDeletion(GPUMeshBuffers mesh);
         void AddDeletion(std::function<void()>&& deletor);
         void CreateUi();
-        void UpdateScene(const Window& window);
-        void Draw(Window& window);
+        void UpdateScene(const Window& window, Camera& camera);
+        void Draw(Window& window, Camera& camera);
 
         void ImmediateSubmit(const std::function<void(VkCommandBuffer commandBuffer)>& function) const;
 
@@ -193,7 +190,6 @@ namespace Flashlight::VulkanRenderer {
         void InitializeDescriptors();
         void InitializePipelines();
         void InitializeComputePipelines();
-        void InitializeMeshPipeline();
         void InitializeImGui(const Window& window);
         void InitializeDefaultData();
 

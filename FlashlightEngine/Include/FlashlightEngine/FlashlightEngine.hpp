@@ -10,6 +10,7 @@
 #include <FlashlightEngine/Core/Window.hpp>
 
 #include <FlashlightEngine/VulkanRenderer/VulkanRenderer.hpp>
+#include <FlashlightEngine/VulkanRenderer/Camera.hpp>
 
 namespace Flashlight {
     class FlashlightEngine {
@@ -30,7 +31,7 @@ namespace Flashlight {
     protected:
         bool Init(const WindowProperties& windowProperties, const DebugLevel& debugLevel);
         void Update();
-        void Render() const;
+        void Render();
         void Cleanup();
 
         [[nodiscard]] inline bool IsRunning() const;
@@ -41,7 +42,7 @@ namespace Flashlight {
         std::unique_ptr<Window> m_Window;
         std::unique_ptr<VulkanRenderer::VulkanRenderer> m_Renderer;
 
-        VulkanRenderer::GPUMeshBuffers m_Rectangle;
+        VulkanRenderer::Camera m_Camera;
 
     private:
         std::chrono::high_resolution_clock::time_point m_CurrentTime;

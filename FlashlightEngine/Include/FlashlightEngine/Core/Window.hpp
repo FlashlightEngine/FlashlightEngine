@@ -10,6 +10,7 @@
 #include <FlashlightEngine/Core/Logger.hpp>
 
 #include <FlashlightEngine/VulkanRenderer/VulkanTypes.hpp>
+#include <FlashlightEngine/VulkanRenderer/Camera.hpp>
 
 #include <FlashlightEngine/flpch.hpp>
 
@@ -58,7 +59,7 @@ namespace Flashlight {
         [[nodiscard]] inline VkExtent2D GetExtent() const;
         [[nodiscard]] inline std::string GetTitle() const;
 
-        void Update();
+        void Update(VulkanRenderer::Camera& camera, f32 deltaTime);
         inline void Close();
     };
 

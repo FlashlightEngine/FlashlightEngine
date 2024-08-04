@@ -46,7 +46,7 @@ namespace Flashlight {
         SDL_Quit();
     }
 
-    void Window::Update() {
+    void Window::Update(VulkanRenderer::Camera& camera, const f32 deltaTime) {
         SDL_Event event;
 
         while (SDL_PollEvent(&event) != 0) {
@@ -70,6 +70,7 @@ namespace Flashlight {
             }
 
             ImGui_ImplSDL2_ProcessEvent(&event);
+            camera.ProcessSDLEvent(event, deltaTime);
         }
     }
 }

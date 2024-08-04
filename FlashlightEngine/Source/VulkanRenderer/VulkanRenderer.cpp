@@ -278,12 +278,14 @@ namespace Flashlight::VulkanRenderer {
         ImGui::Render();
     }
 
-    void VulkanRenderer::UpdateScene(const Window& window) {
+    void VulkanRenderer::UpdateScene(const Window& window, Camera& camera) {
+        camera.Update();
+        
         MainDrawContext.OpaqueSurfaces.clear();
 
         LoadedNodes["Suzanne"]->Draw(glm::mat4{1.f}, MainDrawContext);
 
-        SceneData.View = glm::translate(glm::vec3(0, 0, -5));
+        SceneData.View = camera.GetViewMatrix();
         SceneData.Projection = glm::perspective(glm::radians(70.f),
                                                 static_cast<f32>(window.GetWidth()) / static_cast<f32>(window.
                                                     GetHeight()), 0.1f, 10000.0f);
@@ -303,13 +305,13 @@ namespace Flashlight::VulkanRenderer {
         }
     }
 
-    void VulkanRenderer::Draw(Window& window) {
+    void VulkanRenderer::Draw(Window& window, Camera& camera) {
         m_DrawExtent.width = static_cast<u32>(static_cast<f32>(std::min(
             m_Swapchain->GetSwapchainExtent().width, m_DrawImage.ImageExtent.width)) * m_RenderScale);
         m_DrawExtent.height = static_cast<u32>(static_cast<f32>(std::min(
             m_Swapchain->GetSwapchainExtent().height, m_DrawImage.ImageExtent.height)) * m_RenderScale);
 
-        UpdateScene(window);
+        UpdateScene(window, camera);
 
         auto& frame = GetCurrentFrame();
 
@@ -691,7 +693,6 @@ namespace Flashlight::VulkanRenderer {
 
     void VulkanRenderer::InitializePipelines() {
         InitializeComputePipelines();
-        InitializeMeshPipeline();
 
         m_MetalRoughMaterial.BuildPipelines(this);
     }
@@ -800,59 +801,6 @@ namespace Flashlight::VulkanRenderer {
             vkDestroyPipeline(m_Device->GetDevice(), sky.Pipeline, nullptr);
             vkDestroyPipeline(m_Device->GetDevice(), gradient.Pipeline, nullptr);
             vkDestroyPipeline(m_Device->GetDevice(), grid.Pipeline, nullptr);
-        });
-    }
-
-    void VulkanRenderer::InitializeMeshPipeline() {
-        VkShaderModule meshVertexShader;
-        if (!VulkanUtils::CreateShaderModule(m_Device->GetDevice(), "Shaders/basic_meshbuffer.vert.spv",
-                                             &meshVertexShader)) {
-            Log::EngineFatal({0x02, 0x03}, "Failed to create triangle vertex shader.");
-        }
-
-        VkShaderModule meshFragmentShader;
-        if (!VulkanUtils::CreateShaderModule(m_Device->GetDevice(), "Shaders/tex_image.frag.spv",
-                                             &meshFragmentShader)) {
-            Log::EngineFatal({0x02, 0x03}, "Failed to create triangle fragment shader.");
-        }
-
-        VkPipelineLayoutCreateInfo pipelineLayoutInfo = VulkanInit::PipelineLayoutCreateInfo();
-
-        VkPushConstantRange bufferRange{};
-        bufferRange.offset = 0;
-        bufferRange.size = sizeof(GPUDrawPushConstants);
-        bufferRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-
-        pipelineLayoutInfo.pushConstantRangeCount = 1;
-        pipelineLayoutInfo.pPushConstantRanges = &bufferRange;
-        pipelineLayoutInfo.setLayoutCount = 1;
-        pipelineLayoutInfo.pSetLayouts = &m_SingleImageDescriptorLayout;
-
-        VK_CHECK(
-            vkCreatePipelineLayout(m_Device->GetDevice(), &pipelineLayoutInfo, nullptr, &m_MeshPipelineLayout))
-
-        VulkanUtils::PipelineBuilder pipelineBuilder{};
-
-        pipelineBuilder.SetPipelineLayout(m_MeshPipelineLayout);
-        pipelineBuilder.SetShaders(meshVertexShader, meshFragmentShader);
-        pipelineBuilder.SetInputTopology(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
-        pipelineBuilder.SetPolygonMode(VK_POLYGON_MODE_FILL);
-        pipelineBuilder.SetCullMode(VK_CULL_MODE_BACK_BIT, VK_FRONT_FACE_COUNTER_CLOCKWISE);
-        pipelineBuilder.SetMultisamplingNone();
-        pipelineBuilder.DisableBlending();
-        pipelineBuilder.EnableDepthTest(true, VK_COMPARE_OP_LESS);
-
-        pipelineBuilder.SetColorAttachmentFormat(m_DrawImage.ImageFormat);
-        pipelineBuilder.SetDepthFormat(m_DepthImage.ImageFormat);
-
-        m_MeshPipeline = pipelineBuilder.BuildPipeline(m_Device->GetDevice());
-
-        vkDestroyShaderModule(m_Device->GetDevice(), meshVertexShader, nullptr);
-        vkDestroyShaderModule(m_Device->GetDevice(), meshFragmentShader, nullptr);
-
-        m_MainDeletionQueue.PushFunction([&]() {
-            vkDestroyPipelineLayout(m_Device->GetDevice(), m_MeshPipelineLayout, nullptr);
-            vkDestroyPipeline(m_Device->GetDevice(), m_MeshPipeline, nullptr);
         });
     }
 
