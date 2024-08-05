@@ -36,9 +36,14 @@ rule("cp-resources")
     os.cp(target:name() .. "/Resources", "build/" .. outputdir .. "/" .. target:name() .. "/bin")
   end)
 
+rule("cp-imgui-layout")
+  after_build(function(target)
+    os.cp(target:name() .. "/Resources/imgui.ini", "build/" .. outputdir .. "/" .. target:name() .. "/bin")    
+  end)
+  
 target("FlashlightEngine")
   set_kind("binary")
-  add_rules("cp-resources")
+  add_rules("cp-resources", "cp-imgui-layout")
   add_rules("utils.glsl2spv", {outputdir = "build/" .. outputdir .. "/FlashlightEngine/bin/Shaders"})
 
   -- Set binary and object files directories.
