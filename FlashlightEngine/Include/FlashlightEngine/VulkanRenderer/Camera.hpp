@@ -24,7 +24,7 @@ namespace Flashlight::VulkanRenderer {
         glm::mat4 GetViewMatrix() const;
         glm::mat4 GetRotationMatrix() const;
 
-        void ProcessInput(const Window& window, f32 deltaTime);
+        void ProcessInput(const Window& window, f32 deltaTime, f32 speed);
 
         void Update();
     };

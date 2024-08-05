@@ -248,7 +248,7 @@ namespace Flashlight::VulkanRenderer {
         m_MainDeletionQueue.PushFunction(std::move(deletor));
     }
 
-    void VulkanRenderer::CreateUi() {
+    void VulkanRenderer::CreateRendererUi() {
         ImGui_ImplVulkan_NewFrame();
         ImGui_ImplGlfw_NewFrame();
 
@@ -273,8 +273,6 @@ namespace Flashlight::VulkanRenderer {
             ImGui::InputFloat4("data4", reinterpret_cast<float*>(&selected.Data.Data4));
         }
         ImGui::End();
-
-        ImGui::Render();
     }
 
     void VulkanRenderer::UpdateScene(const Window& window, Camera& camera) {
@@ -305,6 +303,8 @@ namespace Flashlight::VulkanRenderer {
     }
 
     void VulkanRenderer::Draw(Window& window, Camera& camera) {
+        ImGui::Render();
+        
         m_DrawExtent.width = static_cast<u32>(static_cast<f32>(std::min(
             m_Swapchain->GetSwapchainExtent().width, m_DrawImage.ImageExtent.width)) * m_RenderScale);
         m_DrawExtent.height = static_cast<u32>(static_cast<f32>(std::min(

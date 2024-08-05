@@ -170,7 +170,7 @@ namespace Flashlight::VulkanRenderer {
         [[nodiscard]] GPUMeshBuffers UploadMesh(std::span<u32> indices, std::span<Vertex> vertices) const;
         void PlanMeshDeletion(GPUMeshBuffers mesh);
         void AddDeletion(std::function<void()>&& deletor);
-        void CreateUi();
+        void CreateRendererUi();
         void UpdateScene(const Window& window, Camera& camera);
         void Draw(Window& window, Camera& camera);
 

@@ -41,11 +41,17 @@ namespace Flashlight {
         inline void Close();
 
         bool m_IsRunning = false;
+
         f32 m_DeltaTime = 0.016f;
+        
         std::unique_ptr<Window> m_Window;
         std::unique_ptr<VulkanRenderer::VulkanRenderer> m_Renderer;
 
         VulkanRenderer::Camera m_Camera;
+        f32 m_CameraSpeed = 1.f;
+
+    private:
+        void CreateEditorUi();
     };
 
 #include "FlashlightEngine.inl"

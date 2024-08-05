@@ -26,7 +26,7 @@ namespace Flashlight::VulkanRenderer {
         return glm::toMat4(yawRotation) * glm::toMat4(pitchRotation);
     }
 
-    void Camera::ProcessInput(const Window& window, const f32 deltaTime) {
+    void Camera::ProcessInput(const Window& window, const f32 deltaTime, const f32 speed) {
         if (window.GetKeyState(Keys::W) == KeyState::Released) {
             Velocity.z = 0;
         }
@@ -45,19 +45,19 @@ namespace Flashlight::VulkanRenderer {
 
         // Camera movement
         if (window.GetKeyState(Keys::W) == KeyState::Pressed) {
-            Velocity.z = -1 * deltaTime;
+            Velocity.z = -speed * deltaTime;
         }
         
         if (window.GetKeyState(Keys::S) == KeyState::Pressed) {
-            Velocity.z = 1 * deltaTime;
+            Velocity.z = speed * deltaTime;
         }
         
         if (window.GetKeyState(Keys::A) == KeyState::Pressed) {
-            Velocity.x = -1 * deltaTime;
+            Velocity.x = -speed * deltaTime;
         }
         
         if (window.GetKeyState(Keys::D) == KeyState::Pressed) {
-            Velocity.x = 1 * deltaTime;
+            Velocity.x = speed * deltaTime;
         }
 
         // Camera rotation

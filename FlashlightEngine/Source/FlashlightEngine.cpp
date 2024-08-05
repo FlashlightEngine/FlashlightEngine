@@ -9,6 +9,8 @@
 
 #include <FlashlightEngine/Core/Logger.hpp>
 
+#include <imgui.h>
+
 namespace Flashlight {    
     FlashlightEngine* FlashlightEngine::m_SLoadedApplication = nullptr;
 
@@ -70,16 +72,25 @@ namespace Flashlight {
         
         m_Window->Update();
 
-        m_Camera.ProcessInput(*m_Window, m_DeltaTime);
+        m_Camera.ProcessInput(*m_Window, m_DeltaTime, m_CameraSpeed);
     }
 
     void FlashlightEngine::Render() {
-        m_Renderer->CreateUi();
+        m_Renderer->CreateRendererUi();
+
+        CreateEditorUi();
         
         m_Renderer->Draw(*m_Window, m_Camera);
     }
 
     void FlashlightEngine::Cleanup() {
         m_SLoadedApplication = nullptr;
+    }
+
+    void FlashlightEngine::CreateEditorUi() {
+        if (ImGui::Begin("Camera")) {
+            ImGui::SliderFloat("Camera speed", &m_CameraSpeed, 0.1f, 10.0f);
+        }
+        ImGui::End();
     }
 }
