@@ -42,7 +42,8 @@ namespace Flashlight::VulkanRenderer {
         if (window.GetKeyState(Keys::D) == KeyState::Released) {
             Velocity.x = 0;
         }
-        
+
+        // Camera movement
         if (window.GetKeyState(Keys::W) == KeyState::Pressed) {
             Velocity.z = -1 * deltaTime;
         }
@@ -59,21 +60,22 @@ namespace Flashlight::VulkanRenderer {
             Velocity.x = 1 * deltaTime;
         }
 
+        // Camera rotation
         if (window.GetKeyState(Keys::Up) == KeyState::Pressed) {
-            Pitch += 3.f * deltaTime;
+            Pitch += 1.5f * deltaTime;
         }
 
         if (window.GetKeyState(Keys::Down) == KeyState::Pressed) {
-            Pitch -= 3.f * deltaTime;
+            Pitch -= 1.5f * deltaTime;
         }
 
         if (window.GetKeyState(Keys::Left) == KeyState::Pressed) {
-            Yaw += 3.f * deltaTime;
+            Yaw += 2.f * deltaTime;
         }
 
         if (window.GetKeyState(Keys::Right) == KeyState::Pressed) {
-            Yaw -= 3.f * deltaTime;
-        }    
+            Yaw -= 2.f * deltaTime;
+        }
     }
 
     void Camera::Update() {
