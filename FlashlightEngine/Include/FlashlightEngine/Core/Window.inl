@@ -43,6 +43,10 @@ inline std::string Window::GetTitle() const {
     return m_Data.Title;
 }
 
+inline bool Window::VSyncEnabled() const {
+    return m_Data.VSyncEnabled;
+}
+
 inline void Window::Close() {
     m_Data.ShouldClose = true;
 }

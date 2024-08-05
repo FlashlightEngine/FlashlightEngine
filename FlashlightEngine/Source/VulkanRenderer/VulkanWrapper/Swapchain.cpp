@@ -23,7 +23,10 @@ namespace Flashlight::VulkanRenderer::VulkanWrapper {
                                           .format = m_SwapchainImageFormat,
                                           .colorSpace = VK_COLORSPACE_SRGB_NONLINEAR_KHR
                                       })
-                                      .set_desired_present_mode(VK_PRESENT_MODE_FIFO_KHR)
+                                      .set_desired_present_mode(
+                                          window.VSyncEnabled()
+                                              ? VK_PRESENT_MODE_FIFO_KHR
+                                              : VK_PRESENT_MODE_MAILBOX_KHR)
                                       .set_desired_extent(window.GetWidth(), window.GetHeight())
                                       .add_image_usage_flags(VK_IMAGE_USAGE_TRANSFER_DST_BIT)
                                       .build()
@@ -58,9 +61,10 @@ namespace Flashlight::VulkanRenderer::VulkanWrapper {
         frame.DeletionQueue.Flush();
 
         VK_CHECK(vkResetFences(device.GetDevice(), 1, &frame.RenderFence))
-        
-        return vkAcquireNextImageKHR(device.GetDevice(), m_Swapchain, 1000000000, frame.SwapchainSemaphore, nullptr, &
-                frame.SwapchainImageIndex);
+
+        return vkAcquireNextImageKHR(device.GetDevice(), m_Swapchain, 1000000000, frame.SwapchainSemaphore, nullptr,
+                                     &
+                                     frame.SwapchainImageIndex);
     }
 
     void Swapchain::Destroy() {

@@ -155,10 +155,12 @@ namespace Flashlight {
         i32 Width, Height;
         std::string Title;
         bool Fullscreen;
+        bool VSync;
 
         WindowProperties(const i32 width, const i32 height, std::string&& title,
-                         const bool fullscreen) : Width(width), Height(height), Title(std::move(title)),
-                                                  Fullscreen(fullscreen) {
+                         const bool fullscreen, const bool vSync) : Width(width), Height(height),
+                                                                    Title(std::move(title)), Fullscreen(fullscreen),
+                                                                    VSync(vSync) {
         }
     };
 
@@ -169,6 +171,7 @@ namespace Flashlight {
         bool StopRendering = false;
         bool RestartRendering = false;
         bool ShouldInvalidateSwapchain = false;
+        bool VSyncEnabled = false;
     };
 
     class Window {
@@ -194,6 +197,7 @@ namespace Flashlight {
         [[nodiscard]] inline i32 GetHeight() const;
         [[nodiscard]] inline VkExtent2D GetExtent() const;
         [[nodiscard]] inline std::string GetTitle() const;
+        [[nodiscard]] inline bool VSyncEnabled() const;
         [[nodiscard]] KeyState GetKeyState(const Keys& key) const;
 
         void Update();

@@ -47,6 +47,7 @@ namespace Flashlight {
         m_Data.Width = width;
         m_Data.Height = height;
         m_Data.Title = windowProperties.Title;
+        m_Data.VSyncEnabled = windowProperties.VSync;
 
         glfwSetWindowUserPointer(m_Window, &m_Data);
 
