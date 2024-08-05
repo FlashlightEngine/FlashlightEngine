@@ -150,13 +150,15 @@ namespace Flashlight {
         RightSuper = 347,
         Menu = 348,
     };
-    
+
     struct WindowProperties {
         i32 Width, Height;
         std::string Title;
+        bool Fullscreen;
 
-        WindowProperties(const i32 width, const i32 height, std::string&& title) : Width(width), Height(height),
-                                                                                   Title(std::move(title)) {
+        WindowProperties(const i32 width, const i32 height, std::string&& title,
+                         const bool fullscreen) : Width(width), Height(height), Title(std::move(title)),
+                                                  Fullscreen(fullscreen) {
         }
     };
 

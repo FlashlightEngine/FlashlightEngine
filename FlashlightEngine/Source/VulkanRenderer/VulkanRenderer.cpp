@@ -21,7 +21,6 @@
 #include <imgui_impl_glfw.h>
 #include <vk_mem_alloc.h>
 
-#include <imgui_impl_glfw.h>
 #include <imgui_impl_vulkan.h>
 
 namespace Flashlight::VulkanRenderer {
@@ -254,8 +253,8 @@ namespace Flashlight::VulkanRenderer {
 
         ImGui::NewFrame();
 
-        if (ImGui::Begin("Background")) {
-            ImGui::SliderFloat("Render Scale: ", &m_RenderScale, 0.3f, 1.0f);
+        if (ImGui::Begin("Rendering settings")) {
+            ImGui::SliderFloat("Render Scale ", &m_RenderScale, 0.3f, 1.0f);
         }
         ImGui::End();
 

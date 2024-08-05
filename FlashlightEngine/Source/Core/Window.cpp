@@ -22,24 +22,30 @@ namespace Flashlight {
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
         glfwWindowHint(GLFW_SCALE_TO_MONITOR, GLFW_FALSE);
 
+        const GLFWvidmode* videoMode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+
         Log::EngineTrace("Creating window...");
-        m_Window = glfwCreateWindow(windowProperties.Width, windowProperties.Height, windowProperties.Title.c_str(),
-                                    nullptr, nullptr);
+        const i32 width = windowProperties.Fullscreen ? videoMode->width : windowProperties.Width;
+        const i32 height = windowProperties.Fullscreen ? videoMode->height : windowProperties.Height;
+
+        // If windowProperties.Fullscreen is true, discard the width and height and use the monitor's ones instead. 
+        m_Window = glfwCreateWindow(width, height, windowProperties.Title.c_str(),
+                                    windowProperties.Fullscreen ? glfwGetPrimaryMonitor() : nullptr, nullptr);
 
         if (m_Window == nullptr) {
             Log::EngineFatal({0x01, 0x01}, "Failed to create GLFW window.");
         }
 
-        const GLFWvidmode* videoMode = glfwGetVideoMode(glfwGetPrimaryMonitor());
-
-        const i32 windowLeft = videoMode->width / 2 - windowProperties.Width / 2;
-        const i32 windowTop = videoMode->height / 2 - windowProperties.Height / 2;
-        glfwSetWindowPos(m_Window, windowLeft, windowTop);
+        if (!windowProperties.Fullscreen) {
+            const i32 windowLeft = videoMode->width / 2 - windowProperties.Width / 2;
+            const i32 windowTop = videoMode->height / 2 - windowProperties.Height / 2;
+            glfwSetWindowPos(m_Window, windowLeft, windowTop);
+        }
 
         Log::EngineTrace("Window created.");
 
-        m_Data.Width = windowProperties.Width;
-        m_Data.Height = windowProperties.Height;
+        m_Data.Width = width;
+        m_Data.Height = height;
         m_Data.Title = windowProperties.Title;
 
         glfwSetWindowUserPointer(m_Window, &m_Data);
@@ -55,7 +61,7 @@ namespace Flashlight {
     Window::~Window() {
         if (m_Window != nullptr) {
             ImGui_ImplGlfw_Shutdown();
-            
+
             Log::EngineTrace("Destroying window.");
             glfwDestroyWindow(m_Window);
         }
