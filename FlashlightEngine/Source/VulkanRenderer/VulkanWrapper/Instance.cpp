@@ -7,9 +7,6 @@
  */
 #include <FlashlightEngine/VulkanRenderer/VulkanWrapper/Instance.hpp>
 
-#include <SDL.h>
-#include <SDL_vulkan.h>
-
 namespace Flashlight::VulkanRenderer::VulkanWrapper {
     namespace {
         VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(
@@ -74,13 +71,12 @@ namespace Flashlight::VulkanRenderer::VulkanWrapper {
         vkb::InstanceBuilder builder;
 
         u32 extensionCount = 0;
-        SDL_Vulkan_GetInstanceExtensions(window.GetNativeWindow(), &extensionCount, nullptr);
-        std::vector<const char*> requiredExtensions(extensionCount);
-        SDL_Vulkan_GetInstanceExtensions(window.GetNativeWindow(), &extensionCount, requiredExtensions.data());
+        glfwGetRequiredInstanceExtensions(&extensionCount);
+        const char** extensions = glfwGetRequiredInstanceExtensions(&extensionCount);
 
         Log::EngineTrace("Vulkan instance extensions required by the window:");
-        for (const auto extension : requiredExtensions) {
-            Log::EngineTrace("\t - {0}", extension);
+        for (u32 i = 0; i < extensionCount; i++) {
+            Log::EngineTrace("\t - {0}", extensions[i]);
         }
 
         builder.set_app_name(window.GetTitle().c_str())
@@ -134,7 +130,7 @@ namespace Flashlight::VulkanRenderer::VulkanWrapper {
 
         
         Log::EngineTrace("Creating Vulkan window surface...");
-        SDL_Vulkan_CreateSurface(window.GetNativeWindow(), m_VkbInstance.instance, &m_Surface);
+        glfwCreateWindowSurface(m_Instance, window.GetNativeWindow(), nullptr, &m_Surface);
         Log::EngineTrace("Vulkan window surface created.");
 
         m_DeletionQueue.PushFunction([this]() {

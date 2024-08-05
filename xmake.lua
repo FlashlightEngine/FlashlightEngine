@@ -23,10 +23,10 @@ add_repositories("pixfri https://github.com/Pixfri/xmake-repo.git")
 
 -- Define packages to download.
 add_requires("vulkan-loader 1.3.290+0", "vk-bootstrap v1.3.290", "vulkan-memory-allocator v3.1.0", 
-             "vulkan-utility-libraries v1.3.290", "libsdl 2.30.5", "glm 1.0.1", "spdlog v1.9.0", "magic_enum v0.9.5")
+             "vulkan-utility-libraries v1.3.290", "glfw 3.4", "glm 1.0.1", "spdlog v1.9.0", "magic_enum v0.9.5")
 add_requires("glslang 1.3.290+0", {configs = {binaryonly = true}})
 add_requires("fastgltf v0.6.1")
-add_requires("imgui v1.91.0", {configs = {sdl2_no_renderer = true, vulkan = true, debug = is_mode("debug")}})
+add_requires("imgui v1.91.0", {configs = {glfw = true, vulkan = true, debug = is_mode("debug")}})
 
 local outputdir = "$(mode)-$(os)-$(arch)"
 
@@ -63,5 +63,5 @@ target("FlashlightEngine")
   set_pcxxheader("FlashlightEngine/Include/FlashlightEngine/flpch.hpp")
 
   -- target dependencies
-  add_packages("vulkan-loader","vk-bootstrap", "vulkan-memory-allocator", "vulkan-utility-libraries", "libsdl", "glm",
+  add_packages("vulkan-loader","vk-bootstrap", "vulkan-memory-allocator", "vulkan-utility-libraries", "glfw", "glm",
                "spdlog", "magic_enum", "imgui", "fastgltf")

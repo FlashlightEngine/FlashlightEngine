@@ -9,25 +9,24 @@
 
 #include <FlashlightEngine/Core/Logger.hpp>
 
-#include <SDL.h>
+#include <GLFW/glfw3.h>
 
-#include <imgui_impl_sdl2.h>
+#include <imgui_impl_glfw.h>
 
 namespace Flashlight {
     Window::Window(const WindowProperties& windowProperties) {
-        if (SDL_Init(SDL_INIT_VIDEO) != 0) {
-            Log::EngineFatal({0x01, 0x00}, "Failed to initialize SDL. Error : {}", SDL_GetError());
+        if (!glfwInit()) {
+            Log::EngineFatal({0x01, 0x00}, "Failed to initialize GLFW.");
         }
 
-        constexpr auto windowFlags = static_cast<SDL_WindowFlags>(SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
+        glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
         Log::EngineTrace("Creating window...");
-        m_Window = SDL_CreateWindow(windowProperties.Title.c_str(), SDL_WINDOWPOS_UNDEFINED,
-                                    SDL_WINDOWPOS_UNDEFINED, windowProperties.Width, windowProperties.Height,
-                                    windowFlags);
+        m_Window = glfwCreateWindow(windowProperties.Width, windowProperties.Height, windowProperties.Title.c_str(),
+                                    nullptr, nullptr);
 
         if (m_Window == nullptr) {
-            Log::EngineFatal({0x01, 0x01}, "Failed to create SDL window.");
+            Log::EngineFatal({0x01, 0x01}, "Failed to create GLFW window.");
         }
 
         Log::EngineTrace("Window created.");
@@ -35,42 +34,53 @@ namespace Flashlight {
         m_Data.Width = windowProperties.Width;
         m_Data.Height = windowProperties.Height;
         m_Data.Title = windowProperties.Title;
+
+        glfwSetWindowUserPointer(m_Window, &m_Data);
+
+        glfwSetWindowSizeCallback(m_Window, [](GLFWwindow* window, const i32 width, const i32 height) {
+            const auto data = static_cast<WindowData*>(glfwGetWindowUserPointer(window));
+            data->Width = width;
+            data->Height = height;
+            data->ShouldInvalidateSwapchain = true;
+        });
     }
 
     Window::~Window() {
         if (m_Window != nullptr) {
+            ImGui_ImplGlfw_Shutdown();
+            
             Log::EngineTrace("Destroying window.");
-            SDL_DestroyWindow(m_Window);
+            glfwDestroyWindow(m_Window);
         }
 
-        SDL_Quit();
+        glfwTerminate();
     }
 
-    void Window::Update(VulkanRenderer::Camera& camera, const f32 deltaTime) {
-        SDL_Event event;
+    KeyState Window::GetKeyState(const Keys& key) const {
+        switch (glfwGetKey(m_Window, static_cast<i32>(key))) {
+        case GLFW_PRESS:
+            return KeyState::Pressed;
 
-        while (SDL_PollEvent(&event) != 0) {
-            if (event.type == SDL_QUIT) {
-                m_Data.ShouldClose = true;
-            }
+        case GLFW_RELEASE:
+            return KeyState::Released;
 
-            if (event.type == SDL_WINDOWEVENT) {
-                if (event.window.event == SDL_WINDOWEVENT_MINIMIZED) {
-                    m_Data.StopRendering = true;
-                }
+        case GLFW_REPEAT:
+            return KeyState::Repeated;
 
-                if (event.window.event == SDL_WINDOWEVENT_RESTORED) {
-                    m_Data.StopRendering = false;
-                }
-
-                if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
-                    m_Data.ShouldInvalidateSwapchain = true;
-                    SDL_GetWindowSize(m_Window, &m_Data.Width, &m_Data.Height);
-                }
-            }
-
-            ImGui_ImplSDL2_ProcessEvent(&event);
-            camera.ProcessSDLEvent(event, deltaTime);
+        default:
+            return KeyState::None;
         }
+    }
+
+    void Window::Update() {
+        glfwPollEvents();
+
+        if (glfwWindowShouldClose(m_Window)) {
+            m_Data.ShouldClose = true;
+        }
+    }
+
+    void Window::SetMouseMovementCallback(const GLFWcursorposfun callback) const {
+        glfwSetCursorPosCallback(m_Window, callback);
     }
 }

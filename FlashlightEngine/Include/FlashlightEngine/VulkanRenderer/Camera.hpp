@@ -9,7 +9,7 @@
 
 #include <FlashlightEngine/VulkanRenderer/VulkanTypes.hpp>
 
-#include <SDL_events.h>
+#include <FlashlightEngine/Core/Window.hpp>
 
 namespace Flashlight::VulkanRenderer {
     class Camera {
@@ -24,7 +24,7 @@ namespace Flashlight::VulkanRenderer {
         glm::mat4 GetViewMatrix() const;
         glm::mat4 GetRotationMatrix() const;
 
-        void ProcessSDLEvent(const SDL_Event& e, f32 deltaTime);
+        void ProcessInput(const Window& window, f32 deltaTime);
 
         void Update();
     };

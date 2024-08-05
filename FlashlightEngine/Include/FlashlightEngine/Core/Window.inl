@@ -23,7 +23,7 @@ inline void Window::SwapchainInvalidated() {
     m_Data.ShouldInvalidateSwapchain = false;
 }
 
-inline SDL_Window* Window::GetNativeWindow() const {
+inline GLFWwindow* Window::GetNativeWindow() const {
     return m_Window;
 }
 

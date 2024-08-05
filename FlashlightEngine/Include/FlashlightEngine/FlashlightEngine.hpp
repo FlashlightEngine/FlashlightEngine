@@ -12,8 +12,11 @@
 #include <FlashlightEngine/VulkanRenderer/VulkanRenderer.hpp>
 #include <FlashlightEngine/VulkanRenderer/Camera.hpp>
 
-namespace Flashlight {
+namespace Flashlight {    
     class FlashlightEngine {
+        std::chrono::high_resolution_clock::time_point m_CurrentTime;
+        static FlashlightEngine* m_SLoadedApplication;
+        
     public:
         FlashlightEngine() = default;
         ~FlashlightEngine() = default;
@@ -43,10 +46,6 @@ namespace Flashlight {
         std::unique_ptr<VulkanRenderer::VulkanRenderer> m_Renderer;
 
         VulkanRenderer::Camera m_Camera;
-
-    private:
-        std::chrono::high_resolution_clock::time_point m_CurrentTime;
-        static FlashlightEngine* m_SLoadedApplication;
     };
 
 #include "FlashlightEngine.inl"

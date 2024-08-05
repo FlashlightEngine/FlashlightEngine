@@ -9,6 +9,7 @@
 
 #include <FlashlightEngine/VulkanRenderer/VulkanAssetsLoader.hpp>
 #include <FlashlightEngine/VulkanRenderer/VulkanDescriptors.hpp>
+#include <FlashlightEngine/VulkanRenderer/Camera.hpp>
 #include <FlashlightEngine/VulkanRenderer/VulkanWrapper/Swapchain.hpp>
 
 #include <FlashlightEngine/Core/Window.hpp>

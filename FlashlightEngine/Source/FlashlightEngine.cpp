@@ -9,7 +9,7 @@
 
 #include <FlashlightEngine/Core/Logger.hpp>
 
-namespace Flashlight {
+namespace Flashlight {    
     FlashlightEngine* FlashlightEngine::m_SLoadedApplication = nullptr;
 
     void FlashlightEngine::Run(const WindowProperties& windowProperties, const DebugLevel& debugLevel) {
@@ -49,9 +49,9 @@ namespace Flashlight {
 
         m_Camera.Pitch = 0;
         m_Camera.Yaw = 0;
-
+        
         m_IsRunning = true;
-
+        
         return true;
     }
 
@@ -67,10 +67,10 @@ namespace Flashlight {
         if (m_Window->ShouldClose()) {
             m_IsRunning = false;
         }
+        
+        m_Window->Update();
 
-        // Poll window events and update objects using SDL events.
-        // TODO: Make a better input system.
-        m_Window->Update(m_Camera, m_DeltaTime);
+        m_Camera.ProcessInput(*m_Window, m_DeltaTime);
     }
 
     void FlashlightEngine::Render() {

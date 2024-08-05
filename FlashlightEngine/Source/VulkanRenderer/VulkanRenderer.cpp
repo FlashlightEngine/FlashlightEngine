@@ -17,13 +17,12 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/transform.hpp>
 
-#include <SDL.h>
-
 #define VMA_IMPLEMENTATION
+#include <imgui_impl_glfw.h>
 #include <vk_mem_alloc.h>
 
+#include <imgui_impl_glfw.h>
 #include <imgui_impl_vulkan.h>
-#include <imgui_impl_sdl2.h>
 
 namespace Flashlight::VulkanRenderer {
     void GLTFMetallic_Roughness::BuildPipelines(VulkanRenderer* renderer) {
@@ -251,7 +250,7 @@ namespace Flashlight::VulkanRenderer {
 
     void VulkanRenderer::CreateUi() {
         ImGui_ImplVulkan_NewFrame();
-        ImGui_ImplSDL2_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
 
         ImGui::NewFrame();
 
@@ -836,8 +835,7 @@ namespace Flashlight::VulkanRenderer {
 
         ImGui::CreateContext();
 
-        ImGui_ImplSDL2_InitForVulkan(window.GetNativeWindow());
-
+        ImGui_ImplGlfw_InitForVulkan(window.GetNativeWindow(), true);
         ImGui_ImplVulkan_InitInfo initInfo = {};
         initInfo.Instance = m_Instance->GetInstance();
         initInfo.PhysicalDevice = m_Device->GetPhysicalDevice();

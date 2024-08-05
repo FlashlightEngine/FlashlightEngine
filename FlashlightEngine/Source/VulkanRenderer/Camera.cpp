@@ -26,41 +26,54 @@ namespace Flashlight::VulkanRenderer {
         return glm::toMat4(yawRotation) * glm::toMat4(pitchRotation);
     }
 
-    void Camera::ProcessSDLEvent(const SDL_Event& e, const f32 deltaTime) {
-        if (e.type == SDL_KEYDOWN) {
-            if (e.key.keysym.sym == SDLK_w) {
-                Velocity.z = -1 * deltaTime;
-            }
-            if (e.key.keysym.sym == SDLK_s) {
-                Velocity.z = 1 * deltaTime;
-            }
-            if (e.key.keysym.sym == SDLK_a) {
-                Velocity.x = -1 * deltaTime;
-            }
-            if (e.key.keysym.sym == SDLK_d) {
-                Velocity.x = 1 * deltaTime;
-            }
+    void Camera::ProcessInput(const Window& window, const f32 deltaTime) {
+        if (window.GetKeyState(Keys::W) == KeyState::Released) {
+            Velocity.z = 0;
         }
 
-        if (e.type == SDL_KEYUP) {
-            if (e.key.keysym.sym == SDLK_w) {
-                Velocity.z = 0;
-            }
-            if (e.key.keysym.sym == SDLK_s) {
-                Velocity.z = 0;
-            }
-            if (e.key.keysym.sym == SDLK_a) {
-                Velocity.x = 0;
-            }
-            if (e.key.keysym.sym == SDLK_d) {
-                Velocity.x = 0;
-            }
+        if (window.GetKeyState(Keys::S) == KeyState::Released) {
+            Velocity.z = 0;
         }
 
-        if (e.type == SDL_MOUSEMOTION) {
-            Yaw += static_cast<f32>(e.motion.xrel * -1) * deltaTime;
-            Pitch += static_cast<f32>(e.motion.yrel * -1) * deltaTime;
+        if (window.GetKeyState(Keys::A) == KeyState::Released) {
+            Velocity.x = 0;
         }
+
+        if (window.GetKeyState(Keys::D) == KeyState::Released) {
+            Velocity.x = 0;
+        }
+        
+        if (window.GetKeyState(Keys::W) == KeyState::Pressed) {
+            Velocity.z = -1 * deltaTime;
+        }
+        
+        if (window.GetKeyState(Keys::S) == KeyState::Pressed) {
+            Velocity.z = 1 * deltaTime;
+        }
+        
+        if (window.GetKeyState(Keys::A) == KeyState::Pressed) {
+            Velocity.x = -1 * deltaTime;
+        }
+        
+        if (window.GetKeyState(Keys::D) == KeyState::Pressed) {
+            Velocity.x = 1 * deltaTime;
+        }
+
+        if (window.GetKeyState(Keys::Up) == KeyState::Pressed) {
+            Pitch += 3.f * deltaTime;
+        }
+
+        if (window.GetKeyState(Keys::Down) == KeyState::Pressed) {
+            Pitch -= 3.f * deltaTime;
+        }
+
+        if (window.GetKeyState(Keys::Left) == KeyState::Pressed) {
+            Yaw += 3.f * deltaTime;
+        }
+
+        if (window.GetKeyState(Keys::Right) == KeyState::Pressed) {
+            Yaw -= 3.f * deltaTime;
+        }    
     }
 
     void Camera::Update() {
