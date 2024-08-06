@@ -7,7 +7,7 @@
  */
 #include <FlashlightEngine/VulkanRenderer/VulkanTypes.hpp>
 
-namespace Flashlight::VulkanRenderer {
+namespace Flashlight::Renderer {
     void Node::RefreshTransform(const glm::mat4& parentMatrix) {
         WorldTransform = parentMatrix * LocalTransform;
         for (const auto& c : Children) {

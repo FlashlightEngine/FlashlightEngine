@@ -47,6 +47,11 @@ inline bool Window::VSyncEnabled() const {
     return m_Data.VSyncEnabled;
 }
 
+inline void Window::ToggleVSync() {
+    m_Data.VSyncEnabled = !m_Data.VSyncEnabled;
+    m_Data.ShouldInvalidateSwapchain = true;
+}
+
 inline void Window::Close() {
     m_Data.ShouldClose = true;
 }

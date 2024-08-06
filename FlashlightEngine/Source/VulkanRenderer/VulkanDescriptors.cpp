@@ -8,7 +8,7 @@
 #include <magic_enum.hpp>
 #include <FlashlightEngine/VulkanRenderer/VulkanDescriptors.hpp>
 
-namespace Flashlight::VulkanRenderer {
+namespace Flashlight::Renderer {
 #pragma region Descriptor Layout Builder
     void DescriptorLayoutBuilder::AddBinding(const u32 binding, const VkDescriptorType type) {
         VkDescriptorSetLayoutBinding newBinding{};
@@ -112,7 +112,7 @@ namespace Flashlight::VulkanRenderer {
         m_FullPools.clear();
     }
 
-    void DescriptorAllocatorGrowable::DestroyPools(const VkDevice device) {
+    void DescriptorAllocatorGrowable::DestroyPools(VkDevice device) {
         for (const auto pool : m_ReadyPools) {
             vkDestroyDescriptorPool(device, pool, nullptr);
         }

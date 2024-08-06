@@ -8,10 +8,11 @@
 #pragma once
 
 #include <FlashlightEngine/VulkanRenderer/VulkanTypes.hpp>
+#include <FlashlightEngine/VulkanRenderer/VulkanDescriptors.hpp>
 
 #include <filesystem>
 
-namespace Flashlight::VulkanRenderer {
+namespace Flashlight::Renderer {
     struct GLTFMaterial {
         MaterialInstance Data;
     };
@@ -31,6 +32,31 @@ namespace Flashlight::VulkanRenderer {
 
     class VulkanRenderer;
 
-    std::optional<std::vector<std::shared_ptr<MeshAsset>>> LoadGltfMeshes(
-        VulkanRenderer* renderer, const std::filesystem::path& filePath);
+    struct LoadedGLTF : IRenderable {
+        // storage for all the data of a given glTF file.
+        std::unordered_map<std::string, std::shared_ptr<MeshAsset>> Meshes;
+        std::unordered_map<std::string, std::shared_ptr<Node>> Nodes;
+        std::unordered_map<std::string, AllocatedImage> Images;
+        std::unordered_map<std::string, std::shared_ptr<GLTFMaterial>> Materials;
+
+        // Nodes that don't have a parent, for iterating through the file in tree order.
+        std::vector<std::shared_ptr<Node>> TopNodes;
+
+        std::vector<VkSampler> Samplers;
+
+        DescriptorAllocatorGrowable DescriptorPool;
+
+        AllocatedBuffer MaterialDataBuffer;
+
+        VulkanRenderer* LinkedRenderer;
+
+        ~LoadedGLTF() { ClearAll(); }
+
+        virtual void Draw(const glm::mat4& topMatrix, DrawContext& context) override;
+
+    private:
+        void ClearAll();
+    };
+
+    std::optional<std::shared_ptr<LoadedGLTF>> LoadGLTF(VulkanRenderer* renderer, const std::filesystem::path& path);
 }

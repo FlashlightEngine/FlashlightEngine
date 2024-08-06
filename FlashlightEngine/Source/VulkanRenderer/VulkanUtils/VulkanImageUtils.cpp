@@ -12,7 +12,7 @@
 #include <FlashlightEngine/VulkanRenderer/VulkanRenderer.hpp>
 #include <FlashlightEngine/VulkanRenderer/VulkanUtils/VulkanBufferUtils.hpp>
 
-namespace Flashlight::VulkanRenderer::VulkanUtils {
+namespace Flashlight::Renderer::VulkanUtils {
     void TransitionImage(const VkCommandBuffer commandBuffer, const VkImage image,
                          const VkImageLayout currentLayout,
                          const VkImageLayout newLayout) {

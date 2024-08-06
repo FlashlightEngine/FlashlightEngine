@@ -9,7 +9,7 @@
 
 #include <magic_enum.hpp>
 
-namespace Flashlight::VulkanRenderer::VulkanWrapper {
+namespace Flashlight::Renderer::VulkanWrapper {
     Device::Device(const Instance& instance) {
         // Vulkan 1.3 features
         VkPhysicalDeviceVulkan13Features features = {

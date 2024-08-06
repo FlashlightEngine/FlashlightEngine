@@ -15,6 +15,10 @@ inline VulkanWrapper::Device& VulkanRenderer::GetDevice() const {
     return *m_Device;
 }
 
+inline VmaAllocator VulkanRenderer::GetAllocator() const {
+    return m_Allocator;
+}
+
 inline VkFormat VulkanRenderer::GetDrawImageFormat() const {
     return m_DrawImage.ImageFormat;
 }

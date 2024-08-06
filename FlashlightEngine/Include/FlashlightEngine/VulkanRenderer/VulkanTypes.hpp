@@ -34,7 +34,7 @@ namespace Flashlight {
         Debug = 4
     };
 
-    namespace VulkanRenderer {
+    namespace Renderer {
         struct DeletionQueue {
             std::deque<std::function<void()>> Deletors;
 

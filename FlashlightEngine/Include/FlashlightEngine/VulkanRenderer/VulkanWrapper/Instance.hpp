@@ -14,7 +14,7 @@
 
 #include <VkBootstrap.h>
 
-namespace Flashlight::VulkanRenderer::VulkanWrapper {
+namespace Flashlight::Renderer::VulkanWrapper {
     class Instance {
         vkb::Instance m_VkbInstance;
         VkInstance m_Instance = VK_NULL_HANDLE;

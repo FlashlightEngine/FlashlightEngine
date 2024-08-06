@@ -9,7 +9,7 @@
 
 #include <FlashlightEngine/VulkanRenderer/VulkanTypes.hpp>
 
-namespace Flashlight::VulkanRenderer {
+namespace Flashlight::Renderer {
     class VulkanRenderer;
 
     namespace VulkanUtils {

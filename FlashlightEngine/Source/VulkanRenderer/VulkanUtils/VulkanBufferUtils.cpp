@@ -7,7 +7,7 @@
  */
 #include <FlashlightEngine/VulkanRenderer/VulkanUtils/VulkanBufferUtils.hpp>
 
-namespace Flashlight::VulkanRenderer::VulkanUtils {
+namespace Flashlight::Renderer::VulkanUtils {
     AllocatedBuffer CreateBuffer(const VmaAllocator allocator, const size allocSize, const VkBufferUsageFlags usage,
                                  const VmaMemoryUsage memoryUsage) {
         // Allocate buffer

@@ -11,7 +11,7 @@
 
 #include <FlashlightEngine/Core/Window.hpp>
 
-namespace Flashlight::VulkanRenderer {
+namespace Flashlight::Renderer {
     class Camera {
     public:
         glm::vec3 Velocity;

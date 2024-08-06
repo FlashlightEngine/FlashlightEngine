@@ -16,7 +16,7 @@
 
 #include <VkBootstrap.h>
 
-namespace Flashlight::VulkanRenderer {
+namespace Flashlight::Renderer {
 
     constexpr u32 g_FrameOverlap = 2;
 
@@ -138,25 +138,25 @@ namespace Flashlight::VulkanRenderer {
 
         VkDescriptorSetLayout m_SingleImageDescriptorLayout;
 
-        std::vector<std::shared_ptr<MeshAsset>> m_TestMeshes;
-
-        AllocatedImage m_WhiteImage;
-        AllocatedImage m_BlackImage;
-        AllocatedImage m_GrayImage;
-        AllocatedImage m_ErrorCheckerboardImage;
-
-        VkSampler m_DefaultSamplerLinear;
-        VkSampler m_DefaultSamplerNearest;
+        std::unordered_map<std::string, std::shared_ptr<LoadedGLTF>> m_LoadedScenes;
 
         MaterialInstance m_DefaultData;
-        GLTFMetallic_Roughness m_MetalRoughMaterial;
 
     public:
         GPUSceneData SceneData;
         VkDescriptorSetLayout GpuSceneDataLayout;
 
         DrawContext MainDrawContext;
-        std::unordered_map<std::string, std::shared_ptr<Node>> LoadedNodes;
+
+        AllocatedImage WhiteImage;
+        AllocatedImage BlackImage;
+        AllocatedImage GrayImage;
+        AllocatedImage ErrorCheckerboardImage;
+
+        VkSampler DefaultSamplerLinear;
+        VkSampler DefaultSamplerNearest;
+        
+        GLTFMetallic_Roughness MetalRoughMaterial;
         
         VulkanRenderer(const Window& window, const DebugLevel& debugLevel);
         ~VulkanRenderer();
@@ -169,7 +169,8 @@ namespace Flashlight::VulkanRenderer {
 
         [[nodiscard]] GPUMeshBuffers UploadMesh(std::span<u32> indices, std::span<Vertex> vertices) const;
         void PlanMeshDeletion(GPUMeshBuffers mesh);
-        void AddDeletion(std::function<void()>&& deletor);
+        void PlanDescriptorPoolsDeletion(DescriptorAllocatorGrowable& allocator);
+        void PlanDeletion(std::function<void()>&& deletor);
         void CreateRendererUi();
         void UpdateScene(const Window& window, Camera& camera);
         void Draw(Window& window, Camera& camera);
@@ -178,6 +179,7 @@ namespace Flashlight::VulkanRenderer {
 
         [[nodiscard]] inline VulkanWrapper::Instance& GetInstance() const;
         [[nodiscard]] inline VulkanWrapper::Device& GetDevice() const;
+        [[nodiscard]] inline VmaAllocator GetAllocator() const;
         [[nodiscard]] inline VkFormat GetDrawImageFormat() const;
         [[nodiscard]] inline VkFormat GetDepthImageFormat() const;
 

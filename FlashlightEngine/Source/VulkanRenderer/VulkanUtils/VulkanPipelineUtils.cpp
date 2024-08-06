@@ -10,7 +10,7 @@
 
 #include <fstream>
 
-namespace Flashlight::VulkanRenderer::VulkanUtils {
+namespace Flashlight::Renderer::VulkanUtils {
     bool CreateShaderModule(const VkDevice device, const std::filesystem::path& filePath,
                             VkShaderModule* outShaderModule) {
         // Open the file with the cursor at the end.

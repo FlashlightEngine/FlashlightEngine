@@ -11,7 +11,7 @@
 #include <glm/gtx/transform.hpp>
 #include <glm/gtx/quaternion.hpp>
 
-namespace Flashlight::VulkanRenderer {
+namespace Flashlight::Renderer {
     glm::mat4 Camera::GetViewMatrix() const {
         // To create a correct model view, the world needs to be moved in the opposite direction of the camera.
         const glm::mat4 cameraTranslation = glm::translate(glm::mat4(1.f), Position);

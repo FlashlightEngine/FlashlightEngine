@@ -7,7 +7,7 @@
  */
 #include <FlashlightEngine/VulkanRenderer/VulkanInitializers.hpp>
 
-namespace Flashlight::VulkanRenderer::VulkanInit {
+namespace Flashlight::Renderer::VulkanInit {
     VkCommandPoolCreateInfo
     CommandPoolCreateInfo(const u32 queueFamilyIndex, const VkCommandPoolCreateFlags flags) {
         VkCommandPoolCreateInfo info;

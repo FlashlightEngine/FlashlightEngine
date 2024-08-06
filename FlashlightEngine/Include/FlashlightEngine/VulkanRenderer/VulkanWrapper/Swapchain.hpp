@@ -9,7 +9,7 @@
 
 #include <FlashlightEngine/VulkanRenderer/VulkanWrapper/Device.hpp>
 
-namespace Flashlight::VulkanRenderer {
+namespace Flashlight::Renderer {
     struct FrameData;
     
     namespace VulkanWrapper {

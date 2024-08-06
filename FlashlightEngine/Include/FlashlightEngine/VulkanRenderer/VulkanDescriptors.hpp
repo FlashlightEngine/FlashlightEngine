@@ -11,7 +11,7 @@
 
 #include <span>
 
-namespace Flashlight::VulkanRenderer {
+namespace Flashlight::Renderer {
 #pragma region Descriptor Layout Builder
     struct DescriptorLayoutBuilder {
         std::vector<VkDescriptorSetLayoutBinding> Bindings;

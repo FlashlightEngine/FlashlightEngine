@@ -198,6 +198,9 @@ namespace Flashlight {
         [[nodiscard]] inline VkExtent2D GetExtent() const;
         [[nodiscard]] inline std::string GetTitle() const;
         [[nodiscard]] inline bool VSyncEnabled() const;
+        // Use at your own risk, when V-Sync is set to false using this, the framerate is locked to twice the screen
+        // refresh rate for some reason.
+        inline void ToggleVSync();
         [[nodiscard]] KeyState GetKeyState(const Keys& key) const;
 
         void Update();

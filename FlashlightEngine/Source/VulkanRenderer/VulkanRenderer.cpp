@@ -23,7 +23,7 @@
 
 #include <imgui_impl_vulkan.h>
 
-namespace Flashlight::VulkanRenderer {
+namespace Flashlight::Renderer {
     void GLTFMetallic_Roughness::BuildPipelines(VulkanRenderer* renderer) {
         VkShaderModule meshFragShader;
         if (!VulkanUtils::CreateShaderModule(renderer->GetDevice().GetDevice(), "Shaders/mesh.frag.spv",
@@ -50,7 +50,7 @@ namespace Flashlight::VulkanRenderer {
         MaterialLayout = layoutBuilder.Build(renderer->GetDevice().GetDevice(),
                                              VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT);
 
-        renderer->AddDeletion([this, renderer]() {
+        renderer->PlanDeletion([this, renderer]() {
             vkDestroyDescriptorSetLayout(renderer->GetDevice().GetDevice(), MaterialLayout, nullptr);
         });
 
@@ -90,6 +90,7 @@ namespace Flashlight::VulkanRenderer {
         // Create the transparent variant.
         pipelineBuilder.EnableAdditiveBlending();
 
+        pipelineBuilder.SetCullMode(VK_CULL_MODE_NONE, VK_FRONT_FACE_COUNTER_CLOCKWISE);
         pipelineBuilder.EnableDepthTest(false, VK_COMPARE_OP_LESS);
 
         TransparentPipeline.Pipeline = pipelineBuilder.BuildPipeline(renderer->GetDevice().GetDevice());
@@ -97,7 +98,7 @@ namespace Flashlight::VulkanRenderer {
         vkDestroyShaderModule(renderer->GetDevice().GetDevice(), meshFragShader, nullptr);
         vkDestroyShaderModule(renderer->GetDevice().GetDevice(), meshVertexShader, nullptr);
 
-        renderer->AddDeletion([this, renderer, newLayout]() {
+        renderer->PlanDeletion([this, renderer, newLayout]() {
             vkDestroyPipelineLayout(renderer->GetDevice().GetDevice(), newLayout, nullptr);
             vkDestroyPipeline(renderer->GetDevice().GetDevice(), OpaquePipeline.Pipeline, nullptr);
             vkDestroyPipeline(renderer->GetDevice().GetDevice(), TransparentPipeline.Pipeline, nullptr);
@@ -164,6 +165,13 @@ namespace Flashlight::VulkanRenderer {
         InitializeImGui(window);
         InitializeDefaultData();
 
+        const std::filesystem::path structurePath = {"./Resources/Models/structure.glb"};
+        const auto structureFile = LoadGLTF(this, structurePath);
+
+        assert(structureFile.has_value());
+
+        m_LoadedScenes["structure"] = *structureFile;
+
         m_RendererInitialized = true;
     }
 
@@ -172,6 +180,8 @@ namespace Flashlight::VulkanRenderer {
 
         if (m_RendererInitialized) {
             m_MainDeletionQueue.Flush();
+
+            m_LoadedScenes.clear();
 
             m_RendererInitialized = false;
         }
@@ -243,7 +253,14 @@ namespace Flashlight::VulkanRenderer {
         });
     }
 
-    void VulkanRenderer::AddDeletion(std::function<void()>&& deletor) {
+    void VulkanRenderer::PlanDescriptorPoolsDeletion(DescriptorAllocatorGrowable& allocator) {
+        m_MainDeletionQueue.PushFunction([this, &allocator]() {
+            allocator.ClearPools(m_Device->GetDevice());
+            allocator.DestroyPools(m_Device->GetDevice());
+        });
+    }
+
+    void VulkanRenderer::PlanDeletion(std::function<void()>&& deletor) {
         m_MainDeletionQueue.PushFunction(std::move(deletor));
     }
 
@@ -276,10 +293,8 @@ namespace Flashlight::VulkanRenderer {
 
     void VulkanRenderer::UpdateScene(const Window& window, Camera& camera) {
         camera.Update();
-        
-        MainDrawContext.OpaqueSurfaces.clear();
 
-        LoadedNodes["Suzanne"]->Draw(glm::mat4{1.f}, MainDrawContext);
+        MainDrawContext.OpaqueSurfaces.clear();
 
         SceneData.View = camera.GetViewMatrix();
         SceneData.Projection = glm::perspective(glm::radians(70.f),
@@ -293,17 +308,12 @@ namespace Flashlight::VulkanRenderer {
         SceneData.SunlightColor = glm::vec4(1.f);
         SceneData.SunlightDirection = glm::vec4(0, 1, 0.5f, 1.0f);
 
-        for (i32 x = -3; x < 4; x++) {
-            glm::mat4 scale = glm::scale(glm::vec3{0.2f});
-            glm::mat4 translation = glm::translate(glm::vec3{x, 1, 0});
-
-            LoadedNodes["Cube"]->Draw(translation * scale, MainDrawContext);
-        }
+        m_LoadedScenes["structure"]->Draw(glm::mat4{1.f}, MainDrawContext);
     }
 
     void VulkanRenderer::Draw(Window& window, Camera& camera) {
         ImGui::Render();
-        
+
         m_DrawExtent.width = static_cast<u32>(static_cast<f32>(std::min(
             m_Swapchain->GetSwapchainExtent().width, m_DrawImage.ImageExtent.width)) * m_RenderScale);
         m_DrawExtent.height = static_cast<u32>(static_cast<f32>(std::min(
@@ -692,7 +702,7 @@ namespace Flashlight::VulkanRenderer {
     void VulkanRenderer::InitializePipelines() {
         InitializeComputePipelines();
 
-        m_MetalRoughMaterial.BuildPipelines(this);
+        MetalRoughMaterial.BuildPipelines(this);
     }
 
     void VulkanRenderer::InitializeComputePipelines() {
@@ -723,13 +733,13 @@ namespace Flashlight::VulkanRenderer {
 
         VkShaderModule skyShaderModule;
         if (!VulkanUtils::CreateShaderModule(m_Device->GetDevice(), "Shaders/sky.comp.spv",
-                           &skyShaderModule)) {
+                                             &skyShaderModule)) {
             Log::EngineFatal({0x02, 0x01}, "Failed to build the sky compute shader module.");
         }
 
         VkShaderModule gridShaderModule;
         if (!VulkanUtils::CreateShaderModule(m_Device->GetDevice(), "Shaders/gradient_grid.comp.spv",
-                           &gridShaderModule)) {
+                                             &gridShaderModule)) {
             Log::EngineFatal({0x02, 0x02}, "Failed to build the grid compute shader module.");
         }
 
@@ -871,28 +881,21 @@ namespace Flashlight::VulkanRenderer {
     }
 
     void VulkanRenderer::InitializeDefaultData() {
-        if (const auto loaded = LoadGltfMeshes(this, "Resources/Models/basicmesh.glb");
-            loaded.has_value()) {
-            m_TestMeshes = loaded.value();
-        } else {
-            Log::EngineError("Failed to load model.");
-        }
-
         // 3 default textures, white, gray, black. 1 pixel each.
         const u32 white = glm::packUnorm4x8(glm::vec4(1, 1, 1, 1));
-        m_WhiteImage = VulkanUtils::CreateImage(m_Allocator, m_Device->GetDevice(), this,
-                                                &white, VkExtent3D{1, 1, 1},
-                                                VK_FORMAT_B8G8R8A8_UNORM, VK_IMAGE_USAGE_SAMPLED_BIT);
+        WhiteImage = VulkanUtils::CreateImage(m_Allocator, m_Device->GetDevice(), this,
+                                              &white, VkExtent3D{1, 1, 1},
+                                              VK_FORMAT_B8G8R8A8_UNORM, VK_IMAGE_USAGE_SAMPLED_BIT);
 
         const u32 gray = glm::packUnorm4x8(glm::vec4(0.66f, 0.66f, 0.66f, 1));
-        m_GrayImage = VulkanUtils::CreateImage(m_Allocator, m_Device->GetDevice(), this,
-                                               &gray, VkExtent3D{1, 1, 1},
-                                               VK_FORMAT_B8G8R8A8_UNORM, VK_IMAGE_USAGE_SAMPLED_BIT);
+        GrayImage = VulkanUtils::CreateImage(m_Allocator, m_Device->GetDevice(), this,
+                                             &gray, VkExtent3D{1, 1, 1},
+                                             VK_FORMAT_B8G8R8A8_UNORM, VK_IMAGE_USAGE_SAMPLED_BIT);
 
         const u32 black = glm::packUnorm4x8(glm::vec4(0, 0, 0, 1));
-        m_BlackImage = VulkanUtils::CreateImage(m_Allocator, m_Device->GetDevice(), this,
-                                                &black, VkExtent3D{1, 1, 1},
-                                                VK_FORMAT_B8G8R8A8_UNORM, VK_IMAGE_USAGE_SAMPLED_BIT);
+        BlackImage = VulkanUtils::CreateImage(m_Allocator, m_Device->GetDevice(), this,
+                                              &black, VkExtent3D{1, 1, 1},
+                                              VK_FORMAT_B8G8R8A8_UNORM, VK_IMAGE_USAGE_SAMPLED_BIT);
 
         // Checkerboard image.
         const u32 magenta = glm::packUnorm4x8(glm::vec4(1, 0, 1, 1));
@@ -903,36 +906,36 @@ namespace Flashlight::VulkanRenderer {
             }
         }
 
-        m_ErrorCheckerboardImage = VulkanUtils::CreateImage(m_Allocator, m_Device->GetDevice(), this, pixels.data(),
-                                                            VkExtent3D{16, 16, 1}, VK_FORMAT_B8G8R8A8_UNORM,
-                                                            VK_IMAGE_USAGE_SAMPLED_BIT);
+        ErrorCheckerboardImage = VulkanUtils::CreateImage(m_Allocator, m_Device->GetDevice(), this, pixels.data(),
+                                                          VkExtent3D{16, 16, 1}, VK_FORMAT_B8G8R8A8_UNORM,
+                                                          VK_IMAGE_USAGE_SAMPLED_BIT);
 
         VkSamplerCreateInfo samplerInfo = {.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO};
         samplerInfo.magFilter = VK_FILTER_NEAREST;
         samplerInfo.minFilter = VK_FILTER_NEAREST;
 
-        vkCreateSampler(m_Device->GetDevice(), &samplerInfo, nullptr, &m_DefaultSamplerNearest);
+        vkCreateSampler(m_Device->GetDevice(), &samplerInfo, nullptr, &DefaultSamplerNearest);
 
         samplerInfo.magFilter = VK_FILTER_LINEAR;
         samplerInfo.minFilter = VK_FILTER_LINEAR;
 
-        vkCreateSampler(m_Device->GetDevice(), &samplerInfo, nullptr, &m_DefaultSamplerLinear);
+        vkCreateSampler(m_Device->GetDevice(), &samplerInfo, nullptr, &DefaultSamplerLinear);
 
         m_MainDeletionQueue.PushFunction([this]() {
-            vkDestroySampler(m_Device->GetDevice(), m_DefaultSamplerNearest, nullptr);
-            vkDestroySampler(m_Device->GetDevice(), m_DefaultSamplerLinear, nullptr);
+            vkDestroySampler(m_Device->GetDevice(), DefaultSamplerNearest, nullptr);
+            vkDestroySampler(m_Device->GetDevice(), DefaultSamplerLinear, nullptr);
 
-            VulkanUtils::DestroyImage(m_Allocator, m_Device->GetDevice(), m_WhiteImage);
-            VulkanUtils::DestroyImage(m_Allocator, m_Device->GetDevice(), m_GrayImage);
-            VulkanUtils::DestroyImage(m_Allocator, m_Device->GetDevice(), m_BlackImage);
-            VulkanUtils::DestroyImage(m_Allocator, m_Device->GetDevice(), m_ErrorCheckerboardImage);
+            VulkanUtils::DestroyImage(m_Allocator, m_Device->GetDevice(), WhiteImage);
+            VulkanUtils::DestroyImage(m_Allocator, m_Device->GetDevice(), GrayImage);
+            VulkanUtils::DestroyImage(m_Allocator, m_Device->GetDevice(), BlackImage);
+            VulkanUtils::DestroyImage(m_Allocator, m_Device->GetDevice(), ErrorCheckerboardImage);
         });
 
         GLTFMetallic_Roughness::MaterialResources materialResources;
-        materialResources.ColorImage = m_WhiteImage;
-        materialResources.ColorSampler = m_DefaultSamplerLinear;
-        materialResources.MetalRoughnessImage = m_WhiteImage;
-        materialResources.MetalRoughnessSampler = m_DefaultSamplerLinear;
+        materialResources.ColorImage = WhiteImage;
+        materialResources.ColorSampler = DefaultSamplerLinear;
+        materialResources.MetalRoughnessImage = WhiteImage;
+        materialResources.MetalRoughnessSampler = DefaultSamplerLinear;
 
         const AllocatedBuffer materialConstants = VulkanUtils::CreateBuffer(
             m_Allocator, sizeof(GLTFMetallic_Roughness::MaterialConstants), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
@@ -950,22 +953,8 @@ namespace Flashlight::VulkanRenderer {
         materialResources.DataBuffer = materialConstants.Buffer;
         materialResources.DataBufferOffset = 0;
 
-        m_DefaultData = m_MetalRoughMaterial.WriteMaterial(m_Device->GetDevice(), MaterialPass::MainColor,
-                                                           materialResources, m_GlobalDescriptorAllocator);
-
-        for (auto& m : m_TestMeshes) {
-            std::shared_ptr<MeshNode> newNode = std::make_shared<MeshNode>();
-            newNode->Mesh = m;
-
-            newNode->LocalTransform = glm::mat4{1.f};
-            newNode->WorldTransform = glm::mat4{1.f};
-
-            for (auto& s : newNode->Mesh->Surfaces) {
-                s.Material = std::make_shared<GLTFMaterial>(m_DefaultData);
-            }
-
-            LoadedNodes[m->Name] = std::move(newNode);
-        }
+        m_DefaultData = MetalRoughMaterial.WriteMaterial(m_Device->GetDevice(), MaterialPass::MainColor,
+                                                         materialResources, m_GlobalDescriptorAllocator);
     }
 
     void VulkanRenderer::DrawBackground(const VkCommandBuffer commandBuffer) const {

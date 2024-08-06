@@ -7,7 +7,7 @@
  */
 #include <FlashlightEngine/VulkanRenderer/VulkanWrapper/Instance.hpp>
 
-namespace Flashlight::VulkanRenderer::VulkanWrapper {
+namespace Flashlight::Renderer::VulkanWrapper {
     namespace {
         VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(
             const VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,

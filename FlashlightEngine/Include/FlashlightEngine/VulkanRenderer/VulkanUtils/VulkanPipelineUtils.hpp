@@ -12,7 +12,7 @@
 #include <filesystem>
 #include <fstream>
 
-namespace Flashlight::VulkanRenderer::VulkanUtils {
+namespace Flashlight::Renderer::VulkanUtils {
 
     [[nodiscard]] bool CreateShaderModule(VkDevice device, const std::filesystem::path& filePath,
                                           VkShaderModule* outShaderModule);

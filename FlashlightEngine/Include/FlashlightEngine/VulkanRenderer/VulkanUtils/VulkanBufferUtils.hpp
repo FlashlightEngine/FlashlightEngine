@@ -9,7 +9,7 @@
 
 #include <FlashlightEngine/VulkanRenderer/VulkanTypes.hpp>
 
-namespace Flashlight::VulkanRenderer::VulkanUtils {
+namespace Flashlight::Renderer::VulkanUtils {
     AllocatedBuffer CreateBuffer(VmaAllocator allocator, size allocSize, VkBufferUsageFlags usage,
                                  VmaMemoryUsage memoryUsage);
     void DestroyBuffer(VmaAllocator allocator, const AllocatedBuffer& buffer);

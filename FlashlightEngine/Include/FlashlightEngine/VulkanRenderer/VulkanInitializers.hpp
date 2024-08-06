@@ -9,7 +9,7 @@
 
 #include <FlashlightEngine/VulkanRenderer/VulkanTypes.hpp>
 
-namespace Flashlight::VulkanRenderer::VulkanInit {
+namespace Flashlight::Renderer::VulkanInit {
     VkCommandPoolCreateInfo CommandPoolCreateInfo(u32 queueFamilyIndex, VkCommandPoolCreateFlags flags = 0);
     VkCommandBufferAllocateInfo CommandBufferAllocateInfo(VkCommandPool pool, u32 count = 1);
 

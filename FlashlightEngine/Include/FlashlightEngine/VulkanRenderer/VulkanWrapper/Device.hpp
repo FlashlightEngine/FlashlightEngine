@@ -10,7 +10,7 @@
 #include <FlashlightEngine/VulkanRenderer/VulkanTypes.hpp>
 #include <FlashlightEngine/VulkanRenderer/VulkanWrapper/Instance.hpp>
 
-namespace Flashlight::VulkanRenderer::VulkanWrapper {
+namespace Flashlight::Renderer::VulkanWrapper {
     class Device {
         VkPhysicalDevice m_PhysicalDevice = VK_NULL_HANDLE;
         VkDevice m_Device = VK_NULL_HANDLE;
