@@ -176,12 +176,12 @@ namespace Flashlight::Renderer {
     }
 
     VulkanRenderer::~VulkanRenderer() {
-        vkDeviceWaitIdle(m_Device->GetDevice());
-
         if (m_RendererInitialized) {
-            m_MainDeletionQueue.Flush();
+            vkDeviceWaitIdle(m_Device->GetDevice());
 
             m_LoadedScenes.clear();
+
+            m_MainDeletionQueue.Flush();
 
             m_RendererInitialized = false;
         }
@@ -1028,26 +1028,39 @@ namespace Flashlight::Renderer {
 
         vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
-        for (const RenderObject& draw : MainDrawContext.OpaqueSurfaces) {
-            vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, draw.Material->Pipeline->Pipeline);
+        auto draw = [&](const RenderObject& drawnObject) {
+            vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                              drawnObject.Material->Pipeline->Pipeline);
             vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                    draw.Material->Pipeline->PipelineLayout, 0, 1, &globalDescriptor, 0, nullptr);
-            vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                    draw.Material->Pipeline->PipelineLayout, 1, 1, &draw.Material->MaterialSet, 0,
+                                    drawnObject.Material->Pipeline->PipelineLayout, 0, 1, &globalDescriptor, 0,
                                     nullptr);
+            vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                    drawnObject.Material->Pipeline->PipelineLayout, 1, 1,
+                                    &drawnObject.Material->MaterialSet, 0, nullptr);
 
-            vkCmdBindIndexBuffer(commandBuffer, draw.IndexBuffer, 0, VK_INDEX_TYPE_UINT32);
+            vkCmdBindIndexBuffer(commandBuffer, drawnObject.IndexBuffer, 0, VK_INDEX_TYPE_UINT32);
 
             GPUDrawPushConstants pushConstants;
-            pushConstants.VertexBuffer = draw.VertexBufferAddress;
-            pushConstants.WorldMatrix = draw.Transform;
-            vkCmdPushConstants(commandBuffer, draw.Material->Pipeline->PipelineLayout, VK_SHADER_STAGE_VERTEX_BIT,
-                               0, sizeof(GPUDrawPushConstants), &pushConstants);
+            pushConstants.VertexBuffer = drawnObject.VertexBufferAddress;
+            pushConstants.WorldMatrix = drawnObject.Transform;
+            vkCmdPushConstants(commandBuffer, drawnObject.Material->Pipeline->PipelineLayout,
+                               VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(GPUDrawPushConstants), &pushConstants);
 
-            vkCmdDrawIndexed(commandBuffer, draw.IndexCount, 1, draw.FirstIndex, 0, 0);
+            vkCmdDrawIndexed(commandBuffer, drawnObject.IndexCount, 1, drawnObject.FirstIndex, 0, 0);
+        };
+
+        for (const RenderObject& object : MainDrawContext.OpaqueSurfaces) {
+            draw(object);
+        }
+
+        for (const RenderObject& object : MainDrawContext.TransparentSurfaces) {
+            draw(object);
         }
 
         vkCmdEndRendering(commandBuffer);
+
+        MainDrawContext.OpaqueSurfaces.clear();
+        MainDrawContext.TransparentSurfaces.clear();
     }
 
     void VulkanRenderer::DrawImGui(const VkCommandBuffer commandBuffer, const VkImageView targetImageView) const {

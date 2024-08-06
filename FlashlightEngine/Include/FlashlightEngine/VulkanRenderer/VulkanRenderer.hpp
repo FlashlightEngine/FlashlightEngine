@@ -93,6 +93,7 @@ namespace Flashlight::Renderer {
 
     struct DrawContext {
         std::vector<RenderObject> OpaqueSurfaces;
+        std::vector<RenderObject> TransparentSurfaces;
     };
 
     struct MeshNode : public Node {

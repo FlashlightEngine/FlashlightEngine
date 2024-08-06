@@ -10,13 +10,15 @@
 #include <FlashlightEngine/VulkanRenderer/VulkanTypes.hpp>
 #include <FlashlightEngine/VulkanRenderer/VulkanDescriptors.hpp>
 
+#include <fastgltf/parser.hpp>
+
 #include <filesystem>
 
 namespace Flashlight::Renderer {
     struct GLTFMaterial {
         MaterialInstance Data;
     };
-    
+
     struct GeoSurface {
         u32 StartIndex;
         u32 Count;
@@ -50,7 +52,9 @@ namespace Flashlight::Renderer {
 
         VulkanRenderer* LinkedRenderer;
 
-        ~LoadedGLTF() { ClearAll(); }
+        ~LoadedGLTF() {
+            ClearAll();
+        }
 
         virtual void Draw(const glm::mat4& topMatrix, DrawContext& context) override;
 
@@ -58,5 +62,8 @@ namespace Flashlight::Renderer {
         void ClearAll();
     };
 
-    std::optional<std::shared_ptr<LoadedGLTF>> LoadGLTF(VulkanRenderer* renderer, const std::filesystem::path& path);
+    std::optional<std::shared_ptr<LoadedGLTF>>
+    LoadGLTF(VulkanRenderer* renderer, const std::filesystem::path& path);
+    std::optional<AllocatedImage> LoadImage(VulkanRenderer* renderer, fastgltf::Asset& asset,
+                                            fastgltf::Image& image);
 }

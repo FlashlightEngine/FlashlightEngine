@@ -10,6 +10,7 @@
 #include <FlashlightEngine/VulkanRenderer/VulkanRenderer.hpp>
 #include <FlashlightEngine/VulkanRenderer/VulkanInitializers.hpp>
 #include <FlashlightEngine/VulkanRenderer/VulkanUtils/VulkanBufferUtils.hpp>
+#include <FlashlightEngine/VulkanRenderer/VulkanUtils/VulkanImageUtils.hpp>
 
 #include <fastgltf/glm_element_traits.hpp>
 #include <fastgltf/parser.hpp>
@@ -20,6 +21,7 @@
 
 #include <magic_enum.hpp>
 
+#define STB_IMAGE_IMPLEMENTATION
 #include <stb_image/stb_image.h>
 
 namespace Flashlight::Renderer {
@@ -62,7 +64,29 @@ namespace Flashlight::Renderer {
     }
 
     void LoadedGLTF::ClearAll() {
-        
+        VkDevice device = LinkedRenderer->GetDevice().GetDevice();
+        VmaAllocator allocator = LinkedRenderer->GetAllocator();
+
+        DescriptorPool.DestroyPools(device);
+
+        VulkanUtils::DestroyBuffer(allocator, MaterialDataBuffer);
+
+        for (const auto& mesh : Meshes | std::views::values) {
+            VulkanUtils::DestroyBuffer(allocator, mesh->MeshBuffers.IndexBuffer);
+            VulkanUtils::DestroyBuffer(allocator, mesh->MeshBuffers.VertexBuffer);
+        }
+
+        for (auto& image : Images | std::views::values) {
+            if (image.Image == LinkedRenderer->ErrorCheckerboardImage.Image) {
+                // Don't destroy the default images.
+                continue;
+            }
+            VulkanUtils::DestroyImage(allocator, device, image);
+        }
+
+        for (auto& sampler : Samplers) {
+            vkDestroySampler(device, sampler, nullptr);
+        }
     }
 
     std::optional<std::shared_ptr<LoadedGLTF>>
@@ -111,10 +135,8 @@ namespace Flashlight::Renderer {
             {VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1}
         };
 
-        file.DescriptorPool.Initialize(renderer->GetDevice().GetDevice(), static_cast<u32>(gltf.materials.size()), sizes);
-        
-        
-        renderer->PlanDescriptorPoolsDeletion(file.DescriptorPool);
+        file.DescriptorPool.Initialize(renderer->GetDevice().GetDevice(), static_cast<u32>(gltf.materials.size()),
+                                       sizes);
 
         // load samplers
         for (fastgltf::Sampler& sampler : gltf.samplers) {
@@ -131,10 +153,6 @@ namespace Flashlight::Renderer {
             vkCreateSampler(renderer->GetDevice().GetDevice(), &samplerInfo, nullptr, &newSampler);
 
             file.Samplers.push_back(newSampler);
-
-            renderer->PlanDeletion([renderer, newSampler]() {
-                vkDestroySampler(renderer->GetDevice().GetDevice(), newSampler, nullptr);
-            });
         }
 
         // Temporary arrays for all the objects to use while creating the GLTF data
@@ -145,7 +163,17 @@ namespace Flashlight::Renderer {
 
         // Load all textures
         for (fastgltf::Image& image : gltf.images) {
-            images.push_back(renderer->ErrorCheckerboardImage);
+            const auto img = LoadImage(renderer, gltf, image);
+
+            if (img.has_value()) {
+                images.push_back(*img);
+                file.Images[image.name.c_str()] = *img;
+            } else {
+                // We failed to load, so let's give the slot the error checkerboard texture to not completely break
+                // loading.
+                images.push_back(renderer->ErrorCheckerboardImage);
+                Log::EngineWarn("glTF failed to load texture named {}", image.name);
+            }
         }
 
         // create buffer to hold the material data
@@ -155,10 +183,6 @@ namespace Flashlight::Renderer {
                                                                                                                 .size(),
                                                             VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
                                                             VMA_MEMORY_USAGE_CPU_TO_GPU);
-
-        renderer->PlanDeletion([renderer, file]() {
-            VulkanUtils::DestroyBuffer(renderer->GetAllocator(), file.MaterialDataBuffer);
-        });
 
         int dataIndex = 0;
         auto sceneMaterialConstants = static_cast<GLTFMetallic_Roughness::MaterialConstants*>(file.
@@ -299,7 +323,6 @@ namespace Flashlight::Renderer {
             }
 
             newMesh->MeshBuffers = renderer->UploadMesh(indices, vertices);
-            renderer->PlanMeshDeletion(newMesh->MeshBuffers);
         }
 
         // load all nodes and their meshes
@@ -358,5 +381,98 @@ namespace Flashlight::Renderer {
             }
         }
         return scene;
+    }
+
+    std::optional<AllocatedImage> LoadImage(VulkanRenderer* renderer, fastgltf::Asset& asset,
+                                            fastgltf::Image& image) {
+        AllocatedImage newImage{};
+
+        i32 width, height, nrChannels;
+
+        std::visit(
+            fastgltf::visitor{
+                [](auto& arg) {
+                },
+                [&](fastgltf::sources::URI& filePath) {
+                    assert(filePath.fileByteOffset == 0); // We don't support offsets with stbi.
+                    assert(filePath.uri.isLocalPath()); // We're only capable of loading
+                    // local files.
+
+                    const std::string path(filePath.uri.path().begin(),
+                                           filePath.uri.path().end()); // Thanks C++.
+                    unsigned char* data = stbi_load(path.c_str(), &width, &height, &nrChannels, 4);
+                    if (data) {
+                        VkExtent3D imagesize;
+                        imagesize.width = width;
+                        imagesize.height = height;
+                        imagesize.depth = 1;
+
+                        newImage = VulkanUtils::CreateImage(renderer->GetAllocator(),
+                                                            renderer->GetDevice().GetDevice(), renderer, data,
+                                                            imagesize, VK_FORMAT_R8G8B8A8_UNORM,
+                                                            VK_IMAGE_USAGE_SAMPLED_BIT, false);
+
+                        stbi_image_free(data);
+                    }
+                },
+                [&](fastgltf::sources::Vector& vector) {
+                    unsigned char* data = stbi_load_from_memory(vector.bytes.data(),
+                                                                static_cast<int>(vector.bytes.size()),
+                                                                &width, &height, &nrChannels, 4);
+                    if (data) {
+                        VkExtent3D imagesize;
+                        imagesize.width = width;
+                        imagesize.height = height;
+                        imagesize.depth = 1;
+
+                        newImage = VulkanUtils::CreateImage(renderer->GetAllocator(),
+                                                            renderer->GetDevice().GetDevice(), renderer, data,
+                                                            imagesize, VK_FORMAT_R8G8B8A8_UNORM,
+                                                            VK_IMAGE_USAGE_SAMPLED_BIT, false);
+
+                        stbi_image_free(data);
+                    }
+                },
+                [&](fastgltf::sources::BufferView& view) {
+                    auto& bufferView = asset.bufferViews[view.bufferViewIndex];
+                    auto& buffer = asset.buffers[bufferView.bufferIndex];
+
+                    std::visit(fastgltf::visitor{
+                                   // We only care about VectorWithMime here, because we
+                                   // specify LoadExternalBuffers, meaning all buffers
+                                   // are already loaded into a vector.
+                                   [](auto& arg) {
+                                   },
+                                   [&](fastgltf::sources::Vector& vector) {
+                                       unsigned char* data = stbi_load_from_memory(
+                                           vector.bytes.data() + bufferView.byteOffset,
+                                           static_cast<int>(bufferView.byteLength),
+                                           &width, &height, &nrChannels, 4);
+                                       if (data) {
+                                           VkExtent3D imagesize;
+                                           imagesize.width = width;
+                                           imagesize.height = height;
+                                           imagesize.depth = 1;
+
+                                           newImage = VulkanUtils::CreateImage(
+                                               renderer->GetAllocator(), renderer->GetDevice().GetDevice(),
+                                               renderer, data, imagesize, VK_FORMAT_R8G8B8A8_UNORM,
+                                               VK_IMAGE_USAGE_SAMPLED_BIT, false);
+
+                                           stbi_image_free(data);
+                                       }
+                                   }
+                               },
+                               buffer.data);
+                },
+            },
+            image.data);
+
+        // If any of the attempts to load the data failed, we haven't written the image so handle is null.
+        if (newImage.Image == VK_NULL_HANDLE) {
+            return {};
+        } else {
+            return newImage;
+        }
     }
 }
