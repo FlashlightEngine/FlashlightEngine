@@ -80,9 +80,9 @@ namespace Flashlight::Renderer::VulkanWrapper {
         }
 
         builder.set_app_name(window.GetTitle().c_str())
-               .set_app_version(1, 0, 0)
+               .set_app_version(0, 1, 0)
                .set_engine_name("Flashlight Engine")
-               .set_engine_version(1, 0, 0)
+               .set_engine_version(0, 1, 0)
                .request_validation_layers(debugLevel > DebugLevel::None)
                .require_api_version(1, 3, 0);
 

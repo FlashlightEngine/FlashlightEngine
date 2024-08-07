@@ -1,7 +1,7 @@
 set_xmakever("2.9.3")
 
 set_project("FlashlightEngine")
-set_version("0.0.1")
+set_version("0.1.0")
 
 set_allowedplats("windows", "linux")
 set_allowedarchs("windows|x64", "linux|x64", "linux|x86_64")
