@@ -65,6 +65,8 @@ namespace Flashlight {
         const std::chrono::duration<double, std::milli> timeSpan = (m_CurrentTime - oldTime);
         m_DeltaTime = static_cast<f32>(timeSpan.count()) / 1000.0f;
 
+        m_EngineStats.FrameTime = m_DeltaTime;
+
         // Check if window is closed.
         if (m_Window->ShouldClose()) {
             m_IsRunning = false;
@@ -80,7 +82,7 @@ namespace Flashlight {
 
         CreateEditorUi();
         
-        m_Renderer->Draw(*m_Window, m_Camera);
+        m_Renderer->Draw(*m_Window, m_Camera, m_EngineStats);
     }
 
     void FlashlightEngine::Cleanup() {
@@ -90,6 +92,16 @@ namespace Flashlight {
     void FlashlightEngine::CreateEditorUi() {
         if (ImGui::Begin("Camera")) {
             ImGui::SliderFloat("Camera speed", &m_CameraSpeed, 0.1f, 10.0f);
+        }
+        ImGui::End();
+
+        if (ImGui::Begin("Statistics")) {
+            ImGui::Text("Frame time %f ms", m_EngineStats.FrameTime);
+            ImGui::Text("Draw time %f ms", m_EngineStats.MeshDrawTime);
+            ImGui::Text("Update time %f ms", m_EngineStats.SceneUpdateTime);
+            ImGui::Text("Triangle count %i", m_EngineStats.TriangleCount);
+            ImGui::Text("Draw call count %i", m_EngineStats.DrawCallCount);
+            ImGui::Text("Estimated FPS %f", 1.f / m_EngineStats.FrameTime);
         }
         ImGui::End();
     }

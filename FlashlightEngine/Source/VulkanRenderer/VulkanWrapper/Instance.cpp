@@ -104,13 +104,6 @@ namespace Flashlight::Renderer::VulkanWrapper {
             messageSeverity |= VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT;
         }
 
-        if (debugLevel > DebugLevel::None) {
-            // The FPS counter is only available on Windows and on Linux with XCB.
-#if defined(_WIN32) || defined(_WIN64) || defined(VK_USE_PLATFORM_XCB_KHR)
-            builder.enable_layer("VK_LAYER_LUNARG_monitor");
-#endif
-        }
-
         constexpr VkDebugUtilsMessageTypeFlagsEXT messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
             VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
             VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;

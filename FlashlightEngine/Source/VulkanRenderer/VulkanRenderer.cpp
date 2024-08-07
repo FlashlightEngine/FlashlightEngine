@@ -73,7 +73,7 @@ namespace Flashlight::Renderer {
         pipelineBuilder.SetShaders(meshVertexShader, meshFragShader);
         pipelineBuilder.SetInputTopology(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
         pipelineBuilder.SetPolygonMode(VK_POLYGON_MODE_FILL);
-        pipelineBuilder.SetCullMode(VK_CULL_MODE_BACK_BIT, VK_FRONT_FACE_COUNTER_CLOCKWISE);
+        pipelineBuilder.SetCullMode(VK_CULL_MODE_NONE, VK_FRONT_FACE_COUNTER_CLOCKWISE);
         pipelineBuilder.SetMultisamplingNone();
         pipelineBuilder.DisableBlending();
         pipelineBuilder.EnableDepthTest(true, VK_COMPARE_OP_LESS);
@@ -144,14 +144,18 @@ namespace Flashlight::Renderer {
             def.FirstIndex = s.StartIndex;
             def.IndexBuffer = Mesh->MeshBuffers.IndexBuffer.Buffer;
             def.Material = &s.Material->Data;
-
+            def.Bounds = s.Bounds;
             def.Transform = nodeMatrix;
             def.VertexBufferAddress = Mesh->MeshBuffers.VertexBufferAddress;
 
-            context.OpaqueSurfaces.push_back(def);
+            if (s.Material->Data.PassType == MaterialPass::Transparent) {
+                context.TransparentSurfaces.push_back(def);
+            } else {
+                context.OpaqueSurfaces.push_back(def);
+            }
         }
 
-        // Recurse down.
+        // recurse down
         Node::Draw(topMatrix, context);
     }
 
@@ -291,10 +295,12 @@ namespace Flashlight::Renderer {
         ImGui::End();
     }
 
-    void VulkanRenderer::UpdateScene(const Window& window, Camera& camera) {
+    void VulkanRenderer::UpdateScene(const Window& window, Camera& camera, EngineStats& stats) {
+        const auto start = std::chrono::system_clock::now();
         camera.Update();
 
         MainDrawContext.OpaqueSurfaces.clear();
+        MainDrawContext.TransparentSurfaces.clear();
 
         SceneData.View = camera.GetViewMatrix();
         SceneData.Projection = glm::perspective(glm::radians(70.f),
@@ -309,9 +315,14 @@ namespace Flashlight::Renderer {
         SceneData.SunlightDirection = glm::vec4(0, 1, 0.5f, 1.0f);
 
         m_LoadedScenes["structure"]->Draw(glm::mat4{1.f}, MainDrawContext);
+
+        const auto end = std::chrono::system_clock::now();
+
+        const auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+        stats.SceneUpdateTime = elapsed.count() / 1000.f;
     }
 
-    void VulkanRenderer::Draw(Window& window, Camera& camera) {
+    void VulkanRenderer::Draw(Window& window, Camera& camera, EngineStats& stats) {
         ImGui::Render();
 
         m_DrawExtent.width = static_cast<u32>(static_cast<f32>(std::min(
@@ -319,7 +330,7 @@ namespace Flashlight::Renderer {
         m_DrawExtent.height = static_cast<u32>(static_cast<f32>(std::min(
             m_Swapchain->GetSwapchainExtent().height, m_DrawImage.ImageExtent.height)) * m_RenderScale);
 
-        UpdateScene(window, camera);
+        UpdateScene(window, camera, stats);
 
         auto& frame = GetCurrentFrame();
 
@@ -351,7 +362,7 @@ namespace Flashlight::Renderer {
         VulkanUtils::TransitionImage(frame.MainCommandBuffer, m_DepthImage.Image, VK_IMAGE_LAYOUT_UNDEFINED,
                                      VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL);
 
-        DrawGeometry(cmd);
+        DrawGeometry(cmd, stats);
 
         VulkanUtils::TransitionImage(frame.MainCommandBuffer, m_DrawImage.Image,
                                      VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
@@ -975,8 +986,33 @@ namespace Flashlight::Renderer {
                       static_cast<u32>(std::ceil(m_DrawExtent.height / 16.0)), 1);
     }
 
-    void VulkanRenderer::DrawGeometry(const VkCommandBuffer commandBuffer) {
+    void VulkanRenderer::DrawGeometry(const VkCommandBuffer commandBuffer, EngineStats& stats) {
         auto& frame = GetCurrentFrame();
+
+        stats.TriangleCount = 0;
+        stats.DrawCallCount = 0;
+
+        std::vector<u32> opaqueDraws;
+        opaqueDraws.reserve(MainDrawContext.OpaqueSurfaces.size());
+
+        for (u32 i = 0; i < MainDrawContext.OpaqueSurfaces.size(); i++) {
+            if (IsVisible(MainDrawContext.OpaqueSurfaces[i], SceneData.ViewProjection)) {
+                opaqueDraws.push_back(i);
+            }
+        }
+
+        // Sort the opaques surfaces by material and mesh.
+        std::ranges::sort(opaqueDraws, [&](const auto& iA, const auto& iB) {
+            const RenderObject& A = MainDrawContext.OpaqueSurfaces[iA];
+            const RenderObject& B = MainDrawContext.OpaqueSurfaces[iB];
+            if (A.Material == B.Material) {
+                return A.IndexBuffer < B.IndexBuffer;
+            }
+
+            return A.Material < B.Material;
+        });
+
+        const auto start = std::chrono::system_clock::now();
 
         // Begin a render pass connected to the draw image.
         const VkRenderingAttachmentInfo colorAttachment = VulkanInit::AttachmentInfo(
@@ -1010,47 +1046,69 @@ namespace Flashlight::Renderer {
             writer.UpdateSet(m_Device->GetDevice(), globalDescriptor);
         }
 
-        VkViewport viewport = {};
-        viewport.x = 0;
-        viewport.y = 0;
-        viewport.width = static_cast<f32>(m_DrawExtent.width);
-        viewport.height = static_cast<f32>(m_DrawExtent.height);
-        viewport.minDepth = 0.f;
-        viewport.maxDepth = 1.f;
-
-        vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
-
-        VkRect2D scissor = {};
-        scissor.offset.x = 0;
-        scissor.offset.y = 0;
-        scissor.extent.width = static_cast<u32>(viewport.width);
-        scissor.extent.height = static_cast<u32>(viewport.height);
-
-        vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+        MaterialPipeline* lastPipeline = nullptr;
+        MaterialInstance* lastMaterial = nullptr;
+        VkBuffer lastIndexBuffer = VK_NULL_HANDLE;
 
         auto draw = [&](const RenderObject& drawnObject) {
-            vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                              drawnObject.Material->Pipeline->Pipeline);
-            vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                    drawnObject.Material->Pipeline->PipelineLayout, 0, 1, &globalDescriptor, 0,
-                                    nullptr);
-            vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                    drawnObject.Material->Pipeline->PipelineLayout, 1, 1,
-                                    &drawnObject.Material->MaterialSet, 0, nullptr);
+            if (drawnObject.Material != lastMaterial) {
+                lastMaterial = drawnObject.Material;
 
-            vkCmdBindIndexBuffer(commandBuffer, drawnObject.IndexBuffer, 0, VK_INDEX_TYPE_UINT32);
+                // Rebind pipeline and descriptors if the material changed.
+                if (drawnObject.Material->Pipeline != lastPipeline) {
+                    lastPipeline = drawnObject.Material->Pipeline;
+                    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                      drawnObject.Material->Pipeline->Pipeline);
+                    vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                            drawnObject.Material->Pipeline->PipelineLayout, 0, 1, &globalDescriptor,
+                                            0, nullptr);
 
+                    VkViewport viewport;
+                    viewport.x = 0;
+                    viewport.y = 0;
+                    viewport.width = static_cast<f32>(m_DrawExtent.width);
+                    viewport.height = static_cast<f32>(m_DrawExtent.height);
+                    viewport.minDepth = 0.f;
+                    viewport.maxDepth = 1.f;
+
+                    vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+
+                    VkRect2D scissor;
+                    scissor.offset.x = 0;
+                    scissor.offset.y = 0;
+                    scissor.extent.width = m_DrawExtent.width;
+                    scissor.extent.height = m_DrawExtent.height;
+
+                    vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+                }
+
+                vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                        drawnObject.Material->Pipeline->PipelineLayout, 1, 1,
+                                        &drawnObject.Material->MaterialSet, 0, nullptr);
+            }
+
+            // Rebind index buffer if needed.
+            if (drawnObject.IndexBuffer != lastIndexBuffer) {
+                lastIndexBuffer = drawnObject.IndexBuffer;
+                vkCmdBindIndexBuffer(commandBuffer, drawnObject.IndexBuffer, 0, VK_INDEX_TYPE_UINT32);
+            }
+
+            // Calculate final mesh matrices.
             GPUDrawPushConstants pushConstants;
-            pushConstants.VertexBuffer = drawnObject.VertexBufferAddress;
             pushConstants.WorldMatrix = drawnObject.Transform;
+            pushConstants.VertexBuffer = drawnObject.VertexBufferAddress;
+
             vkCmdPushConstants(commandBuffer, drawnObject.Material->Pipeline->PipelineLayout,
                                VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(GPUDrawPushConstants), &pushConstants);
 
             vkCmdDrawIndexed(commandBuffer, drawnObject.IndexCount, 1, drawnObject.FirstIndex, 0, 0);
+
+            stats.DrawCallCount++;
+            stats.TriangleCount += drawnObject.IndexCount / 3;
         };
 
-        for (const RenderObject& object : MainDrawContext.OpaqueSurfaces) {
-            draw(object);
+        for (auto& objectIndex : opaqueDraws) {
+            draw(MainDrawContext.OpaqueSurfaces[objectIndex]);
         }
 
         for (const RenderObject& object : MainDrawContext.TransparentSurfaces) {
@@ -1061,6 +1119,11 @@ namespace Flashlight::Renderer {
 
         MainDrawContext.OpaqueSurfaces.clear();
         MainDrawContext.TransparentSurfaces.clear();
+
+        const auto end = std::chrono::system_clock::now();
+
+        const auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+        stats.MeshDrawTime = elapsed.count() / 1000.f;
     }
 
     void VulkanRenderer::DrawImGui(const VkCommandBuffer commandBuffer, const VkImageView targetImageView) const {
@@ -1084,5 +1147,42 @@ namespace Flashlight::Renderer {
         m_Swapchain = std::make_unique<VulkanWrapper::Swapchain>(window, *m_Instance, *m_Device);
 
         window.SwapchainInvalidated();
+    }
+
+    bool VulkanRenderer::IsVisible(const RenderObject& object, const glm::mat4& viewProj) {
+        constexpr std::array<glm::vec3, 8> corners {
+            glm::vec3{1, 1, 1},
+            glm::vec3{1, 1, -1},
+            glm::vec3{1, -1, 1},
+            glm::vec3{1, -1, -1},
+            glm::vec3{-1, 1, 1},
+            glm::vec3{-1, 1, -1},
+            glm::vec3{-1, -1, 1},
+            glm::vec3{-1, -1, -1},
+        };
+
+        const glm::mat4 matrix = viewProj * object.Transform;
+
+        glm::vec3 min = {1.5, 1.5, 1.5};
+        glm::vec3 max = {-1.5, -1.5, -1.5};
+
+        for (int c = 0; c < 8; c++) {
+            // project each corner into clip space
+            glm::vec4 v = matrix * glm::vec4(object.Bounds.Origin + (corners[c] * object.Bounds.Extents), 1.f);
+
+            // perspective correction
+            v.x = v.x / v.w;
+            v.y = v.y / v.w;
+            v.z = v.z / v.w;
+
+            min = glm::min(glm::vec3{v.x, v.y, v.z}, min);
+            max = glm::max(glm::vec3{v.x, v.y, v.z}, max);
+        }
+
+        // check the clip space box is within the view
+        if (min.z > 1.f || max.z < 0.f || min.x > 1.f || max.x < -1.f || min.y > 1.f || max.y < -1.f) {
+            return false;
+        }
+        return true;
     }
 }

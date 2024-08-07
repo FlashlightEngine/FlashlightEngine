@@ -19,9 +19,16 @@ namespace Flashlight::Renderer {
         MaterialInstance Data;
     };
 
+    struct Bounds {
+        glm::vec3 Origin;
+        f32 SphereRadius;
+        glm::vec3 Extents;
+    };
+
     struct GeoSurface {
         u32 StartIndex;
         u32 Count;
+        Bounds Bounds;
         std::shared_ptr<GLTFMaterial> Material;
     };
 

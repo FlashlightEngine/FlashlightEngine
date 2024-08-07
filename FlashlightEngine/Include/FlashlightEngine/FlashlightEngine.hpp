@@ -16,6 +16,8 @@ namespace Flashlight {
     class FlashlightEngine {
         std::chrono::high_resolution_clock::time_point m_CurrentTime;
         static FlashlightEngine* m_SLoadedApplication;
+
+        EngineStats m_EngineStats{};
         
     public:
         FlashlightEngine() = default;
@@ -47,7 +49,7 @@ namespace Flashlight {
         std::unique_ptr<Window> m_Window;
         std::unique_ptr<Renderer::VulkanRenderer> m_Renderer;
 
-        Renderer::Camera m_Camera;
+        Renderer::Camera m_Camera{glm::vec3{0.f, 0.f, 0.f}, glm::vec3{0.f, 0.f, 0.f}, 0.f, 0.f };
         f32 m_CameraSpeed = 1.f;
 
     private:

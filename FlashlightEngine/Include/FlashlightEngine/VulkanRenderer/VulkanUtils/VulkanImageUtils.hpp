@@ -25,6 +25,6 @@ namespace Flashlight::Renderer {
         AllocatedImage CreateImage(VmaAllocator allocator, VkDevice device, const VulkanRenderer* renderer, const void* data,
                                    VkExtent3D size, VkFormat format, VkImageUsageFlags usage, bool mipmapped = false);
         void DestroyImage(VmaAllocator allocator, VkDevice device, const AllocatedImage& image);
+        void GenerateMipmaps(VkCommandBuffer commandBuffer, VkImage image, VkExtent2D imageSize);
     }
-
 }

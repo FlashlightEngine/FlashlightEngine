@@ -255,7 +255,7 @@ namespace Flashlight::Renderer {
                 newSurface.StartIndex = static_cast<u32>(indices.size());
                 newSurface.Count = static_cast<u32>(gltf.accessors[primitive.indicesAccessor.value()].count);
 
-                size_t initial_vtx = vertices.size();
+                size_t initialVertex = vertices.size();
 
                 // load indices
                 {
@@ -263,8 +263,8 @@ namespace Flashlight::Renderer {
                     indices.reserve(indices.size() + indexAccessor.count);
 
                     fastgltf::iterateAccessor<std::uint32_t>(gltf, indexAccessor,
-                                                             [&](std::uint32_t idx) {
-                                                                 indices.push_back(idx + initial_vtx);
+                                                             [&](const std::uint32_t idx) {
+                                                                 indices.push_back(idx + initialVertex);
                                                              });
                 }
 
@@ -274,14 +274,14 @@ namespace Flashlight::Renderer {
                     vertices.resize(vertices.size() + posAccessor.count);
 
                     fastgltf::iterateAccessorWithIndex<glm::vec3>(gltf, posAccessor,
-                                                                  [&](glm::vec3 v, size_t index) {
+                                                                  [&](const glm::vec3 v, const size_t index) {
                                                                       Vertex newVertex;
                                                                       newVertex.Position = v;
                                                                       newVertex.Normal = {1, 0, 0};
                                                                       newVertex.Color = glm::vec4{1.f};
                                                                       newVertex.UvX = 0;
                                                                       newVertex.UvY = 0;
-                                                                      vertices[initial_vtx + index] = newVertex;
+                                                                      vertices[initialVertex + index] = newVertex;
                                                                   });
                 }
 
@@ -289,8 +289,8 @@ namespace Flashlight::Renderer {
                 auto normals = primitive.findAttribute("NORMAL");
                 if (normals != primitive.attributes.end()) {
                     fastgltf::iterateAccessorWithIndex<glm::vec3>(gltf, gltf.accessors[normals->second],
-                                                                  [&](glm::vec3 v, size_t index) {
-                                                                      vertices[initial_vtx + index].Normal = v;
+                                                                  [&](const glm::vec3 v, const size_t index) {
+                                                                      vertices[initialVertex + index].Normal = v;
                                                                   });
                 }
 
@@ -298,9 +298,9 @@ namespace Flashlight::Renderer {
                 auto uv = primitive.findAttribute("TEXCOORD_0");
                 if (uv != primitive.attributes.end()) {
                     fastgltf::iterateAccessorWithIndex<glm::vec2>(gltf, gltf.accessors[uv->second],
-                                                                  [&](glm::vec2 v, size_t index) {
-                                                                      vertices[initial_vtx + index].UvX = v.x;
-                                                                      vertices[initial_vtx + index].UvY = v.y;
+                                                                  [&](const glm::vec2 v, const size_t index) {
+                                                                      vertices[initialVertex + index].UvX = v.x;
+                                                                      vertices[initialVertex + index].UvY = v.y;
                                                                   });
                 }
 
@@ -308,8 +308,8 @@ namespace Flashlight::Renderer {
                 auto colors = primitive.findAttribute("COLOR_0");
                 if (colors != primitive.attributes.end()) {
                     fastgltf::iterateAccessorWithIndex<glm::vec4>(gltf, gltf.accessors[colors->second],
-                                                                  [&](glm::vec4 v, size_t index) {
-                                                                      vertices[initial_vtx + index].Color = v;
+                                                                  [&](const glm::vec4 v, const size_t index) {
+                                                                      vertices[initialVertex + index].Color = v;
                                                                   });
                 }
 
@@ -319,6 +319,18 @@ namespace Flashlight::Renderer {
                     newSurface.Material = materials[0];
                 }
 
+                // Loop the vertices of this surface, find min/max bounds.
+                glm::vec3 minPos = vertices[initialVertex].Position;
+                glm::vec3 maxPos = vertices[initialVertex].Position;
+                for (int i = initialVertex; i < vertices.size(); i++) {
+                    minPos = glm::min(minPos, vertices[i].Position);
+                    maxPos = glm::max(maxPos, vertices[i].Position);
+                }
+
+                newSurface.Bounds.Origin = (maxPos + minPos) / 2.f;
+                newSurface.Bounds.Extents = (maxPos - minPos) / 2.f;
+                newSurface.Bounds.SphereRadius = glm::length(newSurface.Bounds.Extents);
+                
                 newMesh->Surfaces.push_back(newSurface);
             }
 
@@ -332,7 +344,7 @@ namespace Flashlight::Renderer {
             // find if the node has a mesh, and if it does hook it to the mesh pointer and allocate it with the MeshNode class
             if (node.meshIndex.has_value()) {
                 newNode = std::make_shared<MeshNode>();
-                static_cast<MeshNode*>(newNode.get())->Mesh = meshes[*node.meshIndex];
+                dynamic_cast<MeshNode*>(newNode.get())->Mesh = meshes[*node.meshIndex];
             } else {
                 newNode = std::make_shared<Node>();
             }
@@ -363,7 +375,7 @@ namespace Flashlight::Renderer {
         }
 
         // run loop again to set up transform hierarchy
-        for (int i = 0; i < gltf.nodes.size(); i++) {
+        for (size i = 0; i < gltf.nodes.size(); ++i) {
             fastgltf::Node& node = gltf.nodes[i];
             std::shared_ptr<Node>& sceneNode = nodes[i];
 
@@ -410,7 +422,7 @@ namespace Flashlight::Renderer {
                         newImage = VulkanUtils::CreateImage(renderer->GetAllocator(),
                                                             renderer->GetDevice().GetDevice(), renderer, data,
                                                             imagesize, VK_FORMAT_R8G8B8A8_UNORM,
-                                                            VK_IMAGE_USAGE_SAMPLED_BIT, false);
+                                                            VK_IMAGE_USAGE_SAMPLED_BIT, true);
 
                         stbi_image_free(data);
                     }
@@ -428,7 +440,7 @@ namespace Flashlight::Renderer {
                         newImage = VulkanUtils::CreateImage(renderer->GetAllocator(),
                                                             renderer->GetDevice().GetDevice(), renderer, data,
                                                             imagesize, VK_FORMAT_R8G8B8A8_UNORM,
-                                                            VK_IMAGE_USAGE_SAMPLED_BIT, false);
+                                                            VK_IMAGE_USAGE_SAMPLED_BIT, true);
 
                         stbi_image_free(data);
                     }
@@ -457,7 +469,7 @@ namespace Flashlight::Renderer {
                                            newImage = VulkanUtils::CreateImage(
                                                renderer->GetAllocator(), renderer->GetDevice().GetDevice(),
                                                renderer, data, imagesize, VK_FORMAT_R8G8B8A8_UNORM,
-                                               VK_IMAGE_USAGE_SAMPLED_BIT, false);
+                                               VK_IMAGE_USAGE_SAMPLED_BIT, true);
 
                                            stbi_image_free(data);
                                        }

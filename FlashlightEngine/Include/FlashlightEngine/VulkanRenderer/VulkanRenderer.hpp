@@ -86,7 +86,7 @@ namespace Flashlight::Renderer {
         VkBuffer IndexBuffer;
 
         MaterialInstance* Material;
-
+        Bounds Bounds;
         glm::mat4 Transform;
         VkDeviceAddress VertexBufferAddress;
     };
@@ -173,8 +173,8 @@ namespace Flashlight::Renderer {
         void PlanDescriptorPoolsDeletion(DescriptorAllocatorGrowable& allocator);
         void PlanDeletion(std::function<void()>&& deletor);
         void CreateRendererUi();
-        void UpdateScene(const Window& window, Camera& camera);
-        void Draw(Window& window, Camera& camera);
+        void UpdateScene(const Window& window, Camera& camera, EngineStats& stats);
+        void Draw(Window& window, Camera& camera, EngineStats& stats);
 
         void ImmediateSubmit(const std::function<void(VkCommandBuffer commandBuffer)>& function) const;
 
@@ -198,7 +198,7 @@ namespace Flashlight::Renderer {
         void InitializeDefaultData();
 
         void DrawBackground(VkCommandBuffer commandBuffer) const;
-        void DrawGeometry(VkCommandBuffer commandBuffer);
+        void DrawGeometry(VkCommandBuffer commandBuffer, EngineStats& stats);
         void DrawImGui(VkCommandBuffer commandBuffer, VkImageView targetImageView) const;
 
         [[nodiscard]] FrameData& GetCurrentFrame() {
@@ -206,6 +206,8 @@ namespace Flashlight::Renderer {
         }
 
         void RecreateSwapchain(Window& window);
+
+        [[nodiscard]] static bool IsVisible(const RenderObject& object, const glm::mat4& viewProj);
     };
 
 #include <FlashlightEngine/VulkanRenderer/VulkanRenderer.inl>
