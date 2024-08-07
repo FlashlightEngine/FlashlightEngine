@@ -5,14 +5,14 @@
  * File : Logger.cpp
  * Description : Definitions of methods from the Logger class.
  */
-#include "FlashlightEngine/Core/Logger.hpp"
+#include <FlashlightEngine/Core/Logger.hpp>
 
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/sinks/base_sink.h>
 
 namespace Flashlight {
     std::shared_ptr<spdlog::logger> Logger::m_EngineLogger;
-    std::shared_ptr<spdlog::logger> Logger::m_ApplicationLogger;
+    std::shared_ptr<spdlog::logger> Logger::m_EditorLogger;
 
     void Logger::Init() {
         spdlog::set_pattern("%^[%T](%l) %n : %v%$");
@@ -20,8 +20,8 @@ namespace Flashlight {
         m_EngineLogger = spdlog::stdout_color_mt("FlashlightEngine");
         m_EngineLogger->set_level(spdlog::level::trace);
 
-        m_ApplicationLogger = spdlog::stdout_color_mt("Application");
-        m_ApplicationLogger->set_level(spdlog::level::trace);
+        m_EditorLogger = spdlog::stdout_color_mt("Flashlight Editor");
+        m_EditorLogger->set_level(spdlog::level::trace);
     }
 
     template <typename Mutex>
@@ -50,8 +50,8 @@ namespace Flashlight {
         m_EngineLogger->sinks().push_back(std::make_shared<CallbackSink<std::mutex>>(callback));
     }
 
-    void Logger::AddApplicationCallback(const customLogCallback& callback) {
-        m_ApplicationLogger->sinks().push_back(std::make_shared<CallbackSink<std::mutex>>(callback));
+    void Logger::AddEditorCallback(const customLogCallback& callback) {
+        m_EditorLogger->sinks().push_back(std::make_shared<CallbackSink<std::mutex>>(callback));
     }
 
     namespace Log {

@@ -7,7 +7,7 @@
  */
 #pragma once
 
-#include "FlashlightEngine/pch.hpp"
+#include <FlashlightEngine/flpch.hpp>
 
 #include <spdlog/spdlog.h>
 
@@ -31,14 +31,14 @@ namespace Flashlight {
 
     class Logger {
         static std::shared_ptr<spdlog::logger> m_EngineLogger;
-        static std::shared_ptr<spdlog::logger> m_ApplicationLogger;
+        static std::shared_ptr<spdlog::logger> m_EditorLogger;
 
     public:
         static void Init();
         static inline spdlog::logger* GetEngineLogger();
-        static inline spdlog::logger* GetApplicationLogger();
+        static inline spdlog::logger* GetEditorLogger();
         static void AddEngineCallback(const customLogCallback& callback);
-        static void AddApplicationCallback(const customLogCallback& callback);
+        static void AddEditorCallback(const customLogCallback& callback);
     };
 
 
@@ -65,22 +65,22 @@ namespace Flashlight {
 
 
         template <typename... Args>
-        constexpr void AppTrace(Args&&... args);
+        constexpr void EditorTrace(Args&&... args);
 
         template <typename... Args>
-        constexpr void AppInfo(Args&&... args);
+        constexpr void EditorInfo(Args&&... args);
 
         template <typename... Args>
-        constexpr void AppWarn(Args&&... args);
+        constexpr void EditorWarn(Args&&... args);
 
         template <typename... Args>
-        constexpr void AppError(Args&&... args);
+        constexpr void EditorError(Args&&... args);
 
         template <typename... Args>
-        constexpr void AppCritical(Args&&... args);
+        constexpr void EditorCritical(Args&&... args);
 
         template <typename... Args>
-        constexpr void AppFatal(ErrorCode errorCode, Args&&... args);
+        constexpr void EditorFatal(ErrorCode errorCode, Args&&... args);
     }
 
 #include "Logger.inl"

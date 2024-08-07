@@ -12,8 +12,8 @@ inline spdlog::logger* Logger::GetEngineLogger() {
     return m_EngineLogger.get();
 }
 
-inline spdlog::logger* Logger::GetApplicationLogger() {
-    return m_ApplicationLogger.get();
+inline spdlog::logger* Logger::GetEditorLogger() {
+    return m_EditorLogger.get();
 }
 
 namespace Log {
@@ -54,36 +54,36 @@ namespace Log {
 
 
     template <typename... Args>
-    constexpr void AppTrace(Args&&... args) {
-        Logger::GetApplicationLogger()->trace(std::forward<Args>(args)...);
+    constexpr void EditorTrace(Args&&... args) {
+        Logger::GetEditorLogger()->trace(std::forward<Args>(args)...);
     }
 
     template <typename... Args>
-    constexpr void AppInfo(Args&&... args) {
-        Logger::GetApplicationLogger()->info(std::forward<Args>(args)...);
+    constexpr void EditorInfo(Args&&... args) {
+        Logger::GetEditorLogger()->info(std::forward<Args>(args)...);
     }
 
     template <typename... Args>
-    constexpr void AppWarn(Args&&... args) {
-        Logger::GetApplicationLogger()->warn(std::forward<Args>(args)...);
+    constexpr void EditorWarn(Args&&... args) {
+        Logger::GetEditorLogger()->warn(std::forward<Args>(args)...);
     }
 
     template <typename... Args>
-    constexpr void AppError(Args&&... args) {
-        Logger::GetApplicationLogger()->error(std::forward<Args>(args)...);
+    constexpr void EditorError(Args&&... args) {
+        Logger::GetEditorLogger()->error(std::forward<Args>(args)...);
     }
 
     template <typename... Args>
-    constexpr void AppCritical(Args&&... args) {
-        Logger::GetApplicationLogger()->critical(std::forward<Args>(args)...);
+    constexpr void EditorCritical(Args&&... args) {
+        Logger::GetEditorLogger()->critical(std::forward<Args>(args)...);
     }
 
     template <typename... Args>
-    constexpr void AppFatal(const ErrorCode errorCode, Args&&... args) {
+    constexpr void EditorFatal(const ErrorCode errorCode, Args&&... args) {
         std::stringstream hexErrorCodeStream;
         hexErrorCodeStream << std::hex << errorCode.GetFormattedErrorCode();
-        Logger::GetApplicationLogger()->critical("FATAL APPLICATION ERROR: Code: 0x{0}", hexErrorCodeStream.str());
-        Logger::GetApplicationLogger()->critical(std::forward<Args>(args)...);
+        Logger::GetEditorLogger()->critical("FATAL EDITOR ERROR: Code: 0x{0}", hexErrorCodeStream.str());
+        Logger::GetEditorLogger()->critical(std::forward<Args>(args)...);
         exit(errorCode.GetFormattedErrorCode());
     }
 }

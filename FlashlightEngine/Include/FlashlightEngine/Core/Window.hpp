@@ -3,31 +3,19 @@
  * For conditions of distribution and use, see copyright notice in LICENSE.
  *
  * File : Window.hpp
- * Description : Declaration of the Window class. The Window class is used to create and manage a GLFW window.
+ * Description : Declaration of the Window class. The Window class is used to create and manage a SDL window.
  */
 #pragma once
 
-#include "FlashlightEngine/Core/Logger.hpp"
+#include <FlashlightEngine/Core/Logger.hpp>
 
-#include "FlashlightEngine/pch.hpp"
+#include <FlashlightEngine/VulkanRenderer/VulkanTypes.hpp>
+
+#include <FlashlightEngine/flpch.hpp>
 
 #include <GLFW/glfw3.h>
 
 namespace Flashlight {
-    struct WindowProperties {
-        i32 Width, Height;
-        std::string Title;
-
-        WindowProperties(const i32 width, const i32 height, std::string&& title) : Width(width), Height(height),
-                                                                                   Title(std::move(title)) {
-        }
-    };
-
-    struct WindowData {
-        i32 Width, Height;
-        bool ShouldRecreateSwapChain = false;
-    };
-
     enum class KeyState {
         Pressed,
         Released,
@@ -163,13 +151,36 @@ namespace Flashlight {
         Menu = 348,
     };
 
+    struct WindowProperties {
+        i32 Width, Height;
+        std::string Title;
+        bool Fullscreen;
+        bool VSync;
+
+        WindowProperties(const i32 width, const i32 height, std::string&& title,
+                         const bool fullscreen, const bool vSync) : Width(width), Height(height),
+                                                                    Title(std::move(title)), Fullscreen(fullscreen),
+                                                                    VSync(vSync) {
+        }
+    };
+
+    struct WindowData {
+        i32 Width, Height;
+        std::string Title;
+        bool ShouldClose = false;
+        bool StopRendering = false;
+        bool RestartRendering = false;
+        bool ShouldInvalidateSwapchain = false;
+        bool VSyncEnabled = false;
+    };
+
     class Window {
-        GLFWwindow* m_Window;
+        GLFWwindow* m_Window = nullptr;
         WindowData m_Data;
 
     public:
         explicit Window(const WindowProperties& windowProperties);
-        inline ~Window();
+        ~Window();
 
         Window(const Window&) = delete;
         Window(Window&&) = delete;
@@ -177,17 +188,26 @@ namespace Flashlight {
         Window& operator=(const Window&) = delete;
         Window& operator=(Window&&) = delete;
 
-        [[nodiscard]] inline GLFWwindow* GetGlfwWindow() const;
         [[nodiscard]] inline bool ShouldClose() const;
+        [[nodiscard]] inline bool ShouldStopRendering() const;
+        [[nodiscard]] inline bool ShouldInvalidateSwapchain() const;
+        inline void SwapchainInvalidated();
+        [[nodiscard]] inline GLFWwindow* GetNativeWindow() const;
         [[nodiscard]] inline i32 GetWidth() const;
         [[nodiscard]] inline i32 GetHeight() const;
-        [[nodiscard]] bool ShouldRecreateSwapChain() const;
-        inline void SwapChainRecreated();
-        [[nodiscard]] KeyState GetKeyState(Keys key) const;
+        [[nodiscard]] inline VkExtent2D GetExtent() const;
+        [[nodiscard]] inline std::string GetTitle() const;
+        [[nodiscard]] inline bool VSyncEnabled() const;
+        // Use at your own risk, when V-Sync is set to false using this, the framerate is locked to twice the screen
+        // refresh rate for some reason.
+        inline void ToggleVSync();
+        [[nodiscard]] KeyState GetKeyState(const Keys& key) const;
 
-        static inline void Update();
-        inline void Close() const;
+        void Update();
+        inline void Close();
+
+        void SetMouseMovementCallback(GLFWcursorposfun callback) const;
     };
 
-#include "Window.inl"
+#include <FlashlightEngine/Core/Window.inl>
 }
