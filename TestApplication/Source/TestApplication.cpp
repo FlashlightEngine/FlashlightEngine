@@ -38,7 +38,7 @@ void TestApplication::OnKeyDown(const Flashlight::KeyDownEvent& event) {
         m_IsRunning = false;
     }
 
-    m_Camera.OnKeyDown(event.GetScancode(), m_DeltaTime, m_CameraSpeed * 2.5f);
+    m_Camera.OnKeyDown(event.GetScancode(), m_DeltaTime, m_CameraSpeed * 2.25f);
 }
 
 void TestApplication::OnKeyUp(const Flashlight::KeyUpEvent& event) {
