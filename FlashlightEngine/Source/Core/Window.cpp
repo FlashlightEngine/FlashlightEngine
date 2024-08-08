@@ -48,15 +48,112 @@ namespace Flashlight {
         m_Data.Height = height;
         m_Data.Title = windowProperties.Title;
         m_Data.VSyncEnabled = windowProperties.VSync;
+        m_Data.Focused = true;
 
         glfwSetWindowUserPointer(m_Window, &m_Data);
+
+        SetVSync(windowProperties.VSync);
+
+        // ------------------------------- Window callbacks ------------------------------- //
+        Log::EngineTrace("Setting up window callbacks...");
+        
+        glfwSetWindowCloseCallback(m_Window, [](GLFWwindow* window) {
+            const auto data = static_cast<WindowData*>(glfwGetWindowUserPointer(window));
+            WindowCloseEvent event;
+            data->EventCallback(event);
+        });
 
         glfwSetWindowSizeCallback(m_Window, [](GLFWwindow* window, const i32 width, const i32 height) {
             const auto data = static_cast<WindowData*>(glfwGetWindowUserPointer(window));
             data->Width = width;
             data->Height = height;
             data->ShouldInvalidateSwapchain = true;
+            WindowResizeEvent event(width, height);
+            data->EventCallback(event);
         });
+
+        glfwSetWindowPosCallback(m_Window, [](GLFWwindow* window, const i32 x, const i32 y) {
+            const auto data = static_cast<WindowData*>(glfwGetWindowUserPointer(window));
+            WindowMovedEvent event(x, y);
+            data->EventCallback(event);
+        });
+
+        glfwSetKeyCallback(m_Window, [](GLFWwindow* window, const i32 key, [[maybe_unused]] const i32 scancode,
+                                        const i32 action,
+                                        [[maybe_unused]] const i32 mods) {
+            const auto data = static_cast<WindowData*>(glfwGetWindowUserPointer(window));
+            switch (action) {
+            case GLFW_PRESS:
+                {
+                    KeyDownEvent event(key, 0);
+                    data->EventCallback(event);
+                    break;
+                }
+            case GLFW_RELEASE:
+                {
+                    KeyUpEvent event(key);
+                    data->EventCallback(event);
+                    break;
+                }
+            case GLFW_REPEAT:
+                {
+                    KeyDownEvent event(key, 1);
+                    data->EventCallback(event);
+                    break;
+                }
+            default:
+                Log::EngineError("Unknown GLFW key action.");
+            }
+        });
+
+        glfwSetCharCallback(m_Window, [](GLFWwindow* window, const u32 keycode) {
+            const auto data = static_cast<WindowData*>(glfwGetWindowUserPointer(window));
+            KeyTypedEvent event(static_cast<i32>(keycode));
+            data->EventCallback(event);
+        });
+
+        glfwSetMouseButtonCallback(
+            m_Window, [](GLFWwindow* window, const i32 button, const i32 action, [[maybe_unused]] const i32 mods) {
+                const auto data = static_cast<WindowData*>(glfwGetWindowUserPointer(window));
+
+                switch (action) {
+                case GLFW_PRESS:
+                    {
+                        MouseButtonDownEvent event(button);
+                        data->EventCallback(event);
+                        break;
+                    }
+                case GLFW_RELEASE:
+                    {
+                        MouseButtonUpEvent event(button);
+                        data->EventCallback(event);
+                        break;
+                    }
+                default:
+                    Log::EngineError("Unknown GLFW mouse button action.");
+                }
+            });
+
+        glfwSetScrollCallback(m_Window, [](GLFWwindow* window, const f64 xOffset, const f64 yOffset) {
+            const auto data = static_cast<WindowData*>(glfwGetWindowUserPointer(window));
+            MouseScrolledEvent event(static_cast<f32>(xOffset), static_cast<f32>(yOffset));
+            data->EventCallback(event);
+        });
+
+        glfwSetCursorPosCallback(m_Window, [](GLFWwindow* window, const f64 xPos, const f64 yPos) {
+            const auto data = static_cast<WindowData*>(glfwGetWindowUserPointer(window));
+            MouseMovedEvent event(static_cast<f32>(xPos), static_cast<f32>(yPos));
+            data->EventCallback(event);
+        });
+
+        glfwSetWindowFocusCallback(m_Window, [](GLFWwindow* window, const i32 focused) {
+            const auto data = static_cast<WindowData*>(glfwGetWindowUserPointer(window));
+            WindowFocusedEvent event(focused);
+            data->EventCallback(event);
+            data->Focused = focused;
+        });
+
+        Log::EngineTrace("Callbacks are set up successfully.");
     }
 
     Window::~Window() {
@@ -70,28 +167,8 @@ namespace Flashlight {
         glfwTerminate();
     }
 
-    KeyState Window::GetKeyState(const Keys& key) const {
-        switch (glfwGetKey(m_Window, static_cast<i32>(key))) {
-        case GLFW_PRESS:
-            return KeyState::Pressed;
-
-        case GLFW_RELEASE:
-            return KeyState::Released;
-
-        case GLFW_REPEAT:
-            return KeyState::Repeated;
-
-        default:
-            return KeyState::None;
-        }
-    }
-
     void Window::Update() {
         glfwPollEvents();
-
-        if (glfwWindowShouldClose(m_Window)) {
-            m_Data.ShouldClose = true;
-        }
     }
 
     void Window::SetMouseMovementCallback(const GLFWcursorposfun callback) const {

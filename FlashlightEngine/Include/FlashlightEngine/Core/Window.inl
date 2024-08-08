@@ -8,11 +8,7 @@
 #pragma once
 
 inline bool Window::ShouldClose() const {
-    return m_Data.ShouldClose;
-}
-
-inline bool Window::ShouldStopRendering() const {
-    return m_Data.StopRendering;
+    return glfwWindowShouldClose(m_Window);
 }
 
 inline bool Window::ShouldInvalidateSwapchain() const {
@@ -47,11 +43,16 @@ inline bool Window::VSyncEnabled() const {
     return m_Data.VSyncEnabled;
 }
 
-inline void Window::ToggleVSync() {
-    m_Data.VSyncEnabled = !m_Data.VSyncEnabled;
+inline void Window::SetVSync(const bool status) {
+    glfwSwapInterval(status);
+    m_Data.VSyncEnabled = status;
     m_Data.ShouldInvalidateSwapchain = true;
 }
 
-inline void Window::Close() {
-    m_Data.ShouldClose = true;
+inline void Window::SetEventCallback(const std::function<void(Event&)>& callback) {
+    m_Data.EventCallback = callback;
+}
+
+inline void Window::Close() const {
+    glfwSetWindowShouldClose(m_Window, true);
 }

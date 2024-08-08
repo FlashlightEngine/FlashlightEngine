@@ -26,55 +26,63 @@ namespace Flashlight::Renderer {
         return glm::toMat4(yawRotation) * glm::toMat4(pitchRotation);
     }
 
-    void Camera::ProcessInput(const Window& window, const f32 deltaTime, const f32 speed) {
-        if (window.GetKeyState(Keys::W) == KeyState::Released) {
-            Velocity.z = 0;
-        }
-
-        if (window.GetKeyState(Keys::S) == KeyState::Released) {
-            Velocity.z = 0;
-        }
-
-        if (window.GetKeyState(Keys::A) == KeyState::Released) {
-            Velocity.x = 0;
-        }
-
-        if (window.GetKeyState(Keys::D) == KeyState::Released) {
-            Velocity.x = 0;
-        }
-
+    void Camera::OnKeyDown(const i32 keyScancode, const f32 deltaTime, const f32 speed) {
         // Camera movement
-        if (window.GetKeyState(Keys::W) == KeyState::Pressed) {
+        if (keyScancode == static_cast<i32>(Keys::W)) {
             Velocity.z = -speed * deltaTime;
         }
         
-        if (window.GetKeyState(Keys::S) == KeyState::Pressed) {
+        if (keyScancode == static_cast<i32>(Keys::S)) {
             Velocity.z = speed * deltaTime;
         }
         
-        if (window.GetKeyState(Keys::A) == KeyState::Pressed) {
+        if (keyScancode == static_cast<i32>(Keys::A)) {
             Velocity.x = -speed * deltaTime;
         }
         
-        if (window.GetKeyState(Keys::D) == KeyState::Pressed) {
+        if (keyScancode == static_cast<i32>(Keys::D)) {
             Velocity.x = speed * deltaTime;
         }
 
-        // Camera rotation
-        if (window.GetKeyState(Keys::Up) == KeyState::Pressed) {
-            Pitch += 1.5f * deltaTime;
+        if (keyScancode == static_cast<i32>(Keys::Q)) {
+            m_EnableMouse = true;
+        }
+    }
+
+    void Camera::OnKeyUp(const i32 keyScancode) {
+        if (keyScancode == static_cast<i32>(Keys::W)) {
+            Velocity.z = 0;
         }
 
-        if (window.GetKeyState(Keys::Down) == KeyState::Pressed) {
-            Pitch -= 1.5f * deltaTime;
+        if (keyScancode == static_cast<i32>(Keys::S)) {
+            Velocity.z = 0;
         }
 
-        if (window.GetKeyState(Keys::Left) == KeyState::Pressed) {
-            Yaw += 2.f * deltaTime;
+        if (keyScancode == static_cast<i32>(Keys::A)) {
+            Velocity.x = 0;
         }
 
-        if (window.GetKeyState(Keys::Right) == KeyState::Pressed) {
-            Yaw -= 2.f * deltaTime;
+        if (keyScancode == static_cast<i32>(Keys::D)) {
+            Velocity.x = 0;
+        }
+
+        if (keyScancode == static_cast<i32>(Keys::Q)) {
+            m_EnableMouse = false;
+        }
+    }
+
+    void Camera::OnMouseMovement(const f32 mouseX, const f32 mouseY, const f32 sensitivity, const f32 deltaTime) {
+        f32 xOffset = m_LastMouseX - mouseX;
+        f32 yOffset = m_LastMouseY - mouseY;
+        m_LastMouseX = mouseX;
+        m_LastMouseY = mouseY;
+
+        if (m_EnableMouse) {
+            xOffset *= (sensitivity * deltaTime);
+            yOffset *= (sensitivity * deltaTime);
+
+            Yaw += xOffset;
+            Pitch += yOffset;
         }
     }
 
