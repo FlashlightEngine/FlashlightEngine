@@ -38,7 +38,7 @@ void TestApplication::OnKeyDown(const Flashlight::KeyDownEvent& event) {
         m_IsRunning = false;
     }
 
-    m_Camera.OnKeyDown(event.GetScancode(), m_DeltaTime, m_CameraSpeed);
+    m_Camera.OnKeyDown(event.GetScancode(), m_DeltaTime, m_CameraSpeed * 2.5f);
 }
 
 void TestApplication::OnKeyUp(const Flashlight::KeyUpEvent& event) {
@@ -46,7 +46,7 @@ void TestApplication::OnKeyUp(const Flashlight::KeyUpEvent& event) {
 }
 
 void TestApplication::OnMouseMovement(const Flashlight::MouseMovedEvent& event) {
-    m_Camera.OnMouseMovement(event.GetX(), event.GetY(), m_MouseSensitivity * 5.f, m_DeltaTime);
+    m_Camera.OnMouseMovement(event.GetX(), event.GetY(), m_MouseSensitivity * 2.5f, m_DeltaTime);
 }
 
 void TestApplication::CreateEditorUi() {
