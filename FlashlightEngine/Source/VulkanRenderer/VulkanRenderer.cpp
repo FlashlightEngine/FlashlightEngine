@@ -12,8 +12,6 @@
 #include <FlashlightEngine/VulkanRenderer/VulkanUtils/VulkanImageUtils.hpp>
 #include <FlashlightEngine/VulkanRenderer/VulkanUtils/VulkanPipelineUtils.hpp>
 
-#include <magic_enum.hpp>
-
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/transform.hpp>
 
@@ -278,21 +276,6 @@ namespace Flashlight::Renderer {
             ImGui::SliderFloat("Render Scale ", &m_RenderScale, 0.3f, 1.0f);
         }
         ImGui::End();
-
-        if (ImGui::Begin("Background effect data")) {
-            ComputeEffect& selected = m_BackgroundEffects[m_CurrentBackgroundEffect];
-
-            ImGui::Text("Selected effect: %s", selected.Name);
-
-            ImGui::SliderInt("Effect Index", &m_CurrentBackgroundEffect, 0,
-                             static_cast<i32>(m_BackgroundEffects.size() - 1));
-
-            ImGui::InputFloat4("data1", reinterpret_cast<float*>(&selected.Data.Data1));
-            ImGui::InputFloat4("data2", reinterpret_cast<float*>(&selected.Data.Data2));
-            ImGui::InputFloat4("data3", reinterpret_cast<float*>(&selected.Data.Data3));
-            ImGui::InputFloat4("data4", reinterpret_cast<float*>(&selected.Data.Data4));
-        }
-        ImGui::End();
     }
 
     void VulkanRenderer::UpdateScene(const Window& window, Camera& camera, EngineStats& stats) {
@@ -319,7 +302,7 @@ namespace Flashlight::Renderer {
         const auto end = std::chrono::system_clock::now();
 
         const auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-        stats.SceneUpdateTime = elapsed.count() / 1000.f;
+        stats.SceneUpdateTime = static_cast<f32>(elapsed.count()) / 1000.f;
     }
 
     void VulkanRenderer::Draw(Window& window, Camera& camera, EngineStats& stats) {
@@ -352,9 +335,15 @@ namespace Flashlight::Renderer {
 
         VK_CHECK(vkBeginCommandBuffer(cmd, &cmdBeginInfo))
 
-        VulkanUtils::TransitionImage(cmd, m_DrawImage.Image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL);
+        VulkanUtils::TransitionImage(frame.MainCommandBuffer, m_DrawImage.Image, VK_IMAGE_LAYOUT_UNDEFINED,
+                                     VK_IMAGE_LAYOUT_GENERAL);
 
-        DrawBackground(cmd);
+        constexpr VkClearColorValue clearColor = {{0.0f, 0.0f, 0.0f, 1.0f}};
+
+        const VkImageSubresourceRange clearRange = VulkanInit::ImageSubresourceRange(VK_IMAGE_ASPECT_COLOR_BIT);
+
+        vkCmdClearColorImage(frame.MainCommandBuffer, m_DrawImage.Image, VK_IMAGE_LAYOUT_GENERAL, &clearColor, 1,
+                             &clearRange);
 
         // Transition the draw image and the swap chain image into their correct transfer layouts.
         VulkanUtils::TransitionImage(frame.MainCommandBuffer, m_DrawImage.Image, VK_IMAGE_LAYOUT_GENERAL,
@@ -711,116 +700,7 @@ namespace Flashlight::Renderer {
     }
 
     void VulkanRenderer::InitializePipelines() {
-        InitializeComputePipelines();
-
         MetalRoughMaterial.BuildPipelines(this);
-    }
-
-    void VulkanRenderer::InitializeComputePipelines() {
-        // Create pipeline layout
-        VkPipelineLayoutCreateInfo computeLayout{};
-        computeLayout.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-        computeLayout.pNext = nullptr;
-
-        computeLayout.setLayoutCount = 1;
-        computeLayout.pSetLayouts = &m_DrawImageDescriptorLayout;
-
-        VkPushConstantRange pushConstant;
-        pushConstant.offset = 0;
-        pushConstant.size = sizeof(ComputePushConstants);
-        pushConstant.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
-
-        computeLayout.pushConstantRangeCount = 1;
-        computeLayout.pPushConstantRanges = &pushConstant;
-
-        VK_CHECK(vkCreatePipelineLayout(m_Device->GetDevice(), &computeLayout, nullptr, &m_ComputePipelineLayout))
-
-        // Create shader modules.
-        VkShaderModule gradientShaderModule;
-        if (!VulkanUtils::CreateShaderModule(m_Device->GetDevice(), "Shaders/gradient_color.comp.spv",
-                                             &gradientShaderModule)) {
-            Log::EngineFatal({0x02, 0x00}, "Failed to build the gradient compute shader module.");
-        }
-
-        VkShaderModule skyShaderModule;
-        if (!VulkanUtils::CreateShaderModule(m_Device->GetDevice(), "Shaders/sky.comp.spv",
-                                             &skyShaderModule)) {
-            Log::EngineFatal({0x02, 0x01}, "Failed to build the sky compute shader module.");
-        }
-
-        VkShaderModule gridShaderModule;
-        if (!VulkanUtils::CreateShaderModule(m_Device->GetDevice(), "Shaders/gradient_grid.comp.spv",
-                                             &gridShaderModule)) {
-            Log::EngineFatal({0x02, 0x02}, "Failed to build the grid compute shader module.");
-        }
-
-        VkPipelineShaderStageCreateInfo stageInfo{};
-        stageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-        stageInfo.pNext = nullptr;
-        stageInfo.stage = VK_SHADER_STAGE_COMPUTE_BIT;
-        stageInfo.module = gradientShaderModule;
-        stageInfo.pName = "main";
-
-
-        VkComputePipelineCreateInfo computePipelineCreateInfo{};
-        computePipelineCreateInfo.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
-        computePipelineCreateInfo.pNext = nullptr;
-        computePipelineCreateInfo.layout = m_ComputePipelineLayout;
-        computePipelineCreateInfo.stage = stageInfo;
-
-        ComputeEffect gradient;
-        gradient.Layout = m_ComputePipelineLayout;
-        gradient.Name = "Gradient";
-        gradient.Data = {};
-
-        // default colors
-        gradient.Data.Data1 = glm::vec4(0, 0, 1, 1);
-        gradient.Data.Data2 = glm::vec4(0, 1.75, 1, 1);
-
-        VK_CHECK(
-            vkCreateComputePipelines(m_Device->GetDevice(), VK_NULL_HANDLE, 1, &computePipelineCreateInfo, nullptr,
-                &gradient.Pipeline))
-
-        computePipelineCreateInfo.stage.module = skyShaderModule;
-
-        ComputeEffect sky;
-        sky.Layout = m_ComputePipelineLayout;
-        sky.Name = "Sky";
-        sky.Data = {};
-
-        // Default sky parameters.
-        sky.Data.Data1 = glm::vec4(0.1, 0.2, 0.4, 0.97);
-
-        VK_CHECK(
-            vkCreateComputePipelines(m_Device->GetDevice(), VK_NULL_HANDLE, 1, &computePipelineCreateInfo, nullptr,
-                &sky.Pipeline))
-
-        computePipelineCreateInfo.stage.module = gridShaderModule;
-
-        ComputeEffect grid;
-        grid.Layout = m_ComputePipelineLayout;
-        grid.Name = "Grid";
-        grid.Data = {};
-
-        VK_CHECK(
-            vkCreateComputePipelines(m_Device->GetDevice(), VK_NULL_HANDLE, 1, &computePipelineCreateInfo, nullptr,
-                &grid.Pipeline))
-
-        // Add the 2 effects into the array.
-        m_BackgroundEffects.push_back(gradient);
-        m_BackgroundEffects.push_back(sky);
-        m_BackgroundEffects.push_back(grid);
-
-        vkDestroyShaderModule(m_Device->GetDevice(), gradientShaderModule, nullptr);
-        vkDestroyShaderModule(m_Device->GetDevice(), skyShaderModule, nullptr);
-        vkDestroyShaderModule(m_Device->GetDevice(), gridShaderModule, nullptr);
-
-        m_MainDeletionQueue.PushFunction([this, sky, gradient, grid]() {
-            vkDestroyPipelineLayout(m_Device->GetDevice(), m_ComputePipelineLayout, nullptr);
-            vkDestroyPipeline(m_Device->GetDevice(), sky.Pipeline, nullptr);
-            vkDestroyPipeline(m_Device->GetDevice(), gradient.Pipeline, nullptr);
-            vkDestroyPipeline(m_Device->GetDevice(), grid.Pipeline, nullptr);
-        });
     }
 
     void VulkanRenderer::InitializeImGui(const Window& window) {
@@ -952,8 +832,9 @@ namespace Flashlight::Renderer {
             m_Allocator, sizeof(GLTFMetallic_Roughness::MaterialConstants), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
             VMA_MEMORY_USAGE_CPU_TO_GPU);
 
-        GLTFMetallic_Roughness::MaterialConstants* sceneUniformData = static_cast<
-            GLTFMetallic_Roughness::MaterialConstants*>(materialConstants.Allocation->GetMappedData());
+        auto sceneUniformData = static_cast<GLTFMetallic_Roughness::MaterialConstants*>(materialConstants.Allocation
+                                                                                                         ->
+                                                                                                         GetMappedData());
         sceneUniformData->ColorFactors = glm::vec4(1, 1, 1, 1);
         sceneUniformData->MetalRoughFactors = glm::vec4(1, 0.5, 0, 0);
 
@@ -966,24 +847,6 @@ namespace Flashlight::Renderer {
 
         m_DefaultData = MetalRoughMaterial.WriteMaterial(m_Device->GetDevice(), MaterialPass::MainColor,
                                                          materialResources, m_GlobalDescriptorAllocator);
-    }
-
-    void VulkanRenderer::DrawBackground(const VkCommandBuffer commandBuffer) const {
-        const ComputeEffect& effect = m_BackgroundEffects[m_CurrentBackgroundEffect];
-
-        // Bind the gradient drawing compute pipeline.
-        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, effect.Pipeline);
-
-        // Bind the descriptor set containing the draw image for the compute pipeline.
-        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_ComputePipelineLayout, 0, 1,
-                                &m_DrawImageDescriptors, 0, nullptr);
-
-        vkCmdPushConstants(commandBuffer, m_ComputePipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0,
-                           sizeof(ComputePushConstants), &effect.Data);
-
-        // Execute the compute pipeline dispatch. The workgroup size is 16x16, so we need to divide by it.
-        vkCmdDispatch(commandBuffer, static_cast<u32>(std::ceil(m_DrawExtent.width / 16.0)),
-                      static_cast<u32>(std::ceil(m_DrawExtent.height / 16.0)), 1);
     }
 
     void VulkanRenderer::DrawGeometry(const VkCommandBuffer commandBuffer, EngineStats& stats) {
@@ -1104,7 +967,7 @@ namespace Flashlight::Renderer {
             vkCmdDrawIndexed(commandBuffer, drawnObject.IndexCount, 1, drawnObject.FirstIndex, 0, 0);
 
             stats.DrawCallCount++;
-            stats.TriangleCount += drawnObject.IndexCount / 3;
+            stats.TriangleCount += static_cast<i32>(drawnObject.IndexCount) / 3;
         };
 
         for (auto& objectIndex : opaqueDraws) {
@@ -1123,7 +986,7 @@ namespace Flashlight::Renderer {
         const auto end = std::chrono::system_clock::now();
 
         const auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-        stats.MeshDrawTime = elapsed.count() / 1000.f;
+        stats.MeshDrawTime = static_cast<f32>(elapsed.count()) / 1000.f;
     }
 
     void VulkanRenderer::DrawImGui(const VkCommandBuffer commandBuffer, const VkImageView targetImageView) const {
@@ -1150,7 +1013,7 @@ namespace Flashlight::Renderer {
     }
 
     bool VulkanRenderer::IsVisible(const RenderObject& object, const glm::mat4& viewProj) {
-        constexpr std::array<glm::vec3, 8> corners {
+        constexpr std::array<glm::vec3, 8> corners{
             glm::vec3{1, 1, 1},
             glm::vec3{1, 1, -1},
             glm::vec3{1, -1, 1},

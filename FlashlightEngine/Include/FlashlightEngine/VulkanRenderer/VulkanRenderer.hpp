@@ -40,15 +40,6 @@ namespace Flashlight::Renderer {
         glm::vec4 Data4;
     };
 
-    struct ComputeEffect {
-        const char* Name;
-
-        VkPipeline Pipeline;
-        VkPipelineLayout Layout;
-
-        ComputePushConstants Data;
-    };
-
     struct GLTFMetallic_Roughness {
         MaterialPipeline OpaquePipeline;
         MaterialPipeline TransparentPipeline;
@@ -132,11 +123,6 @@ namespace Flashlight::Renderer {
         VkDescriptorSet m_DrawImageDescriptors;
         VkDescriptorSetLayout m_DrawImageDescriptorLayout;
 
-        VkPipelineLayout m_ComputePipelineLayout;
-
-        std::vector<ComputeEffect> m_BackgroundEffects;
-        i32 m_CurrentBackgroundEffect{0};
-
         VkDescriptorSetLayout m_SingleImageDescriptorLayout;
 
         std::unordered_map<std::string, std::shared_ptr<LoadedGLTF>> m_LoadedScenes;
@@ -193,11 +179,9 @@ namespace Flashlight::Renderer {
         void InitializeSynchronisationPrimitives();
         void InitializeDescriptors();
         void InitializePipelines();
-        void InitializeComputePipelines();
         void InitializeImGui(const Window& window);
         void InitializeDefaultData();
 
-        void DrawBackground(VkCommandBuffer commandBuffer) const;
         void DrawGeometry(VkCommandBuffer commandBuffer, EngineStats& stats);
         void DrawImGui(VkCommandBuffer commandBuffer, VkImageView targetImageView) const;
 
