@@ -1,5 +1,5 @@
 # Flashlight Engine
-Flashlight engine is a game engine made using C++20 and DirectX 11.
+Flashlight engine is a game engine made using C++20 and Vulkan.
 
 ## Compiling & Running
 1. Install [xmake](https://xmake.io/)
