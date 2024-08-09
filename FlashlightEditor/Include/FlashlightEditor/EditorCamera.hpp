@@ -7,12 +7,12 @@
  */
 #pragma once
 
-#include <FlashlightEngine/VulkanRenderer/VulkanTypes.hpp>
+#include <FlashlightEngine/fltypes.hpp>
 
-#include <FlashlightEngine/Core/Window.hpp>
+#include <glm/glm.hpp>
 
-namespace Flashlight::Renderer {
-    class Camera {
+namespace FlashlightEditor {
+    class EditorCamera {
         f32 m_LastMouseX = 960;
         f32 m_LastMouseY = 540;
 

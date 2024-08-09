@@ -41,15 +41,12 @@ namespace Flashlight {
         }
     }
 
-    void SceneManager::UpdateScene(const Renderer::Camera& camera, const Window& window, const std::string& name) {
+    void SceneManager::UpdateScene(const glm::mat4& viewMatrix, const f32 fov, const Window& window, const std::string& name) {
         m_LoadedScenes[name].DrawContext.OpaqueSurfaces.clear();
         m_LoadedScenes[name].DrawContext.TransparentSurfaces.clear();
 
-        m_LoadedScenes[name].SceneData.View = camera.GetViewMatrix();
-        m_LoadedScenes[name].SceneData.Projection = glm::perspective(glm::radians(70.f),
-                                                                     static_cast<f32>(window.GetWidth()) /
-                                                                     static_cast<f32>(window.GetHeight()), 0.1f,
-                                                                     10000.0f);
+        m_LoadedScenes[name].SceneData.View = viewMatrix;
+        m_LoadedScenes[name].SceneData.Projection = glm::perspective(fov, static_cast<f32>(window.GetWidth()) / static_cast<f32>(window.GetHeight()), 0.1f, 10000.0f);
 
         m_LoadedScenes[name].SceneData.Projection[1][1] *= -1;
         m_LoadedScenes[name].SceneData.ViewProjection = m_LoadedScenes[name].SceneData.Projection * m_LoadedScenes[

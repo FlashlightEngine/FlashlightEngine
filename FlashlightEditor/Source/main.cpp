@@ -1,4 +1,4 @@
-#include <FlashlightEditorApplication.hpp>
+#include <FlashlightEditor/FlashlightEditorApplication.hpp>
 
 int main() {
     Flashlight::WindowProperties properties{1920, 1080, "Test Application", false, false};
@@ -9,7 +9,7 @@ int main() {
     constexpr auto debugLevel = Flashlight::DebugLevel::Debug;
 #endif
         
-    const auto app = std::make_unique<FlashlightEditorApplication>(properties, debugLevel);
+    const auto app = std::make_unique<FlashlightEditor::FlashlightEditorApplication>(properties, debugLevel);
 
     app->Run();
 

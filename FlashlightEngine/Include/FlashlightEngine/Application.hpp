@@ -10,7 +10,6 @@
 #include <FlashlightEngine/Core/Window.hpp>
 
 #include <FlashlightEngine/VulkanRenderer/VulkanRenderer.hpp>
-#include <FlashlightEngine/VulkanRenderer/Camera.hpp>
 
 namespace Flashlight {    
     class Application {

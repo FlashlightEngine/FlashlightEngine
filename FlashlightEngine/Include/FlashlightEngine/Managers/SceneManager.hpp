@@ -2,7 +2,6 @@
 
 #include <FlashlightEngine/VulkanRenderer/VulkanTypes.hpp>
 #include <FlashlightEngine/VulkanRenderer/VulkanAssetsLoader.hpp>
-#include <FlashlightEngine/VulkanRenderer/Camera.hpp>
 #include <FlashlightEngine/VulkanRenderer/VulkanRenderer.hpp>
 
 namespace Flashlight {
@@ -29,7 +28,7 @@ namespace Flashlight {
         void LoadScene(const std::filesystem::path& path, const std::string& name);
         void UnloadScene(const std::string& name);
 
-        void UpdateScene(const Renderer::Camera& camera, const Window& window, const std::string& name);
+        void UpdateScene(const glm::mat4& viewMatrix, f32 fov, const Window& window, const std::string& name);
         void RenderScene(const std::string& name, EngineStats& stats);
 
         void ClearScenes();
