@@ -1,11 +1,11 @@
-#include <TestApplication.hpp>
+#include <FlashlightEditorApplication.hpp>
 
 #include <FlashlightEngine/VulkanRenderer/VulkanUtils/VulkanBufferUtils.hpp>
 #include <FlashlightEngine/VulkanRenderer/VulkanInitializers.hpp>
 
 #include <imgui.h>
 
-TestApplication::TestApplication(const Flashlight::WindowProperties& windowProperties,
+FlashlightEditorApplication::FlashlightEditorApplication(const Flashlight::WindowProperties& windowProperties,
                                  const Flashlight::DebugLevel& debugLevel) : Application(
     windowProperties, debugLevel) {
     m_Camera.Velocity = glm::vec3(0.f);
@@ -21,15 +21,15 @@ TestApplication::TestApplication(const Flashlight::WindowProperties& windowPrope
     m_IsRunning = true;
 }
 
-void TestApplication::OnEvent(Flashlight::Event& event) {
+void FlashlightEditorApplication::OnEvent(Flashlight::Event& event) {
     Flashlight::EventDispatcher dispatcher(event);
 
-    dispatcher.Dispatch<Flashlight::KeyDownEvent>(BIND_EVENT_TO_EVENT_HANDLER(TestApplication::OnKeyDown));
-    dispatcher.Dispatch<Flashlight::KeyUpEvent>(BIND_EVENT_TO_EVENT_HANDLER(TestApplication::OnKeyUp));
-    dispatcher.Dispatch<Flashlight::MouseMovedEvent>(BIND_EVENT_TO_EVENT_HANDLER(TestApplication::OnMouseMovement));
+    dispatcher.Dispatch<Flashlight::KeyDownEvent>(BIND_EVENT_TO_EVENT_HANDLER(FlashlightEditorApplication::OnKeyDown));
+    dispatcher.Dispatch<Flashlight::KeyUpEvent>(BIND_EVENT_TO_EVENT_HANDLER(FlashlightEditorApplication::OnKeyUp));
+    dispatcher.Dispatch<Flashlight::MouseMovedEvent>(BIND_EVENT_TO_EVENT_HANDLER(FlashlightEditorApplication::OnMouseMovement));
 }
 
-void TestApplication::OnUpdate() {
+void FlashlightEditorApplication::OnUpdate() {
     const auto start = std::chrono::system_clock::now();
     m_Camera.Update();
 
@@ -41,7 +41,7 @@ void TestApplication::OnUpdate() {
     m_EngineStats.SceneUpdateTime = static_cast<f32>(elapsed.count()) / 1000.f;
 }
 
-void TestApplication::OnRender() {
+void FlashlightEditorApplication::OnRender() {
     m_Renderer->BeginUi();
 
     CreateEditorUi();
@@ -53,7 +53,7 @@ void TestApplication::OnRender() {
     m_Renderer->EndRendering(*m_Window);
 }
 
-void TestApplication::OnKeyDown(const Flashlight::KeyDownEvent& event) {
+void FlashlightEditorApplication::OnKeyDown(const Flashlight::KeyDownEvent& event) {
     if (event.GetScancode() == static_cast<i32>(Flashlight::Keys::Escape)) {
         m_IsRunning = false;
     }
@@ -61,15 +61,15 @@ void TestApplication::OnKeyDown(const Flashlight::KeyDownEvent& event) {
     m_Camera.OnKeyDown(event.GetScancode(), m_DeltaTime, m_CameraSpeed * 2.25f);
 }
 
-void TestApplication::OnKeyUp(const Flashlight::KeyUpEvent& event) {
+void FlashlightEditorApplication::OnKeyUp(const Flashlight::KeyUpEvent& event) {
     m_Camera.OnKeyUp(event.GetScancode());
 }
 
-void TestApplication::OnMouseMovement(const Flashlight::MouseMovedEvent& event) {
+void FlashlightEditorApplication::OnMouseMovement(const Flashlight::MouseMovedEvent& event) {
     m_Camera.OnMouseMovement(event.GetX(), event.GetY(), m_MouseSensitivity * 2.5f, m_DeltaTime);
 }
 
-void TestApplication::CreateEditorUi() {
+void FlashlightEditorApplication::CreateEditorUi() {
     if (ImGui::Begin("Camera")) {
         ImGui::SliderFloat("Camera speed", &m_CameraSpeed, 0.1f, 10.0f);
         ImGui::SliderFloat("Mouse sensitivity", &m_MouseSensitivity, 0.1f, 10.0f);

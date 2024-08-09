@@ -3,18 +3,18 @@
 #include <FlashlightEngine/Application.hpp>
 #include <FlashlightEngine/Managers/SceneManager.hpp>
 
-class TestApplication final : public Flashlight::Application {
+class FlashlightEditorApplication final : public Flashlight::Application {
     std::unique_ptr<Flashlight::SceneManager> m_SceneManager;
     
 public:
-    TestApplication(const Flashlight::WindowProperties& windowProperties, const Flashlight::DebugLevel& debugLevel);
-    ~TestApplication() override = default;
+    FlashlightEditorApplication(const Flashlight::WindowProperties& windowProperties, const Flashlight::DebugLevel& debugLevel);
+    ~FlashlightEditorApplication() override = default;
 
-    TestApplication(const TestApplication&) = delete;
-    TestApplication(TestApplication&&) = delete;
+    FlashlightEditorApplication(const FlashlightEditorApplication&) = delete;
+    FlashlightEditorApplication(FlashlightEditorApplication&&) = delete;
 
-    TestApplication& operator=(const TestApplication&) = delete;
-    TestApplication& operator=(TestApplication&&) = delete;
+    FlashlightEditorApplication& operator=(const FlashlightEditorApplication&) = delete;
+    FlashlightEditorApplication& operator=(FlashlightEditorApplication&&) = delete;
 
 protected:
     void OnEvent(Flashlight::Event& event) override;

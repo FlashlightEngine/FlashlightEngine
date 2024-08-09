@@ -65,21 +65,21 @@ target("FlashlightEngine")
   add_packages("vulkan-loader","vk-bootstrap", "vulkan-memory-allocator", "vulkan-utility-libraries", "glfw", "glm",
                "spdlog", "magic_enum", "imgui", "fastgltf", {public = true})
                
-target("TestApplication")
+target("FlashlightEditor")
    set_kind("binary")
    add_rules("cp-resources", "cp-imgui-layout")
-   add_rules("utils.glsl2spv", {outputdir = "build/" .. outputdir .. "/TestApplication/bin/Shaders"})
+   add_rules("utils.glsl2spv", {outputdir = "build/" .. outputdir .. "/FlashlightEditor/bin/Shaders"})
    
-  set_targetdir("build/" .. outputdir .. "/TestApplication/bin")
-  set_objectdir("build/" .. outputdir .. "/TestApplication/obj")
+  set_targetdir("build/" .. outputdir .. "/FlashlightEditor/bin")
+  set_objectdir("build/" .. outputdir .. "/FlashlightEditor/obj")
   
-  add_files("TestApplication/Source/**.cpp")
+  add_files("FlashlightEditor/Source/**.cpp")
   
-  add_headerfiles("TestApplication/Include/**.hpp", "TestApplication/Include/**.h", "TestApplication/Include/**.inl")
-  add_includedirs("TestApplication/Include")
+  add_headerfiles("FlashlightEditor/Include/**.hpp", "FlashlightEditor/Include/**.h", "FlashlightEditor/Include/**.inl")
+  add_includedirs("FlashlightEditor/Include")
   
-  add_files("TestApplication/Shaders/**.vert", "TestApplication/Shaders/**.frag", "TestApplication/Shaders/**.comp") -- Tell glsl2spv to compile the files.
-  add_headerfiles("TestApplication/Shaders/**") -- A trick to make them show up in VS/Rider solutions.
-  add_headerfiles("TestApplication/Resources/**") -- A trick to make them show up in VS/Rider solutions.
+  add_files("FlashlightEditor/Shaders/**.vert", "FlashlightEditor/Shaders/**.frag", "FlashlightEditor/Shaders/**.comp") -- Tell glsl2spv to compile the files.
+  add_headerfiles("FlashlightEditor/Shaders/**") -- A trick to make them show up in VS/Rider solutions.
+  add_headerfiles("FlashlightEditor/Resources/**") -- A trick to make them show up in VS/Rider solutions.
   
   add_deps("FlashlightEngine")
