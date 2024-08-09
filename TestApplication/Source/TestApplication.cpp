@@ -1,5 +1,8 @@
 #include <TestApplication.hpp>
 
+#include <FlashlightEngine/VulkanRenderer/VulkanUtils/VulkanBufferUtils.hpp>
+#include <FlashlightEngine/VulkanRenderer/VulkanInitializers.hpp>
+
 #include <imgui.h>
 
 TestApplication::TestApplication(const Flashlight::WindowProperties& windowProperties,
@@ -10,6 +13,10 @@ TestApplication::TestApplication(const Flashlight::WindowProperties& windowPrope
 
     m_Camera.Pitch = 0;
     m_Camera.Yaw = 0;
+
+    m_SceneManager = std::make_unique<Flashlight::SceneManager>(m_Renderer.get());
+
+    m_SceneManager->LoadScene("Resources/Models/structure.glb", "structure");
 
     m_IsRunning = true;
 }
@@ -23,14 +30,27 @@ void TestApplication::OnEvent(Flashlight::Event& event) {
 }
 
 void TestApplication::OnUpdate() {
+    const auto start = std::chrono::system_clock::now();
+    m_Camera.Update();
+
+    m_SceneManager->UpdateScene(m_Camera, *m_Window, "structure");
+
+    const auto end = std::chrono::system_clock::now();
+
+    const auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+    m_EngineStats.SceneUpdateTime = static_cast<f32>(elapsed.count()) / 1000.f;
 }
 
 void TestApplication::OnRender() {
-    m_Renderer->CreateRendererUi();
+    m_Renderer->BeginUi();
 
     CreateEditorUi();
 
-    m_Renderer->Draw(*m_Window, m_Camera, m_EngineStats);
+    m_Renderer->BeginRendering(*m_Window, {{0.1f, 0.1f, 0.1f, 1.0f}}, m_EngineStats);
+
+    m_SceneManager->RenderScene("structure", m_EngineStats);
+    
+    m_Renderer->EndRendering(*m_Window);
 }
 
 void TestApplication::OnKeyDown(const Flashlight::KeyDownEvent& event) {

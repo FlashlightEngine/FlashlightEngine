@@ -20,9 +20,9 @@ inline VmaAllocator VulkanRenderer::GetAllocator() const {
 }
 
 inline VkFormat VulkanRenderer::GetDrawImageFormat() const {
-    return m_DrawImage.ImageFormat;
+    return DrawImage.ImageFormat;
 }
 
 inline VkFormat VulkanRenderer::GetDepthImageFormat() const {
-        return m_DepthImage.ImageFormat;
+        return DepthImage.ImageFormat;
 }

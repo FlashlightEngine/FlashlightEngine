@@ -1,8 +1,11 @@
 #pragma once
 
 #include <FlashlightEngine/Application.hpp>
+#include <FlashlightEngine/Managers/SceneManager.hpp>
 
 class TestApplication final : public Flashlight::Application {
+    std::unique_ptr<Flashlight::SceneManager> m_SceneManager;
+    
 public:
     TestApplication(const Flashlight::WindowProperties& windowProperties, const Flashlight::DebugLevel& debugLevel);
     ~TestApplication() override = default;
