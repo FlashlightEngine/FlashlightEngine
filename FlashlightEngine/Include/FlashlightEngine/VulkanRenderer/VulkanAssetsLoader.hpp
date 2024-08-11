@@ -9,6 +9,7 @@
 
 #include <FlashlightEngine/VulkanRenderer/VulkanTypes.hpp>
 #include <FlashlightEngine/VulkanRenderer/VulkanDescriptors.hpp>
+#include <FlashlightEngine/VulkanRenderer/MaterialSystem.hpp>
 #include <FlashlightEngine/VulkanRenderer/VulkanUtils/VulkanBufferUtils.hpp>
 #include <FlashlightEngine/VulkanRenderer/VulkanUtils/VulkanImageUtils.hpp>
 

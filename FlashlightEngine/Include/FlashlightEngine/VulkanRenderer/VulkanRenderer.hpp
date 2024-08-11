@@ -9,6 +9,7 @@
 
 #include <FlashlightEngine/VulkanRenderer/VulkanAssetsLoader.hpp>
 #include <FlashlightEngine/VulkanRenderer/VulkanDescriptors.hpp>
+#include <FlashlightEngine/VulkanRenderer/MaterialSystem.hpp>
 #include <FlashlightEngine/VulkanRenderer/VulkanWrapper/Swapchain.hpp>
 
 #include <FlashlightEngine/Core/Window.hpp>
@@ -29,37 +30,6 @@ namespace Flashlight::Renderer {
 
         DeletionQueue DeletionQueue;
         DescriptorAllocatorGrowable FrameDescriptors;
-    };
-
-    struct GLTFMetallic_Roughness {
-        MaterialPipeline OpaquePipeline;
-        MaterialPipeline TransparentPipeline;
-
-        VkDescriptorSetLayout MaterialLayout;
-
-        struct MaterialConstants {
-            glm::vec4 ColorFactors;
-            glm::vec4 MetalRoughFactors;
-            // Padding, we need it anyway for uniform buffers.
-            glm::vec4 Padding[14];
-        };
-
-        struct MaterialResources {
-            AllocatedImage ColorImage;
-            VkSampler ColorSampler;
-            AllocatedImage MetalRoughnessImage;
-            VkSampler MetalRoughnessSampler;
-            VkBuffer DataBuffer;
-            u32 DataBufferOffset;
-        };
-
-        DescriptorWriter Writer;
-
-        void BuildPipelines(VulkanRenderer* renderer);
-        void ClearResources(VkDevice device);
-
-        MaterialInstance WriteMaterial(VkDevice device, MaterialPass pass, const MaterialResources& resources,
-                                       DescriptorAllocatorGrowable& descriptorAllocator);
     };
 
     struct RenderObject {

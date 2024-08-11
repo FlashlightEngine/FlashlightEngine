@@ -8,14 +8,14 @@ namespace FlashlightEditor {
                                                              debugLevel) : Application(
         windowProperties, debugLevel) {
         m_Camera.Velocity = glm::vec3(0.f);
-        m_Camera.Position = glm::vec3(30.f, -00.f, -085.f);
+        m_Camera.Position = glm::vec3(0.f, 0.f, 0.f);
 
         m_Camera.Pitch = 0;
         m_Camera.Yaw = 0;
 
         m_SceneManager = std::make_unique<Flashlight::SceneManager>(m_Renderer.get());
 
-        m_SceneManager->LoadScene("Resources/Models/structure.glb", "structure");
+        m_SceneManager->LoadScene("Resources/Models/DamagedHelmet.glb", "helmet");
 
         m_IsRunning = true;
     }
@@ -35,7 +35,7 @@ namespace FlashlightEditor {
         const auto start = std::chrono::system_clock::now();
         m_Camera.Update();
 
-        m_SceneManager->UpdateScene(m_Camera.GetViewMatrix(), glm::radians(m_Fov), *m_Window, "structure");
+        m_SceneManager->UpdateScene(m_Camera.GetViewMatrix(), glm::radians(m_Fov), *m_Window, "helmet");
 
         const auto end = std::chrono::system_clock::now();
 
@@ -50,7 +50,7 @@ namespace FlashlightEditor {
 
         m_Renderer->BeginRendering(*m_Window, {{0.1f, 0.1f, 0.1f, 1.0f}}, m_EngineStats);
 
-        m_SceneManager->RenderScene("structure", m_EngineStats);
+        m_SceneManager->RenderScene("helmet", m_EngineStats);
 
         m_Renderer->EndRendering(*m_Window);
     }

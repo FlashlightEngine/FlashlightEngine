@@ -73,13 +73,13 @@ namespace Flashlight {
 
         // Sort the opaques surfaces by material and mesh.
         std::ranges::sort(opaqueDraws, [&](const auto& iA, const auto& iB) {
-            const Renderer::RenderObject& A = m_LoadedScenes[name].DrawContext.OpaqueSurfaces[iA];
-            const Renderer::RenderObject& B = m_LoadedScenes[name].DrawContext.OpaqueSurfaces[iB];
-            if (A.Material == B.Material) {
-                return A.IndexBuffer < B.IndexBuffer;
+            const Renderer::RenderObject& a = m_LoadedScenes[name].DrawContext.OpaqueSurfaces[iA];
+            const Renderer::RenderObject& b = m_LoadedScenes[name].DrawContext.OpaqueSurfaces[iB];
+            if (a.Material == b.Material) {
+                return a.IndexBuffer < b.IndexBuffer;
             }
 
-            return A.Material < B.Material;
+            return a.Material < b.Material;
         });
 
         const auto start = std::chrono::system_clock::now();
@@ -93,8 +93,6 @@ namespace Flashlight {
         const VkRenderingInfo renderingInfo = Renderer::VulkanInit::RenderingInfo(
             m_LinkedRenderer->DrawExtent, &colorAttachment, &depthAttachment);
         vkCmdBeginRendering(frame.MainCommandBuffer, &renderingInfo);
-
-        void* mappedMemory = nullptr;
 
         Renderer::VulkanUtils::AllocatedBuffer gpuSceneDataBuffer = Renderer::VulkanUtils::CreateBuffer(
             m_LinkedRenderer->GetAllocator(), sizeof(Renderer::GPUSceneData),

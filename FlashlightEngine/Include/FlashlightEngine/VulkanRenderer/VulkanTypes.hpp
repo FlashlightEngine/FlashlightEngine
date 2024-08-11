@@ -74,23 +74,6 @@ namespace Flashlight {
             glm::vec4 SunlightColor;
         };
 
-        enum class MaterialPass : u8 {
-            MainColor,
-            Transparent,
-            Other
-        };
-        
-        struct MaterialPipeline {
-            VkPipeline Pipeline;
-            VkPipelineLayout PipelineLayout;
-        };
-
-        struct MaterialInstance {
-            MaterialPipeline* Pipeline;
-            VkDescriptorSet MaterialSet;
-            MaterialPass PassType;
-        };
-
         struct DrawContext;
 
         // Base class for a renderable dynamic object.
