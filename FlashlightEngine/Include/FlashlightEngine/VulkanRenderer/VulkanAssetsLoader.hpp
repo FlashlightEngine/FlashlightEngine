@@ -9,12 +9,22 @@
 
 #include <FlashlightEngine/VulkanRenderer/VulkanTypes.hpp>
 #include <FlashlightEngine/VulkanRenderer/VulkanDescriptors.hpp>
+#include <FlashlightEngine/VulkanRenderer/MaterialSystem.hpp>
+#include <FlashlightEngine/VulkanRenderer/VulkanUtils/VulkanBufferUtils.hpp>
+#include <FlashlightEngine/VulkanRenderer/VulkanUtils/VulkanImageUtils.hpp>
 
 #include <fastgltf/parser.hpp>
 
 #include <filesystem>
 
 namespace Flashlight::Renderer {
+    // Holds the resources needed for a mesh.
+    struct GPUMeshBuffers {
+        VulkanUtils::AllocatedBuffer IndexBuffer;
+        VulkanUtils::AllocatedBuffer VertexBuffer;
+        VkDeviceAddress VertexBufferAddress;
+    };
+    
     struct GLTFMaterial {
         MaterialInstance Data;
     };
@@ -55,7 +65,7 @@ namespace Flashlight::Renderer {
 
         DescriptorAllocatorGrowable DescriptorPool;
 
-        AllocatedBuffer MaterialDataBuffer;
+        VulkanUtils::AllocatedBuffer MaterialDataBuffer;
 
         VulkanRenderer* LinkedRenderer;
 

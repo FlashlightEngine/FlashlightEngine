@@ -42,9 +42,7 @@ rule("cp-imgui-layout")
   end)
   
 target("FlashlightEngine")
-  set_kind("binary")
-  add_rules("cp-resources", "cp-imgui-layout")
-  add_rules("utils.glsl2spv", {outputdir = "build/" .. outputdir .. "/FlashlightEngine/bin/Shaders"})
+  set_kind("static")
 
   -- Set binary and object files directories.
   set_targetdir("build/" .. outputdir .. "/FlashlightEngine/bin")
@@ -58,15 +56,30 @@ target("FlashlightEngine")
   add_headerfiles("FlashlightEngine/Include/**.hpp", "FlashlightEngine/Include/**.h", "FlashlightEngine/Include/**.inl")
   add_includedirs("FlashlightEngine/Include", {public = true})
   add_headerfiles("FlashlightEngine/ThirdParty/**.h")
-  add_includedirs("FlashlightEngine/ThirdParty", {public = true})
+  add_includedirs("FlashlightEngine/ThirdParty")
   
-  add_files("FlashlightEngine/Shaders/**.vert", "FlashlightEngine/Shaders/**.frag", "FlashlightEngine/Shaders/**.comp") -- Tell glsl2spv to compile the files.
-  add_headerfiles("FlashlightEngine/Shaders/**") -- A trick to make them show up in VS/Rider solutions.
-  add_headerfiles("FlashlightEngine/Resources/**") -- A trick to make them show up in VS/Rider solutions.
-
   -- Precompiled header
   set_pcxxheader("FlashlightEngine/Include/FlashlightEngine/flpch.hpp")
 
   -- target dependencies
   add_packages("vulkan-loader","vk-bootstrap", "vulkan-memory-allocator", "vulkan-utility-libraries", "glfw", "glm",
-               "spdlog", "magic_enum", "imgui", "fastgltf")
+               "spdlog", "magic_enum", "imgui", "fastgltf", {public = true})
+               
+target("FlashlightEditor")
+   set_kind("binary")
+   add_rules("cp-resources", "cp-imgui-layout")
+   add_rules("utils.glsl2spv", {outputdir = "build/" .. outputdir .. "/FlashlightEditor/bin/Shaders"})
+   
+  set_targetdir("build/" .. outputdir .. "/FlashlightEditor/bin")
+  set_objectdir("build/" .. outputdir .. "/FlashlightEditor/obj")
+  
+  add_files("FlashlightEditor/Source/**.cpp")
+  
+  add_headerfiles("FlashlightEditor/Include/**.hpp", "FlashlightEditor/Include/**.h", "FlashlightEditor/Include/**.inl")
+  add_includedirs("FlashlightEditor/Include")
+  
+  add_files("FlashlightEditor/Shaders/**.vert", "FlashlightEditor/Shaders/**.frag", "FlashlightEditor/Shaders/**.comp") -- Tell glsl2spv to compile the files.
+  add_headerfiles("FlashlightEditor/Shaders/**") -- A trick to make them show up in VS/Rider solutions.
+  add_headerfiles("FlashlightEditor/Resources/**") -- A trick to make them show up in VS/Rider solutions.
+  
+  add_deps("FlashlightEngine")

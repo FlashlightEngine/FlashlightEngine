@@ -24,6 +24,8 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image/stb_image.h>
 
+#include <vk_mem_alloc.h>
+
 namespace Flashlight::Renderer {
     VkFilter ExtractFilter(const fastgltf::Filter filter) {
         switch (filter) {
@@ -113,7 +115,7 @@ namespace Flashlight::Renderer {
             if (load) {
                 gltf = std::move(load.get());
             } else {
-                Log::EngineError("Failed to load glTF: {}", fastgltf::to_underlying(load.error()));
+                Log::EngineError("Failed to load glTF: {}", to_underlying(load.error()));
                 return {};
             }
         } else if (type == fastgltf::GltfType::GLB) {
@@ -121,7 +123,7 @@ namespace Flashlight::Renderer {
             if (load) {
                 gltf = std::move(load.get());
             } else {
-                Log::EngineError("Failed to load glTF: {}", fastgltf::to_underlying(load.error()));
+                Log::EngineError("Failed to load glTF: {}", to_underlying(load.error()));
                 return {};
             }
         } else {
@@ -182,12 +184,16 @@ namespace Flashlight::Renderer {
                                                                                                                 .materials
                                                                                                                 .size(),
                                                             VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-                                                            VMA_MEMORY_USAGE_CPU_TO_GPU);
+                                                            VulkanUtils::MemoryUsage::CpuToGpu);
 
         int dataIndex = 0;
-        auto sceneMaterialConstants = static_cast<GLTFMetallic_Roughness::MaterialConstants*>(file.
-                                                                                              MaterialDataBuffer.
-                                                                                              Info.pMappedData);
+
+        VmaAllocationInfo materialDataBufferAllocInfo;
+        vmaGetAllocationInfo(renderer->GetAllocator(), file.MaterialDataBuffer.Allocation,
+                             &materialDataBufferAllocInfo);
+
+        auto sceneMaterialConstants = static_cast<GLTFMetallic_Roughness::MaterialConstants*>(
+            materialDataBufferAllocInfo.pMappedData);
 
         for (fastgltf::Material& mat : gltf.materials) {
             auto newMat = std::make_shared<GLTFMaterial>();
@@ -330,7 +336,7 @@ namespace Flashlight::Renderer {
                 newSurface.Bounds.Origin = (maxPos + minPos) / 2.f;
                 newSurface.Bounds.Extents = (maxPos - minPos) / 2.f;
                 newSurface.Bounds.SphereRadius = glm::length(newSurface.Bounds.Extents);
-                
+
                 newMesh->Surfaces.push_back(newSurface);
             }
 

@@ -6,11 +6,13 @@
  * Description : Definitions of methods from VulkanImageUtils.hpp.
  */
 
+#include <vk_mem_alloc.h>
 #include <FlashlightEngine/VulkanRenderer/VulkanUtils/VulkanImageUtils.hpp>
 
 #include <FlashlightEngine/VulkanRenderer/VulkanInitializers.hpp>
 #include <FlashlightEngine/VulkanRenderer/VulkanRenderer.hpp>
 #include <FlashlightEngine/VulkanRenderer/VulkanUtils/VulkanBufferUtils.hpp>
+
 
 namespace Flashlight::Renderer::VulkanUtils {
     void TransitionImage(const VkCommandBuffer commandBuffer, const VkImage image,
@@ -116,10 +118,14 @@ namespace Flashlight::Renderer::VulkanUtils {
                                const void* data, const VkExtent3D size, const VkFormat format,
                                const VkImageUsageFlags usage, const bool mipmapped) {
         const std::size_t dataSize = static_cast<std::size_t>(size.depth * size.width * size.height) * 4;
+        
         const AllocatedBuffer uploadBuffer = CreateBuffer(allocator, dataSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-                                                          VMA_MEMORY_USAGE_CPU_TO_GPU);
+                                                          MemoryUsage::CpuToGpu);
 
-        memcpy(uploadBuffer.Info.pMappedData, data, dataSize);
+        VmaAllocationInfo uploadBufferAllocInfo;
+        vmaGetAllocationInfo(allocator, uploadBuffer.Allocation, &uploadBufferAllocInfo);
+        
+        memcpy(uploadBufferAllocInfo.pMappedData, data, dataSize);
 
         const AllocatedImage newImage = CreateImage(allocator, device, size, format,
                                                     usage | VK_IMAGE_USAGE_TRANSFER_DST_BIT |
@@ -164,7 +170,7 @@ namespace Flashlight::Renderer::VulkanUtils {
         vmaDestroyImage(allocator, image.Image, image.Allocation);
     }
 
-    void GenerateMipmaps(VkCommandBuffer commandBuffer, VkImage image, VkExtent2D imageSize) {
+    void GenerateMipmaps(const VkCommandBuffer commandBuffer, const VkImage image, VkExtent2D imageSize) {
         const i32 mipLevels = static_cast<i32>(std::floor(std::log2(std::max(imageSize.width, imageSize.height)))) +
             1;
         for (int mip = 0; mip < mipLevels; mip++) {
@@ -182,7 +188,7 @@ namespace Flashlight::Renderer::VulkanUtils {
             imageBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
             imageBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
 
-            VkImageAspectFlags aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            constexpr VkImageAspectFlags aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
             imageBarrier.subresourceRange = VulkanInit::ImageSubresourceRange(aspectMask);
             imageBarrier.subresourceRange.levelCount = 1;
             imageBarrier.subresourceRange.baseMipLevel = mip;
@@ -197,12 +203,12 @@ namespace Flashlight::Renderer::VulkanUtils {
             if (mip < mipLevels - 1) {
                 VkImageBlit2 blitRegion{.sType = VK_STRUCTURE_TYPE_IMAGE_BLIT_2, .pNext = nullptr};
 
-                blitRegion.srcOffsets[1].x = imageSize.width;
-                blitRegion.srcOffsets[1].y = imageSize.height;
+                blitRegion.srcOffsets[1].x = static_cast<i32>(imageSize.width);
+                blitRegion.srcOffsets[1].y = static_cast<i32>(imageSize.height);
                 blitRegion.srcOffsets[1].z = 1;
 
-                blitRegion.dstOffsets[1].x = halfSize.width;
-                blitRegion.dstOffsets[1].y = halfSize.height;
+                blitRegion.dstOffsets[1].x = static_cast<i32>(halfSize.width);
+                blitRegion.dstOffsets[1].y = static_cast<i32>(halfSize.height);
                 blitRegion.dstOffsets[1].z = 1;
 
                 blitRegion.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;

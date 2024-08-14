@@ -7,9 +7,11 @@
  */
 #include <FlashlightEngine/VulkanRenderer/VulkanUtils/VulkanBufferUtils.hpp>
 
+#include <vk_mem_alloc.h>
+
 namespace Flashlight::Renderer::VulkanUtils {
     AllocatedBuffer CreateBuffer(const VmaAllocator allocator, const size allocSize, const VkBufferUsageFlags usage,
-                                 const VmaMemoryUsage memoryUsage) {
+                                 MemoryUsage memoryUsage) {
         // Allocate buffer
         VkBufferCreateInfo bufferInfo = {.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO};
         bufferInfo.pNext = nullptr;
@@ -18,13 +20,15 @@ namespace Flashlight::Renderer::VulkanUtils {
         bufferInfo.usage = usage;
 
         VmaAllocationCreateInfo vmaAllocInfo{};
-        vmaAllocInfo.usage = memoryUsage;
+        vmaAllocInfo.usage = static_cast<VmaMemoryUsage>(memoryUsage);
         vmaAllocInfo.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT;
         AllocatedBuffer newBuffer;
 
+        VmaAllocationInfo allocInfo;
+
         VK_CHECK(
             vmaCreateBuffer(allocator, &bufferInfo, &vmaAllocInfo, &newBuffer.Buffer, &newBuffer.Allocation, &
-                newBuffer.Info))
+                allocInfo))
 
         return newBuffer;
     }

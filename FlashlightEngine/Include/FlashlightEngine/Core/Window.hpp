@@ -7,6 +7,7 @@
  */
 #pragma once
 
+#include <FlashlightEngine/Core/Event.hpp>
 #include <FlashlightEngine/Core/Logger.hpp>
 
 #include <FlashlightEngine/VulkanRenderer/VulkanTypes.hpp>
@@ -16,13 +17,6 @@
 #include <GLFW/glfw3.h>
 
 namespace Flashlight {
-    enum class KeyState {
-        Pressed,
-        Released,
-        Repeated,
-        None
-    };
-
     enum class Keys {
         Space = 32,
         Apostrophe = 39,
@@ -167,11 +161,10 @@ namespace Flashlight {
     struct WindowData {
         i32 Width, Height;
         std::string Title;
-        bool ShouldClose = false;
-        bool StopRendering = false;
-        bool RestartRendering = false;
         bool ShouldInvalidateSwapchain = false;
         bool VSyncEnabled = false;
+        bool Focused = false;
+        std::function<void(Event&)> EventCallback;
     };
 
     class Window {
@@ -189,22 +182,20 @@ namespace Flashlight {
         Window& operator=(Window&&) = delete;
 
         [[nodiscard]] inline bool ShouldClose() const;
-        [[nodiscard]] inline bool ShouldStopRendering() const;
         [[nodiscard]] inline bool ShouldInvalidateSwapchain() const;
-        inline void SwapchainInvalidated();
         [[nodiscard]] inline GLFWwindow* GetNativeWindow() const;
         [[nodiscard]] inline i32 GetWidth() const;
         [[nodiscard]] inline i32 GetHeight() const;
         [[nodiscard]] inline VkExtent2D GetExtent() const;
         [[nodiscard]] inline std::string GetTitle() const;
         [[nodiscard]] inline bool VSyncEnabled() const;
-        // Use at your own risk, when V-Sync is set to false using this, the framerate is locked to twice the screen
-        // refresh rate for some reason.
-        inline void ToggleVSync();
-        [[nodiscard]] KeyState GetKeyState(const Keys& key) const;
 
-        void Update();
-        inline void Close();
+        inline void SwapchainInvalidated();
+        inline void SetVSync(bool status);
+        inline void SetEventCallback(const std::function<void(Event&)>& callback);
+
+        static void Update();
+        inline void Close() const;
 
         void SetMouseMovementCallback(GLFWcursorposfun callback) const;
     };

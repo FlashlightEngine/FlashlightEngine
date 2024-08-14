@@ -14,7 +14,6 @@
 #include <vulkan/vulkan.h>
 // ReSharper disable once CppUnusedIncludeDirective
 #include <vulkan/vk_enum_string_helper.h>
-#include <vk_mem_alloc.h>
 
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/mat4x4.hpp>
@@ -52,33 +51,12 @@ namespace Flashlight {
             }
         };
 
-        struct AllocatedImage {
-            VkImage Image;
-            VkImageView ImageView;
-            VmaAllocation Allocation;
-            VkExtent3D ImageExtent;
-            VkFormat ImageFormat;
-        };
-
-        struct AllocatedBuffer {
-            VkBuffer Buffer;
-            VmaAllocation Allocation;
-            VmaAllocationInfo Info;
-        };
-
         struct Vertex {
             glm::vec3 Position;
             f32 UvX;
             glm::vec3 Normal;
             f32 UvY;
             glm::vec4 Color;
-        };
-
-        // Holds the resources needed for a mesh.
-        struct GPUMeshBuffers {
-            AllocatedBuffer IndexBuffer;
-            AllocatedBuffer VertexBuffer;
-            VkDeviceAddress VertexBufferAddress;
         };
 
         // Push constants for mesh objects draws
@@ -94,23 +72,6 @@ namespace Flashlight {
             glm::vec4 AmbientColor;
             glm::vec4 SunlightDirection; // w for light intensity.
             glm::vec4 SunlightColor;
-        };
-
-        enum class MaterialPass : u8 {
-            MainColor,
-            Transparent,
-            Other
-        };
-        
-        struct MaterialPipeline {
-            VkPipeline Pipeline;
-            VkPipelineLayout PipelineLayout;
-        };
-
-        struct MaterialInstance {
-            MaterialPipeline* Pipeline;
-            VkDescriptorSet MaterialSet;
-            MaterialPass PassType;
         };
 
         struct DrawContext;

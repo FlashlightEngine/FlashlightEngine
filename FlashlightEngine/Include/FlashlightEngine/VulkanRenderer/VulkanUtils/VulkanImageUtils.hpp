@@ -9,8 +9,19 @@
 
 #include <FlashlightEngine/VulkanRenderer/VulkanTypes.hpp>
 
+VK_DEFINE_HANDLE(VmaAllocator)
+VK_DEFINE_HANDLE(VmaAllocation)
+
 namespace Flashlight::Renderer {
     class VulkanRenderer;
+
+    struct AllocatedImage {
+        VkImage Image;
+        VkImageView ImageView;
+        VmaAllocation Allocation;
+        VkExtent3D ImageExtent;
+        VkFormat ImageFormat;
+    };
 
     namespace VulkanUtils {
         void TransitionImage(VkCommandBuffer commandBuffer, VkImage image, VkImageLayout currentLayout,

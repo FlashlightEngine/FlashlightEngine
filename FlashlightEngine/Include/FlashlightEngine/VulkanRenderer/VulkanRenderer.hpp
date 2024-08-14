@@ -9,7 +9,7 @@
 
 #include <FlashlightEngine/VulkanRenderer/VulkanAssetsLoader.hpp>
 #include <FlashlightEngine/VulkanRenderer/VulkanDescriptors.hpp>
-#include <FlashlightEngine/VulkanRenderer/Camera.hpp>
+#include <FlashlightEngine/VulkanRenderer/MaterialSystem.hpp>
 #include <FlashlightEngine/VulkanRenderer/VulkanWrapper/Swapchain.hpp>
 
 #include <FlashlightEngine/Core/Window.hpp>
@@ -19,7 +19,6 @@
 namespace Flashlight::Renderer {
 
     constexpr u32 g_FrameOverlap = 2;
-
     struct FrameData {
         VkCommandPool CommandPool;
         VkCommandBuffer MainCommandBuffer;
@@ -31,53 +30,6 @@ namespace Flashlight::Renderer {
 
         DeletionQueue DeletionQueue;
         DescriptorAllocatorGrowable FrameDescriptors;
-    };
-
-    struct ComputePushConstants {
-        glm::vec4 Data1;
-        glm::vec4 Data2;
-        glm::vec4 Data3;
-        glm::vec4 Data4;
-    };
-
-    struct ComputeEffect {
-        const char* Name;
-
-        VkPipeline Pipeline;
-        VkPipelineLayout Layout;
-
-        ComputePushConstants Data;
-    };
-
-    struct GLTFMetallic_Roughness {
-        MaterialPipeline OpaquePipeline;
-        MaterialPipeline TransparentPipeline;
-
-        VkDescriptorSetLayout MaterialLayout;
-
-        struct MaterialConstants {
-            glm::vec4 ColorFactors;
-            glm::vec4 MetalRoughFactors;
-            // Padding, we need it anyway for uniform buffers.
-            glm::vec4 Padding[14];
-        };
-
-        struct MaterialResources {
-            AllocatedImage ColorImage;
-            VkSampler ColorSampler;
-            AllocatedImage MetalRoughnessImage;
-            VkSampler MetalRoughnessSampler;
-            VkBuffer DataBuffer;
-            u32 DataBufferOffset;
-        };
-
-        DescriptorWriter Writer;
-
-        void BuildPipelines(VulkanRenderer* renderer);
-        void ClearResources(VkDevice device);
-
-        MaterialInstance WriteMaterial(VkDevice device, MaterialPass pass, const MaterialResources& resources,
-                                       DescriptorAllocatorGrowable& descriptorAllocator);
     };
 
     struct RenderObject {
@@ -122,32 +74,23 @@ namespace Flashlight::Renderer {
         VkCommandBuffer m_ImmediateCommandBuffer;
         VkCommandPool m_ImmediateCommandPool;
 
-        AllocatedImage m_DrawImage;
-        AllocatedImage m_DepthImage;
-        VkExtent2D m_DrawExtent;
-        float m_RenderScale = 1.0f;
-
         DescriptorAllocatorGrowable m_GlobalDescriptorAllocator;
 
         VkDescriptorSet m_DrawImageDescriptors;
         VkDescriptorSetLayout m_DrawImageDescriptorLayout;
 
-        VkPipelineLayout m_ComputePipelineLayout;
-
-        std::vector<ComputeEffect> m_BackgroundEffects;
-        i32 m_CurrentBackgroundEffect{0};
-
         VkDescriptorSetLayout m_SingleImageDescriptorLayout;
-
-        std::unordered_map<std::string, std::shared_ptr<LoadedGLTF>> m_LoadedScenes;
 
         MaterialInstance m_DefaultData;
 
     public:
-        GPUSceneData SceneData;
+        AllocatedImage DrawImage;
+        AllocatedImage DepthImage;
+        VkExtent2D DrawExtent;
+        
         VkDescriptorSetLayout GpuSceneDataLayout;
 
-        DrawContext MainDrawContext;
+        std::unordered_map<std::string, std::shared_ptr<LoadedGLTF>> LoadedScenes;
 
         AllocatedImage WhiteImage;
         AllocatedImage BlackImage;
@@ -172,9 +115,9 @@ namespace Flashlight::Renderer {
         void PlanMeshDeletion(GPUMeshBuffers mesh);
         void PlanDescriptorPoolsDeletion(DescriptorAllocatorGrowable& allocator);
         void PlanDeletion(std::function<void()>&& deletor);
-        void CreateRendererUi();
-        void UpdateScene(const Window& window, Camera& camera, EngineStats& stats);
-        void Draw(Window& window, Camera& camera, EngineStats& stats);
+        static void BeginUi();
+        void BeginRendering(const Window& window, VkClearColorValue clearColor, EngineStats& stats);
+        void EndRendering(Window& window);
 
         void ImmediateSubmit(const std::function<void(VkCommandBuffer commandBuffer)>& function) const;
 
@@ -183,6 +126,12 @@ namespace Flashlight::Renderer {
         [[nodiscard]] inline VmaAllocator GetAllocator() const;
         [[nodiscard]] inline VkFormat GetDrawImageFormat() const;
         [[nodiscard]] inline VkFormat GetDepthImageFormat() const;
+
+        [[nodiscard]] FrameData& GetCurrentFrame() {
+            return m_Frames[m_FrameNumber % g_FrameOverlap];
+        }
+
+        [[nodiscard]] static bool IsVisible(const RenderObject& object, const glm::mat4& viewProj);
 
     private:
         void InitializeVulkan(const Window& window, const DebugLevel& debugLevel);
@@ -193,21 +142,12 @@ namespace Flashlight::Renderer {
         void InitializeSynchronisationPrimitives();
         void InitializeDescriptors();
         void InitializePipelines();
-        void InitializeComputePipelines();
         void InitializeImGui(const Window& window);
         void InitializeDefaultData();
 
-        void DrawBackground(VkCommandBuffer commandBuffer) const;
-        void DrawGeometry(VkCommandBuffer commandBuffer, EngineStats& stats);
         void DrawImGui(VkCommandBuffer commandBuffer, VkImageView targetImageView) const;
 
-        [[nodiscard]] FrameData& GetCurrentFrame() {
-            return m_Frames[m_FrameNumber % g_FrameOverlap];
-        }
-
         void RecreateSwapchain(Window& window);
-
-        [[nodiscard]] static bool IsVisible(const RenderObject& object, const glm::mat4& viewProj);
     };
 
 #include <FlashlightEngine/VulkanRenderer/VulkanRenderer.inl>

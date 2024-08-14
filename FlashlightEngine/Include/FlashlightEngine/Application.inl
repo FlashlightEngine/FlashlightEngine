@@ -7,14 +7,14 @@
  */
 #pragma once
 
-inline FlashlightEngine& FlashlightEngine::GetRunningInstance() {
+inline Application& Application::GetRunningInstance() {
     return *m_SLoadedApplication;
 }
 
-inline bool FlashlightEngine::IsRunning() const {
+inline bool Application::IsRunning() const {
     return m_IsRunning;
 }
 
-inline void FlashlightEngine::Close() {
+inline void Application::Close() {
     m_IsRunning = false;
 }
