@@ -24,13 +24,13 @@ end
 
 add_defines("GLFW_INCLUDE_VULKAN", "VK_NO_PROTOTYPES")
 
-add_repositories("FlashlightEngine https://github.com/Pixfri/xmake-repo.git")
+add_repositories("FlashlightEngine https://github.com/FlashlightEngine/xmake-repo.git")
 
 -- Define packages to download.
 add_requires("volk 1.3.290+0", "vk-bootstrap v1.3.290", "vulkan-memory-allocator v3.1.0", 
              "vulkan-utility-libraries v1.3.290", "glfw 3.4", "glm 1.0.1", "spdlog v1.9.0", "stb 2024.06.01")
 add_requires("imgui v1.91.0", {configs = {glfw = true, vulkan = true, debug = is_mode("debug")}})
-add_packages("flutils 1.1.0")
+add_requires("flutils 1.2.0")
 
 local outputdir = "$(mode)-$(os)-$(arch)"
 
@@ -57,7 +57,7 @@ target("FlashlightEngine")
 
   -- Add Engine headers to the project and set the include directory as public so it can be accessed from dependant
   -- targets.
-  add_headerfiles("Include/**.hpp", "Include/**.h", "Include/**.inl")
+  add_headerfiles("Include/(FlashlightEngine/**.hpp)", "Include/(FlashlightEngine/**.h)", "Include/(FlashlightEngine/**.inl)")
   
   -- Precompiled header
   set_pcxxheader("Include/FlashlightEngine/flpch.hpp")
