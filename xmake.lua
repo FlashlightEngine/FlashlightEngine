@@ -1,7 +1,6 @@
 set_xmakever("2.9.3")
 
 set_project("FlashlightEngine")
-set_version("0.1.0")
 
 set_allowedplats("windows", "linux")
 set_allowedarchs("windows|x64", "linux|x64", "linux|x86_64")
@@ -19,67 +18,49 @@ if (is_mode("debug")) then
     add_defines("FL_DEBUG")
 end
 
-add_repositories("pixfri https://github.com/Pixfri/xmake-repo.git")
+add_defines("GLFW_INCLUDE_VULKAN", "VK_NO_PROTOTYPES")
+
+add_repositories("FlashlightEngine https://github.com/Pixfri/xmake-repo.git")
 
 -- Define packages to download.
-add_requires("vulkan-loader 1.3.290+0", "vk-bootstrap v1.3.290", "vulkan-memory-allocator v3.1.0", 
-             "vulkan-utility-libraries v1.3.290", "glfw 3.4", "glm 1.0.1", "spdlog v1.9.0", "magic_enum v0.9.5")
+add_requires("volk 1.3.290+0", "vk-bootstrap v1.3.290", "vulkan-memory-allocator v3.1.0", 
+             "vulkan-utility-libraries v1.3.290", "glfw 3.4", "glm 1.0.1", "spdlog v1.9.0", "stb 2024.06.01")
 add_requires("glslang 1.3.290+0", {configs = {binaryonly = true}})
 add_requires("fastgltf v0.6.1")
 add_requires("imgui v1.91.0", {configs = {glfw = true, vulkan = true, debug = is_mode("debug")}})
+add_packages("flutils 1.1.0")
 
 local outputdir = "$(mode)-$(os)-$(arch)"
 
--- A rule to copy resources from a target's 'Resources' directory.
-rule("cp-resources")
-  after_build(function (target)
-    os.cp(target:name() .. "/Resources", "build/" .. outputdir .. "/" .. target:name() .. "/bin")
-  end)
-
-rule("cp-imgui-layout")
-  after_build(function(target)
-    os.cp(target:name() .. "/Resources/imgui.ini", "build/" .. outputdir .. "/" .. target:name() .. "/bin")    
-  end)
+option("static", {description = "Build the engine into a static library.", default = false})
   
 target("FlashlightEngine")
-  set_kind("static")
+  if has_config("static") then
+    set_kind("static")
+    add_defines("FL_STATIC", {public = true})
+  else
+    set_kind("shared")
+  end
+  
+  add_defines("FL_BUILD")
 
   -- Set binary and object files directories.
   set_targetdir("build/" .. outputdir .. "/FlashlightEngine/bin")
   set_objectdir("build/" .. outputdir .. "/FlashlightEngine/obj")
 
   -- Set source cpp files.
-  add_files("FlashlightEngine/Source/**.cpp")
+  add_files("Source/**.cpp")
 
   -- Add Engine headers to the project and set the include directory as public so it can be accessed from dependant
   -- targets.
-  add_headerfiles("FlashlightEngine/Include/**.hpp", "FlashlightEngine/Include/**.h", "FlashlightEngine/Include/**.inl")
-  add_includedirs("FlashlightEngine/Include", {public = true})
-  add_headerfiles("FlashlightEngine/ThirdParty/**.h")
-  add_includedirs("FlashlightEngine/ThirdParty")
+  add_headerfiles("Include/**.hpp", "Include/**.h", "Include/**.inl")
+  add_includedirs("Include", {public = true})
   
   -- Precompiled header
-  set_pcxxheader("FlashlightEngine/Include/FlashlightEngine/flpch.hpp")
+  set_pcxxheader("Include/FlashlightEngine/flpch.hpp")
 
   -- target dependencies
-  add_packages("vulkan-loader","vk-bootstrap", "vulkan-memory-allocator", "vulkan-utility-libraries", "glfw", "glm",
-               "spdlog", "magic_enum", "imgui", "fastgltf", {public = true})
-               
-target("FlashlightEditor")
-   set_kind("binary")
-   add_rules("cp-resources", "cp-imgui-layout")
-   add_rules("utils.glsl2spv", {outputdir = "build/" .. outputdir .. "/FlashlightEditor/bin/Shaders"})
-   
-  set_targetdir("build/" .. outputdir .. "/FlashlightEditor/bin")
-  set_objectdir("build/" .. outputdir .. "/FlashlightEditor/obj")
-  
-  add_files("FlashlightEditor/Source/**.cpp")
-  
-  add_headerfiles("FlashlightEditor/Include/**.hpp", "FlashlightEditor/Include/**.h", "FlashlightEditor/Include/**.inl")
-  add_includedirs("FlashlightEditor/Include")
-  
-  add_files("FlashlightEditor/Shaders/**.vert", "FlashlightEditor/Shaders/**.frag", "FlashlightEditor/Shaders/**.comp") -- Tell glsl2spv to compile the files.
-  add_headerfiles("FlashlightEditor/Shaders/**") -- A trick to make them show up in VS/Rider solutions.
-  add_headerfiles("FlashlightEditor/Resources/**") -- A trick to make them show up in VS/Rider solutions.
-  
-  add_deps("FlashlightEngine")
+  add_packages("volk","vk-bootstrap", "vulkan-memory-allocator", "vulkan-utility-libraries", "glfw", "glm",
+               "spdlog", "imgui", "fastgltf", "stb", "flutils")
+
+includes("xmake/**.lua")
