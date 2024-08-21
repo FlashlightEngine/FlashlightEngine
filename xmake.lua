@@ -38,7 +38,7 @@ option("static", {description = "Build the engine into a static library.", defau
 
 add_includedirs("Include")
   
-target("FlashlightEngine")
+target("FlashlightEngine", function()
   if has_config("static") then
     set_kind("static")
     add_defines("FL_STATIC", {public = true})
@@ -57,7 +57,9 @@ target("FlashlightEngine")
 
   -- Add Engine headers to the project and set the include directory as public so it can be accessed from dependant
   -- targets.
-  add_headerfiles("Include/(FlashlightEngine/**.hpp)", "Include/(FlashlightEngine/**.h)", "Include/(FlashlightEngine/**.inl)")
+  add_headerfiles("Include/(FlashlightEngine/**.hpp)")
+  add_headerfiles("Include/(FlashlightEngine/**.h)")
+  add_headerfiles("Include/(FlashlightEngine/**.inl)")
   
   -- Precompiled header
   set_pcxxheader("Include/FlashlightEngine/flpch.hpp")
@@ -65,5 +67,7 @@ target("FlashlightEngine")
   -- target dependencies
   add_packages("volk","vk-bootstrap", "vulkan-memory-allocator", "vulkan-utility-libraries", "glfw", "glm",
                "spdlog", "imgui", "stb", "flutils")
+
+end)
 
 includes("xmake/**.lua")
