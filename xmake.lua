@@ -1,3 +1,7 @@
+-- Copyright (C) 2024 Jean "Pixfri" Letessier 
+-- This file is part of Flashlight Engine.
+-- For conditions of distribution and use, see copyright notice in LICENSE
+
 set_xmakever("2.9.3")
 
 set_project("FlashlightEngine")
@@ -25,14 +29,14 @@ add_repositories("FlashlightEngine https://github.com/Pixfri/xmake-repo.git")
 -- Define packages to download.
 add_requires("volk 1.3.290+0", "vk-bootstrap v1.3.290", "vulkan-memory-allocator v3.1.0", 
              "vulkan-utility-libraries v1.3.290", "glfw 3.4", "glm 1.0.1", "spdlog v1.9.0", "stb 2024.06.01")
-add_requires("glslang 1.3.290+0", {configs = {binaryonly = true}})
-add_requires("fastgltf v0.6.1")
 add_requires("imgui v1.91.0", {configs = {glfw = true, vulkan = true, debug = is_mode("debug")}})
 add_packages("flutils 1.1.0")
 
 local outputdir = "$(mode)-$(os)-$(arch)"
 
 option("static", {description = "Build the engine into a static library.", default = false})
+
+add_includedirs("Include")
   
 target("FlashlightEngine")
   if has_config("static") then
@@ -54,13 +58,12 @@ target("FlashlightEngine")
   -- Add Engine headers to the project and set the include directory as public so it can be accessed from dependant
   -- targets.
   add_headerfiles("Include/**.hpp", "Include/**.h", "Include/**.inl")
-  add_includedirs("Include", {public = true})
   
   -- Precompiled header
   set_pcxxheader("Include/FlashlightEngine/flpch.hpp")
 
   -- target dependencies
   add_packages("volk","vk-bootstrap", "vulkan-memory-allocator", "vulkan-utility-libraries", "glfw", "glm",
-               "spdlog", "imgui", "fastgltf", "stb", "flutils")
+               "spdlog", "imgui", "stb", "flutils")
 
 includes("xmake/**.lua")
