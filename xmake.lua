@@ -7,8 +7,8 @@ local rendererBackends = {
     VulkanRenderer = {
         Option = "vulkan",
         Deps = {"FLRenderer"},
+        Packages = {"vulkan-headers", "vulkan-memory-allocator"},
         Custom = function()
-        Packages = {"vulkan-headers", "vulkan-memory-allocator"}
             add_defines("VK_NO_PROTOTYPES")
             if is_plat("windows", "mingw") then
                 add_defines("VK_USE_PLATFORM_WIN32_KHR")
@@ -25,7 +25,7 @@ FLRendererBackends = rendererBackends
 local modules = {
     Core = {
         Custom = function()
-            add_headerfiles("Include/(FlashlightEngine/*.hpp)")
+            add_headerfiles("Include/(Flashlight/*.hpp)")
             
             if is_plat("windows", "mingw") then
                 add_syslinks("Ole32")
@@ -40,7 +40,7 @@ local modules = {
     Graphics = {
         Option = "graphics",
         Deps = {"FLRenderer"},
-        Packages = {"entt"}
+        PublicPackages = {"entt"}
     },
     Platform = {
         Option = "platform",
@@ -60,7 +60,6 @@ local modules = {
         Option = "renderer",
         Deps = {"FLPlatform"},
         Packages = {"frozen"},
-        PublicPackages = {"flutils"},
         Custom = function()
             if has_config("embed_rendererbackends", "static") then
                 add_defines("FL_EMBED_RENDERERBACKEND")
@@ -103,6 +102,7 @@ set_license("MIT")
 includes("xmake/**.lua")
 
 option("embed_rendererbackends", {description = "Embed the renderer backends in FLRenderer instead of loading them dynamically.", default = false})
+option("embed_resources", {description = "Turn builtin resources into includeable headers.", default = true})
 option("static", {description = "Build the engine as static libraries.", default = false})
 option("override_runtime", {description = "Override vs runtime to MD in release and MDd in debug.", default = true})
 option("usepch", {description = "Use precompiled headers (speeds up compilation.)", default = false})
@@ -204,8 +204,8 @@ add_includedirs("Include")
 set_encodings("utf-8")
 set_exceptions("cxx")
 set_languages("c89", "cxx20")
-set_rundir("./build/$(mode)-$(plat)-$(arch)/bin")
-set_targetdir("./build/$(mode)-$(plat)-$(arch)/bin")
+set_rundir("./bin/$(plat)_$(arch)_$(mode)")
+set_targetdir("./bin/$(plat)_$(arch)_$(mode)")
 set_warnings("allextra")
 
 if is_mode("debug") then
@@ -243,32 +243,39 @@ end
 
 -- Targets
 function ModuleTargetConfig(name, module)
-    add_defines("FL_" .. name:upper() .. "_BUILD")
-    if is_mode("debug") then
-        add_defines("FL_" .. name:upper() .. "_DEBUG") 
-    end
+	add_defines("FL_" .. name:upper() .. "_BUILD")
+	if is_mode("debug") then
+		add_defines("FL_" .. name:upper() .. "_DEBUG")
+	end
 
-    -- Add header and source files
-    for _, ext in ipairs({".h", ".hpp", ".inl"}) do
-        add_headerfiles("Include/(Flashlight/" .. name .. "/**" .. ext .. ")")
-        add_headerfiles("Source/Flashlight/" .. name .. "/**" .. ext, {prefixdir = "private", install = false})
-    end
+	-- Add header and source files
+	for _, ext in ipairs({".h", ".hpp", ".inl"}) do
+		add_headerfiles("Include/(Flashlight/" .. name .. "/**" .. ext .. ")")
+		add_headerfiles("Source/Flashlight/" .. name .. "/**" .. ext, { prefixdir = "private", install = false })
+	end
+	remove_headerfiles("Sourec/Flashlight/" .. name .. "/Resources/**.h")
 
-    add_files("Source/Flashlight/" .. name .. "/**.cpp")
+	-- Add extra files for projects
+	for _, ext in ipairs({".natvis"}) do
+		add_extrafiles("Include/Flashlight/" .. name .. "/**" .. ext)
+		add_extrafiles("Source/Flashlight/" .. name .. "/**" .. ext)
+	end
 
-    if has_config("embed_resources") then
-        local embedResourceRule = false
-        for _, filepath in pairs(os.files("Source/Flashlight/" .. name .. "/Resources/**|**.h")) do
-            if not embedResourceRule then
-                add_rules("embed.resources")
-                embedResourceRule = true
-            end
+	add_files("Source/Flashlight/" .. name .. "/**.cpp")
 
-            add_files(filepath, {rule = "embed.resources"})
-        end
-    end
+	if has_config("embed_resources") then
+		local embedResourceRule = false
+		for _, filepath in pairs(os.files("Source/Flashlight/" .. name .. "/Resources/**|**.h")) do
+			if not embedResourceRule then
+				add_rules("embed.resources")
+				embedResourceRule = true
+			end
 
-    -- Remove platform-specific files
+			add_files(filepath, {rule = "embed.resources"})
+		end
+	end
+
+	-- Remove platform-specific files
 	if not is_plat("windows", "mingw") then
 		remove_headerfiles("Source/Flashlight/" .. name .. "/Win32/**")
 		remove_files("Source/Flashlight/" .. name .. "/Win32/**")
@@ -284,7 +291,7 @@ function ModuleTargetConfig(name, module)
 		remove_files("Source/Flashlight/" .. name .. "/Posix/**")
 	end
 
-    if module.Deps then
+	if module.Deps then
 		add_deps(table.unpack(module.Deps))
 	end
 
@@ -304,35 +311,36 @@ function ModuleTargetConfig(name, module)
 end
 
 for name, module in pairs(modules) do
-    if module.Option and not has_config(module.Option) then
-        goto continue
-    end
+	if module.Option and not has_config(module.Option) then
+		goto continue
+	end
 
-    target("FL" .. name, function ()
-        set_group("Modules")
+	target("FL" .. name, function ()
+		set_group("Modules")
 
-        if has_config("static") then
-            set_kind("static")
-            add_defines("FL_STATIC", {public = true})
-        else
-            set_kind("shared")
-        end
+		-- handle shared/static kind
+		if has_config("static") then
+			set_kind("static")
+			add_defines("FL_STATIC", { public = true })
+		else
+			set_kind("shared")
+		end
+		
+		add_defines("FL_BUILD")
+		add_includedirs("Source")
+		add_packages("spdlog")	-- spdlog is a special package that is not public but required by all modules
+		add_rpathdirs("$ORIGIN")
 
-        add_defines("FL_BUILD")
-        add_includedirs("Source")
-        add_packages("spdlog")
-        add_rpathdirs("$ORIGIN")
+		if has_config("usepch") then
+			set_pcxxheader("include/Flashlight/" .. name .. ".hpp")
+		end
 
-        if has_config("usepch") then
-            set_pcxxheader("Include/Flashlight/" .. name .. ".hpp")
-        end
+		if is_plat("windows", "mingw") then
+			add_defines("FLUTILS_WINDOWS_NT6=1")
+		end
 
-        if is_plat("windows", "mingw") then
-            add_defines("FLUTILS_WINDOWS_NT6=1")
-        end
+		ModuleTargetConfig(name, module)
+	end)
 
-        ModuleTargetConfig(name, module)
-    end)
-
-    ::continue::
+	::continue::
 end
