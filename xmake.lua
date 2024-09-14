@@ -15,22 +15,6 @@ option("optick", {description = "Enable the Optick debugger.", default = false})
 
 includes("xmake/**.lua")
 
--- Sanitizers
-local sanitizers = {
-    asan = "address",
-    lsan = "leak",
-    tsan = "thread"
-}
-
-for opt, policy in table.orderpairs(sanitizers) do
-    option(opt, {description = "Enable " .. opt, default = false})
-    
-    if has_config(opt) then
-        add_defines("FL_WITH_" .. opt:upper())
-        set_policy("build.sanitizer." .. policy, true)
-    end
-end
-
 -- Dependencies
 add_repositories("FlashlightEngineRepo https://github.com/FlashlightEngine/xmake-repo")
 

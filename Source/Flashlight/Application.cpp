@@ -11,6 +11,10 @@ namespace Flashlight {
         Logger::Init();
     }
 
+    Application::~Application() {
+        
+    }
+
     void Application::Run() {
         
     }
