@@ -11,7 +11,7 @@ includes("xmake/**.lua")
 
 option("static", {description = "Build the engine as a static library.", default = false})
 option("override_runtime", {description = "Override vs runtime to MD in release and MDd in debug.", default = true})
-option("usepch", {description = "Use precompiled header (speeds up compilation.)", default = false})
+option("optick", {description = "Enable the Optick debugger.", default = false})
 
 includes("xmake/**.lua")
 
@@ -38,8 +38,9 @@ add_requires(
     "spdlog v1.9.0",
     "flutils >=2024.08.22",
 	"vulkan-memory-allocator", 
-	"vk-bootstrap",
-    "stb"
+	"volk",
+    "stb",
+    "glfw"
 )
 
 -- Don't link system-installed libraries on CI
@@ -82,6 +83,10 @@ if not is_mode("release") then
     set_symbols("debug", "hidden")
 end
 
+if has_config("optick") then
+    add_requires("optick")
+end
+
 -- Compiler flags
 add_rules("@flutils/compiler_setup")
 add_cxflags("-Wno-missing-field-initializers", { tools = { "clang", "gcc" } })
@@ -108,6 +113,11 @@ target("FlashlightEngine")
 		set_kind("shared")
 	end
 
+    if has_config("tracy") then
+        add_defines("TRACY_ENABLE")
+        add_packages("tracy")
+    end
+
 	add_defines("FL_BUILD")
 
 	-- Add header and source files
@@ -124,13 +134,9 @@ target("FlashlightEngine")
 
 	add_files("Source/Flashlight/**.cpp")
 
-	add_includedirs("Source")
-	add_packages("spdlog", "vk-bootstrap", "vulkan-memory-allocator", "stb", "flutils")
+	add_includedirs("Source", {private = true})
+	add_packages("spdlog", "volk", "vulkan-memory-allocator", "stb", "flutils", "glfw")
 	add_rpathdirs("$ORIGIN")
-
-	if has_config("usepch") then
-		set_pcxxheader("include/Flashlight/" .. name .. ".hpp")
-	end
 
 	if is_plat("windows", "mingw") then
 		add_defines("FLUTILS_WINDOWS_NT6=1")
