@@ -12,10 +12,10 @@ namespace Flashlight {
     }
 
     Application::~Application() {
-        
+        Log::Info("Quitting...");
     }
 
     void Application::Run() {
-        
+        Log::Info("Starting...");
     }
 }
