@@ -14,9 +14,6 @@ option("override_runtime", {description = "Override vs runtime to MD in release 
 
 includes("xmake/**.lua")
 
--- Dependencies
-add_repositories("FlashlightEngineRepo https://github.com/FlashlightEngine/xmake-repo")
-
 add_requires(
 )
 
@@ -110,3 +107,5 @@ target("FlashlightEngine")
 	end
 
 	add_packages()
+
+includes("TestBed/**.lua")

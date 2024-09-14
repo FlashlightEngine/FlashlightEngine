@@ -166,7 +166,6 @@
 
 // Try to identify target platform via defines
 #if defined(_WIN32)
-#define FL_PLATFORM_DESKTOP
 #define FL_PLATFORM_WINDOWS
 
 #ifndef _WIN64
@@ -203,12 +202,33 @@
 #endif
 #endif
 #elif defined(__linux__)
-	#define FL_PLATFORM_DESKTOP
 	#define FL_PLATFORM_LINUX
-	#define FL_PLATFORM_POSIX
 
 	#define FL_EXPORT __attribute__((visibility("default")))
 	#define FL_IMPORT __attribute__((visibility("default")))
+
+#if defined(__ANDROID__)
+		#define FL_PLATFORM_ANDROID
+#endif
+#elif defined (__unix__)
+// Catch anything not caught by the above
+#define FL_PLATFORM_UNIX
+#elif __APPLE__
+// Apple platforms
+#define FL_PLATFORM_APPLE
+#include <TargetConditionals.h>
+#if TARGET_IPHONE_SIMULATOR
+// iOS simulator
+#define FL_PLATFORM_IOS
+#define FL_PLATFORM_IOS_SIMULATOR
+#elif TARGET_OS_IPHONE
+// iOS device
+#define FL_PLATFORM_IOS
+#elif TARGET_OS_MAC
+// macOS
+#else
+#error "Unknown Apple platform"
+#endif
 #else
 	#pragma message "This operating system is not fully supported by Flashlight Engine"
 
@@ -412,6 +432,9 @@ namespace Flashlight {
     using UInt64 = uint64_t;
 
     using USize = size_t;
+
+    using Float32 = float;
+    using Float64 = double;
 
     struct UnreachableError {
     };
