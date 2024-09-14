@@ -62,7 +62,7 @@ headerTemplate = [[
 #ifndef %HEADER_GUARD%
 #define %HEADER_GUARD%
 
-#include <FLUtils/Defines.hpp>
+#include <Flashlight/Prerequisites.hpp>
 #include <Flashlight/Export.hpp>
 
 namespace Flashlight {
