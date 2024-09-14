@@ -52,7 +52,6 @@ set_targetdir("./bin/$(plat)_$(arch)_$(mode)")
 set_warnings("allextra")
 
 if is_mode("debug") then
-    add_rules("debug.suffix")
     add_defines("FL_DEBUG")
 elseif is_mode("coverage") then 
     if not is_plat("windows") then 
