@@ -212,13 +212,11 @@
 #include <Flashlight/Prerequisites.hpp>
 
 #if defined(FL_STATIC)
-#define FL_API
+   #define FL_API
+#elif defined(FL_BUILD)
+   #define FL_API FL_EXPORT
 #else
-#ifdef FL_BUILD
-#define FL_API FL_EXPORT
-#else
-        #define FL_API FL_IMPORT
-#endif
+   #define FL_API FL_IMPORT
 #endif
 
 #endif // FL_EXPORT_HPP

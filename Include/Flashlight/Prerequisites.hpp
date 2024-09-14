@@ -2,8 +2,8 @@
 // This file is part of Flashlight Engine.
 // For conditions of distribution and use, see copyright notice in Export.hpp
 
-#ifndef FL_PREREQUISTS_HPP
-#define FL_PREREQUISTS_HPP
+#ifndef FL_PREREQUISITES_HPP
+#define FL_PREREQUISITES_HPP
 
 // Try to identify the compiler
 #if defined(__clang__)
@@ -12,7 +12,7 @@
 	#define FL_DEPRECATED(txt) __attribute__((__deprecated__(txt)))
 	#define FL_PRETTY_FUNCTION __PRETTY_FUNCTION__
 
-	#define FL_CHECK_CLANG_VER(ver) (FL_COMPILER_CLANG_VER >= ver)
+	#define FL_CHECK_CLANG_VER(ver) (FL_COMPILER_CLANG_VER >= (ver))
 	
 	#define FL_PRAGMA(x) _Pragma(#x)
 
@@ -21,12 +21,12 @@
 	#define FL_WARNING_POP() FL_PRAGMA(clang diagnostic pop)
 	#define FL_WARNING_PUSH() FL_PRAGMA(clang diagnostic push)
 
-	#ifdef __MINGW32__
+#ifdef __MINGW32__
 		#define FL_COMPILER_MINGW
-		#ifdef __MINGW64_VERSION_MAJOR
+#ifdef __MINGW64_VERSION_MAJOR
 			#define FL_COMPILER_MINGW_W64
-		#endif
-	#endif
+#endif
+#endif
 #elif defined(__GNUC__) || defined(__MINGW32__)
 	#define FL_COMPILER_GCC
 	#define FL_COMPILER_GCC_VER (__GNUC__ * 100 + __GNUC_MINOR__)
@@ -42,12 +42,12 @@
 	#define FL_WARNING_POP() FL_PRAGMA(GCC diagnostic pop)
 	#define FL_WARNING_PUSH() FL_PRAGMA(GCC diagnostic push)
 
-	#ifdef __MINGW32__
+#ifdef __MINGW32__
 		#define FL_COMPILER_MINGW
-		#ifdef __MINGW64_VERSION_MAJOR
+#ifdef __MINGW64_VERSION_MAJOR
 			#define FL_COMPILER_MINGW_W64
-		#endif
-	#endif
+#endif
+#endif
 #elif defined(__INTEL_COMPILER) || defined(__ICL)
 	#define FL_COMPILER_ICC
 	#define FL_COMPILER_ICC_VER __INTEL_COMPILER
@@ -62,21 +62,21 @@
 	#define FL_WARNING_POP() FL_PRAGMA(warning(pop))
 	#define FL_WARNING_PUSH() FL_PRAGMA(warning(push))
 #elif defined(_MSC_VER)
-	#define FL_COMPILER_MSVC
-	#define FL_COMPILER_MSVC_VER _MSC_VER
-	#define FL_DEPRECATED(txt) __declspec(deprecated(txt))
-	#define FL_PRETTY_FUNCTION __FUNCSIG__
+#define FL_COMPILER_MSVC
+#define FL_COMPILER_MSVC_VER _MSC_VER
+#define FL_DEPRECATED(txt) __declspec(deprecated(txt))
+#define FL_PRETTY_FUNCTION __FUNCSIG__
 
-	#define FL_CHECK_MSVC_VER(ver) (FL_COMPILER_MSVC_VER >= ver)
+#define FL_CHECK_MSVC_VER(ver) (FL_COMPILER_MSVC_VER >= ver)
 
-	#define FL_PRAGMA(x) __pragma(x)
+#define FL_PRAGMA(x) __pragma(x)
 
-	#define FL_WARNING_MSVC_DISABLE(...) FL_PRAGMA(warning(disable: __VA_ARGS__))
-	#define FL_WARNING_POP() FL_PRAGMA(warning(pop))
-	#define FL_WARNING_PUSH() FL_PRAGMA(warning(push))
+#define FL_WARNING_MSVC_DISABLE(...) FL_PRAGMA(warning(disable: __VA_ARGS__))
+#define FL_WARNING_POP() FL_PRAGMA(warning(pop))
+#define FL_WARNING_PUSH() FL_PRAGMA(warning(push))
 
-	// __cplusplus isn't respected on MSVC without /Zc:__cplusplus flag
-	#define FL_CPP_VER _MSVC_LANG
+// __cplusplus isn't respected on MSVC without /Zc:__cplusplus flag
+#define FL_CPP_VER _MSVC_LANG
 #else
 	#define FL_COMPILER_UNKNOWN
 	#define FL_DEPRECATED(txt)
@@ -87,14 +87,15 @@
 
 // Detect MinGW thread model
 #ifdef FL_COMPILER_MINGW
-	#if defined(__USING_MCFGTHREAD__)
+#if defined(__USING_MCFGTHREAD__)
 		#define FL_COMPILER_MINGW_THREADS_MCF
-	#elif defined(_REENTRANT)
+#elif defined(_REENTRANT)
 		#define FL_COMPILER_MINGW_THREADS_POSIX
-	#else
+#else
 		#define FL_COMPILER_MINGW_THREADS_WIN32
-	#endif
 #endif
+#endif
+
 
 #ifndef FL_CHECK_CLANG_VER
 #define FL_CHECK_CLANG_VER(ver) 0
@@ -157,7 +158,7 @@
 #define FL_CPP20 202002L
 #define FL_CPP23 202302L
 
-#define FL_CHECK_CPP_VER(ver) (FL_CPP_VER >= ver)
+#define FL_CHECK_CPP_VER(ver) (FL_CPP_VER >= (ver))
 
 #if !FL_CHECK_CPP_VER(FL_CPP17)
 	#error Flashlight Engine requires C++17 or higher
@@ -165,38 +166,42 @@
 
 // Try to identify target platform via defines
 #if defined(_WIN32)
-	#define FL_PLATFORM_DESKTOP
-	#define FL_PLATFORM_WINDOWS
+#define FL_PLATFORM_DESKTOP
+#define FL_PLATFORM_WINDOWS
 
-	#define FL_EXPORT __declspec(dllexport)
-	#define FL_IMPORT __declspec(dllimport)
+#ifndef _WIN64
+#error "64-bit is required to build Flashlight Engine."
+#endif
 
-	// Somes defines for windows.h include..
-	#if defined(FL_BUILD)
-		#ifndef WIN32_LEAN_AND_MEAN
-			#define WIN32_LEAN_AND_MEAN
-		#endif
+#define FL_EXPORT __declspec(dllexport)
+#define FL_IMPORT __declspec(dllimport)
 
-		#ifndef NOMINMAX
-			#define NOMINMAX
-		#endif
+// Some defines for windows.h include...
+#if defined(FL_BUILD)
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
 
-		#if FLUTILS_WINDOWS_NT6
-			#define FL_WINNT 0x0600
-		#else
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+
+#if FLUTILS_WINDOWS_NT6
+#define FL_WINNT 0x0600
+#else
 			#define FL_WINNT 0x0501
-		#endif
+#endif
 
-		// Keep the actual define if existing and greater than our requirement
-		#if defined(_WIN32_WINNT)
-			#if _WIN32_WINNT < FL_WINNT
+// Keep the actual define if existing and greater than our requirement
+#if defined(_WIN32_WINNT)
+#if _WIN32_WINNT < FL_WINNT
 				#undef _WIN32_WINNT
 				#define _WIN32_WINNT FL_WINNT
-			#endif
-		#else
-			#define _WIN32_WINNT FL_WINNT
-		#endif
-	#endif
+#endif
+#else
+#define _WIN32_WINNT FL_WINNT
+#endif
+#endif
 #elif defined(__linux__)
 	#define FL_PLATFORM_DESKTOP
 	#define FL_PLATFORM_LINUX
@@ -213,12 +218,12 @@
 #endif
 
 #ifndef FL_CHECK_NDK_VER
-	#define FL_CHECK_NDK_VER(ver) 0
+#define FL_CHECK_NDK_VER(ver) 0
 #endif
 
 // Feature checking
 #ifdef __has_cpp_attribute
-	#define FL_HAS_CPP_ATTRIBUTE(attr) __has_cpp_attribute(attr)
+#define FL_HAS_CPP_ATTRIBUTE(attr) __has_cpp_attribute(attr)
 #else
 	#define FL_HAS_CPP_ATTRIBUTE(attr) (0)
 #endif
@@ -232,22 +237,22 @@
 
 #ifndef FL_ASSUME
 
-	#if defined(FL_COMPILER_CLANG)
+#if defined(FL_COMPILER_CLANG)
 		#define FL_ASSUME(expr) __builtin_assume(expr)
-	#endif
+#endif
 
-	#if defined(FL_COMPILER_GCC)
+#if defined(FL_COMPILER_GCC)
 
-		// __attribute__(assume) is supported starting with GCC 13
-		#if __GNUC__ >= 13
+// __attribute__(assume) is supported starting with GCC 13
+#if __GNUC__ >= 13
 			#define FL_ASSUME(expr) __attribute__(assume(expr))
-		#endif
+#endif
 
-	#endif
+#endif
 
-	#if defined(FL_COMPILER_MSVC)
-		#define FL_ASSUME(expr) __assume(expr)
-	#endif
+#if defined(FL_COMPILER_MSVC)
+#define FL_ASSUME(expr) __assume(expr)
+#endif
 
 #endif
 
@@ -258,13 +263,13 @@
 
 #ifndef FL_FORCEINLINE
 
-	#if defined(FL_COMPILER_CLANG) || defined(FL_COMPILER_GCC)
+#if defined(FL_COMPILER_CLANG) || defined(FL_COMPILER_GCC)
 		#define FL_FORCEINLINE __attribute__((always_inline)) inline
-	#endif
+#endif
 
-	#if defined(FL_COMPILER_MSVC)
-		#define FL_FORCEINLINE __forceinline
-	#endif
+#if defined(FL_COMPILER_MSVC)
+#define FL_FORCEINLINE __forceinline
+#endif
 
 #endif
 
@@ -274,22 +279,22 @@
 #ifndef FL_NO_LIKELY_ATTRIBUTE
 
 #if FL_CHECK_CPP_VER(FL_CPP20) || FL_HAS_CPP_ATTRIBUTE(likely)
-	#define FL_LIKELY(expr) (expr) [[likely]]
+#define FL_LIKELY(expr) (expr) [[likely]]
 #endif
 
 #if FL_CHECK_CPP_VER(FL_CPP20) || FL_HAS_CPP_ATTRIBUTE(unlikely)
-	#define FL_UNLIKELY(expr) (expr) [[unlikely]]
+#define FL_UNLIKELY(expr) (expr) [[unlikely]]
 #endif
 
 #if defined(FL_COMPILER_CLANG) || defined(FL_COMPILER_GCC) || defined(FL_COMPILER_INTEL)
 
-	#ifndef FL_LIKELY
+#ifndef FL_LIKELY
 		#define FL_LIKELY(expr) (__builtin_expect(!!(expr), 1))
-	#endif
+#endif
 
-	#ifndef FL_UNLIKELY
+#ifndef FL_UNLIKELY
 		#define FL_UNLIKELY(expr) (__builtin_expect(!!(expr), 0))
-	#endif
+#endif
 
 #endif
 
@@ -301,7 +306,7 @@
 #if defined(FL_COMPILER_CLANG) || defined(FL_COMPILER_GCC) || defined(FL_COMPILER_INTEL)
 	#define FL_UNREACHABLE() __builtin_unreachable()
 #elif defined(FL_COMPILER_MSVC)
-	#define FL_UNREACHABLE() __assume(false)
+#define FL_UNREACHABLE() __assume(false)
 #endif
 
 #endif // FL_NO_UNREACHABLE_MACRO
@@ -331,31 +336,31 @@
 // Detect arch
 #ifndef FL_NO_ARCH_DETECTION
 
-	#if defined(__arm__) || defined(__thumb__) || defined(__ARM_ARCH_7__) || defined(_M_ARM)
+#if defined(__arm__) || defined(__thumb__) || defined(__ARM_ARCH_7__) || defined(_M_ARM)
 		#define FL_ARCH_arm
-	#endif
+#endif
 
-	#if defined(__aarch64__) || defined(_M_ARM64) || defined(_M_ARM64EC) || defined(__arm64__)
+#if defined(__aarch64__) || defined(_M_ARM64) || defined(_M_ARM64EC) || defined(__arm64__)
 		#define FL_ARCH_aarch64
-	#endif
+#endif
 
-	#if defined(__amd64__) || defined(__amd64) || defined(__x86_64__) || defined(__x86_64) || defined(_M_AMD64) || defined (_M_X64)
-		#define FL_ARCH_x86_64
-	#endif
+#if defined(__amd64__) || defined(__amd64) || defined(__x86_64__) || defined(__x86_64) || defined(_M_AMD64) || defined (_M_X64)
+#define FL_ARCH_x86_64
+#endif
 
-	#if defined(__i386__) || defined(_M_IX86) || defined(_X86_)
+#if defined(__i386__) || defined(_M_IX86) || defined(_X86_)
 		#define FL_ARCH_x86
-	#endif
+#endif
 
-	#if defined(__wasm32__)
+#if defined(__wasm32__)
 		#define FL_ARCH_wasm32
-	#endif
+#endif
 
-	#if defined(__wasm64__)
+#if defined(__wasm64__)
 		#define FL_ARCH_wasm64
-	#endif
+#endif
 
-	#if defined(FL_ARCH_arm) \
+#if defined(FL_ARCH_arm) \
 	  + defined(FL_ARCH_aarch64) \
 	  + defined(FL_ARCH_x86_64) \
 	  + defined(FL_ARCH_x86) \
@@ -365,7 +370,7 @@
 
 	#error No or multiple arch detected! Please open an issue with details about your target system. You can define FL_NO_ARCH_DETECTION to bypass this error.
 
-	#endif
+#endif
 
 #endif // FL_NO_ARCH_DETECTION
 
@@ -383,33 +388,33 @@
 
 static_assert(CHAR_BIT == 8, "CHAR_BIT is expected to be 8");
 
-static_assert(sizeof(int8_t)  == 1, "int8_t is not of the correct size" );
+static_assert(sizeof(int8_t) == 1, "int8_t is not of the correct size");
 static_assert(sizeof(int16_t) == 2, "int16_t is not of the correct size");
 static_assert(sizeof(int32_t) == 4, "int32_t is not of the correct size");
 static_assert(sizeof(int64_t) == 8, "int64_t is not of the correct size");
 
-static_assert(sizeof(uint8_t)  == 1, "uint8_t is not of the correct size" );
+static_assert(sizeof(uint8_t) == 1, "uint8_t is not of the correct size");
 static_assert(sizeof(uint16_t) == 2, "uint16_t is not of the correct size");
 static_assert(sizeof(uint32_t) == 4, "uint32_t is not of the correct size");
 static_assert(sizeof(uint64_t) == 8, "uint64_t is not of the correct size");
 
-namespace Flashlight
-{
-	using Int8 = int8_t;
-	using UInt8 = uint8_t;
+namespace Flashlight {
+    using Int8 = int8_t;
+    using UInt8 = uint8_t;
 
-	using Int16 = int16_t;
-	using UInt16 = uint16_t;
+    using Int16 = int16_t;
+    using UInt16 = uint16_t;
 
-	using Int32 = int32_t;
-	using UInt32 = uint32_t;
+    using Int32 = int32_t;
+    using UInt32 = uint32_t;
 
-	using Int64 = int64_t;
-	using UInt64 = uint64_t;
+    using Int64 = int64_t;
+    using UInt64 = uint64_t;
 
-	using USize = size_t;
+    using USize = size_t;
 
-	struct UnreachableError {};
+    struct UnreachableError {
+    };
 }
 
-#endif // FL_PREREQUISTS_HPP
+#endif // FL_PREREQUISITES_HPP
