@@ -108,6 +108,10 @@ target("FlashlightEngine")
         add_defines("FL_ASSERTIONS_ENABLED", {public = true})
     end
 
+    if is_plat("windows", "mingw") then
+	    add_syslinks("User32")
+	end
+
 	add_defines("FL_BUILD")
 
 	-- Add header and source files
