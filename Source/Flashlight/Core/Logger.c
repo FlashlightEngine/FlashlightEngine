@@ -11,21 +11,21 @@
 #include <stdarg.h>
 #include <string.h>
 
-void ReportAssertionFailure(const char* expression, const char* message, const char* file, Int32 line) {
-    LogOutput(LogLevelFatal, "Assertion failed: %s, message: '%s', in file %s, line: %d\n",
-              expression, message, file, line);
+void flReportAssertionFailure(const char* expression, const char* message, const char* file, FlInt32 line) {
+    flLogOutput(LogLevelFatal, "Assertion failed: %s, message: '%s', in file %s, line: %d\n",
+                expression, message, file, line);
 }
 
-Bool8 InitializeLogging(void) {
+FlBool8 flInitializeLogging(void) {
     // TODO: Create log file.
     return TRUE;
 }
 
-void ShutdownLogging(void) {
+void flShutdownLogging(void) {
     // TODO: Clean up logging/writing queued entries.
 }
 
-void LogOutput(const LogLevel level, const char* message, ...) {
+void flLogOutput(const FlLogLevel level, const char* message, ...) {
     const char* levelStrings[6] = {
         "[FATAL]: ",
         "[ERROR]: ",

@@ -10,31 +10,31 @@
 #include "Flashlight/Prerequisites.h"
 #include "Flashlight/Export.h"
 
-typedef enum LogLevel {
+typedef enum FlLogLevel {
     LogLevelFatal = 0,
     LogLevelError = 1,
     LogLevelWarn = 2,
     LogLevelInfo = 3,
     LogLevelDebug = 4,
     LogLevelTrace = 5
-} LogLevel;
+} FlLogLevel;
 
-Bool8 InitializeLogging(void);
-void ShutdownLogging(void);
+FlBool8 flInitializeLogging(void);
+void flShutdownLogging(void);
 
-FL_API void LogOutput(LogLevel level, const char* message, ...);
+FL_API void flLogOutput(FlLogLevel level, const char* message, ...);
 
 #ifndef FL_LOG_FATAL
-    #define FL_LOG_FATAL(message, ...) LogOutput(LogLevelFatal, message, ##__VA_ARGS__);
+    #define FL_LOG_FATAL(message, ...) flLogOutput(LogLevelFatal, message, ##__VA_ARGS__);
 #endif
 
 #ifndef FL_LOG_ERROR
-    #define FL_LOG_ERROR(message, ...) LogOutput(LogLevelError, message, ##__VA_ARGS__);
+    #define FL_LOG_ERROR(message, ...) flLogOutput(LogLevelError, message, ##__VA_ARGS__);
 #endif
 
 #if FL_LOG_WARN_ENABLED
     #ifndef FL_LOG_WARN
-        #define FL_LOG_WARN(message, ...) LogOutput(LogLevelWarn, message, ##__VA_ARGS__);
+        #define FL_LOG_WARN(message, ...) flLogOutput(LogLevelWarn, message, ##__VA_ARGS__);
     #endif
 #else
     #ifndef FL_LOG_WARN
@@ -44,7 +44,7 @@ FL_API void LogOutput(LogLevel level, const char* message, ...);
 
 #if FL_LOG_INFO_ENABLED
     #ifndef FL_LOG_INFO
-        #define FL_LOG_INFO(message, ...) LogOutput(LogLevelInfo, message, ##__VA_ARGS__);
+        #define FL_LOG_INFO(message, ...) flLogOutput(LogLevelInfo, message, ##__VA_ARGS__);
     #endif
 #else
     #ifndef FL_LOG_INFO
@@ -55,7 +55,7 @@ FL_API void LogOutput(LogLevel level, const char* message, ...);
 #ifdef FL_DEBUG
     #ifdef FL_LOG_DEBUG_ENABLED
         #ifndef FL_LOG_DEBUG
-            #define FL_LOG_DEBUG(message, ...) LogOutput(LogLevelDebug, message, ##__VA_ARGS__);
+            #define FL_LOG_DEBUG(message, ...) flLogOutput(LogLevelDebug, message, ##__VA_ARGS__);
         #endif
     #else
         #ifndef FL_LOG_DEBUG
@@ -71,7 +71,7 @@ FL_API void LogOutput(LogLevel level, const char* message, ...);
 #ifdef FL_DEBUG
     #ifdef FL_LOG_TRACE_ENABLED
         #ifndef FL_LOG_TRACE
-            #define FL_LOG_TRACE(message, ...) LogOutput(LogLevelTrace, message, ##__VA_ARGS__);
+            #define FL_LOG_TRACE(message, ...) flLogOutput(LogLevelTrace, message, ##__VA_ARGS__);
         #endif
     #else
         #ifndef FL_LOG_TRACE

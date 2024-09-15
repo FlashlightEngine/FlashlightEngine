@@ -18,35 +18,35 @@
         #define DebugBreak() __builtin_trap()
     #endif
 
-    FL_API void ReportAssertionFailure(const char* expression, const char* message, const char* file, Int32 line);
+    FL_API void flReportAssertionFailure(const char* expression, const char* message, const char* file, FlInt32 line);
 
-#define FL_ASSERT(expr)                                            \
-    {                                                              \
-        if (expr) {                                                \
-        } else {                                                   \
-            ReportAssertionFailure(#expr, "", __FILE__, __LINE__); \
-            DebugBreak();                                          \
-        }                                                          \
+#define FL_ASSERT(expr)                                              \
+    {                                                                \
+        if (expr) {                                                  \
+        } else {                                                     \
+            flReportAssertionFailure(#expr, "", __FILE__, __LINE__); \
+            DebugBreak();                                            \
+        }                                                            \
     }
 
 
-#define FL_ASSERT_MSG(expr, message)                                    \
-    {                                                                   \
-        if (expr) {                                                     \
-        } else {                                                        \
-            ReportAssertionFailure(#expr, message, __FILE__, __LINE__); \
-            DebugBreak();                                               \
-        }                                                               \
+#define FL_ASSERT_MSG(expr, message)                                      \
+    {                                                                     \
+        if (expr) {                                                       \
+        } else {                                                          \
+            flReportAssertionFailure(#expr, message, __FILE__, __LINE__); \
+            DebugBreak();                                                 \
+        }                                                                 \
     }
 
 #ifdef FL_DEBUG
-#define FL_ASSERT_DEBUG(expr)                                      \
-    {                                                              \
-        if (expr) {                                                \
-        } else {                                                   \
-            ReportAssertionFailure(#expr, "", __FILE__, __LINE__); \
-            DebugBreak();                                          \
-        }                                                          \
+#define FL_ASSERT_DEBUG(expr)                                        \
+    {                                                                \
+        if (expr) {                                                  \
+        } else {                                                     \
+            flReportAssertionFailure(#expr, "", __FILE__, __LINE__); \
+            DebugBreak();                                            \
+        }                                                            \
     }
 #else
 #define FL_ASSERT_DEBUG(expr) // Does nothing

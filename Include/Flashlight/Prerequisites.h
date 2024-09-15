@@ -8,24 +8,24 @@
 #define FL_PREREQUISITES_H
 
 // Unsigned integer types
-typedef unsigned char UInt8;
-typedef unsigned short UInt16;
-typedef unsigned int UInt32;
-typedef unsigned long long UInt64;
+typedef unsigned char FlUInt8;
+typedef unsigned short FlUInt16;
+typedef unsigned int FlUInt32;
+typedef unsigned long long FlUInt64;
 
 // Signed integer types
-typedef signed char Int8;
-typedef signed short Int16;
-typedef signed int Int32;
-typedef signed long long Int64;
+typedef signed char FlInt8;
+typedef signed short FlInt16;
+typedef signed int FlInt32;
+typedef signed long long FlInt64;
 
 // Floating point types
-typedef float Float32;
-typedef double Float64;
+typedef float FlFloat32;
+typedef double FlFloat64;
 
 // Boolean
-typedef int Bool32;
-typedef char Bool8;
+typedef int FlBool32;
+typedef char FlBool8;
 
 // Properly define static assertions.
 #if defined(__clang__) || defined(__gcc__)
@@ -35,18 +35,18 @@ typedef char Bool8;
 #endif
 
 // Ensure all types are of the correct size
-STATIC_ASSERT(sizeof(UInt8) == 1, "Expected UInt8 to be 1 byte.");
-STATIC_ASSERT(sizeof(UInt16) == 2, "Expected UInt16 to be 2 bytes.");
-STATIC_ASSERT(sizeof(UInt32) == 4, "Expected UInt32 to be 4 bytes.");
-STATIC_ASSERT(sizeof(UInt64) == 8, "Expected UInt64 to be 8 bytes.");
+STATIC_ASSERT(sizeof(FlUInt8) == 1, "Expected FlUInt8 to be 1 byte.");
+STATIC_ASSERT(sizeof(FlUInt16) == 2, "Expected FlUInt16 to be 2 bytes.");
+STATIC_ASSERT(sizeof(FlUInt32) == 4, "Expected FlUInt32 to be 4 bytes.");
+STATIC_ASSERT(sizeof(FlUInt64) == 8, "Expected FlUInt64 to be 8 bytes.");
 
-STATIC_ASSERT(sizeof(Int8) == 1, "Expected Int8 to be 1 byte.");
-STATIC_ASSERT(sizeof(Int16) == 2, "Expected Int16 to be 2 bytes.");
-STATIC_ASSERT(sizeof(Int32) == 4, "Expected Int32 to be 4 bytes.");
-STATIC_ASSERT(sizeof(Int64) == 8, "Expected Int64 to be 8 bytes.");
+STATIC_ASSERT(sizeof(FlInt8) == 1, "Expected FlInt8 to be 1 byte.");
+STATIC_ASSERT(sizeof(FlInt16) == 2, "Expected FlInt16 to be 2 bytes.");
+STATIC_ASSERT(sizeof(FlInt32) == 4, "Expected FlInt32 to be 4 bytes.");
+STATIC_ASSERT(sizeof(FlInt64) == 8, "Expected FlInt64 to be 8 bytes.");
 
-STATIC_ASSERT(sizeof(Float32) == 4, "Expected Float32 to be 4 bytes.");
-STATIC_ASSERT(sizeof(Float64) == 8, "Expected Float64 to be 8 bytes.");
+STATIC_ASSERT(sizeof(FlFloat32) == 4, "Expected FlFloat32 to be 4 bytes.");
+STATIC_ASSERT(sizeof(FlFloat64) == 8, "Expected FlFloat64 to be 8 bytes.");
 
 #define TRUE 1
 #define FALSE 0
@@ -96,5 +96,7 @@ STATIC_ASSERT(sizeof(Float64) == 8, "Expected Float64 to be 8 bytes.");
 #define FL_EXPORT __attribute__((visibility("default")))
 #define FL_IMPORT __attribute__((visibility("default")))
 #endif
+
+#define FL_UNUSED_PARAM(param) (void)(param)
 
 #endif // FL_PREREQUISITES_H
