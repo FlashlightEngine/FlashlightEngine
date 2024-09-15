@@ -5,6 +5,7 @@
 #include "Flashlight/Core/Logger.h"
 
 #include "Flashlight/Core/Asserts.h"
+#include "Flashlight/Platform/Platform.h"
 
 // TODO: Temporary
 #include <stdio.h>
@@ -34,22 +35,26 @@ void flLogOutput(const FlLogLevel level, const char* message, ...) {
         "[DEBUG]: ",
         "[TRACE]: "
     };
-    // Bool8 isError = level <= 2;
+    const FlBool8 isError = level < LogLevelWarn;
 
     // Technically imposes a 32k character limit on a single log entry, but...
     // DON'T DO THAT
-    char out_message[32000];
-    memset(out_message, 0, sizeof(out_message));
+    char outMessage[32000];
+    memset(outMessage, 0, sizeof(outMessage));
 
     // Format original message.
     va_list arg_ptr;
     va_start(arg_ptr, message);
-    vsnprintf(out_message, 32000, message, arg_ptr);
+    vsnprintf(outMessage, 32000, message, arg_ptr);
     va_end(arg_ptr);
 
-    char out_message2[32000];
-    sprintf(out_message2, "%s%s\n", levelStrings[level], out_message);
+    char outMessage2[32000];
+    sprintf(outMessage2, "%s%s\n", levelStrings[level], outMessage);
 
-    // TODO: platform-specific output.
-    printf("%s", out_message2);
+    // Platform specific output
+    if (isError) {
+        flPlatformConsoleWriteError(outMessage2, (FlUInt8)level);
+    } else {
+        flPlatformConsoleWrite(outMessage2, (FlUInt8)level);
+    }
 }
