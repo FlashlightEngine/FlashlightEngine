@@ -12,6 +12,29 @@ includes("xmake/**.lua")
 option("static", {description = "Build the engine as a static library.", default = false})
 option("override_runtime", {description = "Override vs runtime to MD in release and MDd in debug.", default = true})
 
+local logger_options = {
+    warn = "warnings",
+    info = "info",
+    debug = "debug",
+    trace = "trace"
+}
+
+for opt, level in table.orderpairs(logger_options) do
+    if level == "debug" or level == "trace" then
+        option("enable_log_" .. opt, { description = "Enable " .. level .. " messages from the logger (Only in debug mode).", default = true})
+        
+        if has_config("enable_log_" .. opt) and is_mode("debug") then
+            add_defines("FL_LOG_" .. opt:upper() .. "_ENABLED")
+        end
+    else
+        option("enable_log_" .. opt, { description = "Enable " .. level .. " messages from the logger.", default = true})
+       
+        if has_config("enable_log_" .. opt) then
+            add_defines("FL_LOG_" .. opt:upper() .. "_ENABLED")
+        end
+    end
+end
+
 includes("xmake/**.lua")
 
 add_requires("vulkan-loader")
@@ -105,6 +128,6 @@ target("FlashlightEngine")
 		add_defines("FLUTILS_WINDOWS_NT6=1")
 	end
 
-	add_packages("vulkan-loader")
+	add_packages("vulkan-loader", {public = true})
 
 includes("TestBed/**.lua")
