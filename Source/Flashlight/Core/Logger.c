@@ -4,10 +4,17 @@
 
 #include "Flashlight/Core/Logger.h"
 
+#include "Flashlight/Core/Asserts.h"
+
 // TODO: Temporary
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
+
+void ReportAssertionFailure(const char* expression, const char* message, const char* file, Int32 line) {
+    LogOutput(LogLevelFatal, "Assertion failed: %s, message: '%s', in file %s, line: %d\n",
+              expression, message, file, line);
+}
 
 Bool8 InitializeLogging(void) {
     // TODO: Create log file.

@@ -211,20 +211,12 @@
 
 #include "Flashlight/Prerequisites.h"
 
-#ifdef FL_BUILD
-   #ifdef _MSC_VER
-      #define FL_API __declspec(dllexport)
-   #else
-      #define FL_API __attribute__((visibility("default")))
-   #endif
-
+#if defined(FL_STATIC)
+   #define FL_API
+#elif defined(FL_BUILD)
+   #define FL_API FL_EXPORT
 #else
-
-   #ifdef _MSC_VER
-      #define FL_API __declspec(dllimport)
-   #else
-      #define FL_API
-   #endif
+   #define FL_API FL_IMPORT
 #endif
 
 #endif // FL_EXPORT_H

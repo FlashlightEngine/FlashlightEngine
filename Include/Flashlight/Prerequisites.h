@@ -89,4 +89,12 @@ STATIC_ASSERT(sizeof(Float64) == 8, "Expected Float64 to be 8 bytes.");
 #error "Unknown platform"
 #endif
 
+#ifdef _MSC_VER
+#define FL_EXPORT __declspec(dllexport)
+#define FL_IMPORT __declspec(dllexport)
+#else
+#define FL_EXPORT __attribute__((visibility("default")))
+#define FL_IMPORT __attribute__((visibility("default")))
+#endif
+
 #endif // FL_PREREQUISITES_H

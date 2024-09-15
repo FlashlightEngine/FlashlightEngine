@@ -58,14 +58,13 @@ set_defaultmode("debug")
 add_includedirs("Include")
 
 set_encodings("utf-8")
-set_exceptions("cxx")
 set_languages("c17")
 set_rundir("./bin/$(plat)_$(arch)_$(mode)")
 set_targetdir("./bin/$(plat)_$(arch)_$(mode)")
 set_warnings("allextra")
 
 if is_mode("debug") then
-    add_defines("FL_DEBUG")
+    add_defines("FL_DEBUG", {public = true})
 elseif is_mode("coverage") then 
     if not is_plat("windows") then 
         add_links("gcov")
@@ -106,7 +105,7 @@ target("FlashlightEngine")
 	end
 
     if has_config("enable_asserts") then
-        add_defines("FL_ASSERTIONS_ENABLED")
+        add_defines("FL_ASSERTIONS_ENABLED", {public = true})
     end
 
 	add_defines("FL_BUILD")

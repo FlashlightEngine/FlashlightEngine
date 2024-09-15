@@ -1,12 +1,8 @@
 #include <Flashlight/Core/Logger.h>
+#include <Flashlight/Core/Asserts.h>
 
-int main() {
-    FL_LOG_FATAL("A test message %f", 3.14f)
-    FL_LOG_ERROR("A test message %f", 3.14f)
-    FL_LOG_WARN("A test message %f", 3.14f)
-    FL_LOG_INFO("A test message %f", 3.14f)
-    FL_LOG_DEBUG("A test message %f", 3.14f)
-    FL_LOG_TRACE("A test message %f", 3.14f)
+int main(void) {
+    FL_ASSERT(1 == 0)
 
     return 0;
 }
