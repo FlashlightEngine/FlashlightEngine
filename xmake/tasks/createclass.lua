@@ -1,41 +1,39 @@
 local headerTemplate, inlineTemplate, sourceTemplate
 
-task("create-class")
+task("create-file")
 
 set_menu({
-    usage = "xmake create-class [options] name",
-    description = "Task to help class creation.",
+    usage = "xmake create-file [options] name",
+    description = "Task to help file creation.",
     options = {
-        {nil, "nocpp", "k", nil, "Set this to create a header-only class."},
-        {nil, "name", "v", nil, "Class name" }
+        {nil, "noc", "k", nil, "Set this to only create a header." },
+        {nil, "name", "v", nil, "File name" }
     } 
 })
 
 on_run(function()
     import("core.base.option")
 
-    local classPath = option.get("name")
-    if not classPath then
-        os.raise("Missing class name")
+    local filePath = option.get("name")
+    if not filePath then
+        os.raise("Missing file name")
     end
 
-    local className = path.basename(classPath)
+    local className = path.basename(filePath)
 
     local files = {
-        { TargetPath = path.join("Include/Flashlight", classPath) .. ".hpp", Template = headerTemplate },
-        { TargetPath = path.join("Include/Flashlight", classPath) .. ".inl", Template = inlineTemplate }
+        { TargetPath = path.join("Include/Flashlight", filePath) .. ".h", Template = headerTemplate }
     }
 
-    if not option.get("nocpp") then
-        table.insert(files, { TargetPath = path.join("Source", "Flashlight", classPath) .. ".cpp", Template = sourceTemplate })
+    if not option.get("noc") then
+        table.insert(files, { TargetPath = path.join("Source", "Flashlight", filePath) .. ".c", Template = sourceTemplate })
     end
 
     local replacements = {
         CLASS_NAME = className,
-        CLASS_PATH = classPath,
+        CLASS_PATH = filePath,
         COPYRIGHT = os.date("%Y") .. [[ Jean "Pixfri" Letessier ]],
-        HEADER_GUARD = "FL_" .. classPath:gsub("[/\\]", "_"):upper() .. "_HPP",
-        FL_API = "FL_API"
+        HEADER_GUARD = "FL_" .. filePath:gsub("[/\\]", "_"):upper() .. "_H"
     }
 
     for _, file in pairs(files) do
@@ -55,55 +53,23 @@ end)
 headerTemplate = [[
 // Copyright (C) %COPYRIGHT%
 // This file is part of Flashlight Engine.
-// For conditions of distribution and use, see copyright notice in Export.hpp
+// For conditions of distribution and use, see copyright notice in Export.h
 
 #pragma once
 
 #ifndef %HEADER_GUARD%
 #define %HEADER_GUARD%
 
-#include "Flashlight/Prerequisites.hpp"
-#include "Flashlight/Export.hpp"
-
-namespace Flashlight {
-    class %FL_API% %CLASS_NAME% {
-    public:
-        %CLASS_NAME%() = default;
-        ~%CLASS_NAME%() = default;
-
-        %CLASS_NAME%(const %CLASS_NAME%&) = delete;
-        %CLASS_NAME%(%CLASS_NAME%&&) = delete;
-
-        %CLASS_NAME%& operator=(const %CLASS_NAME%&) = delete;
-        %CLASS_NAME%& operator=(%CLASS_NAME%&&) = delete;
-
-    private:
-    };
-}
-
-#include "Flashlight/%CLASS_PATH%.inl"
+#include "Flashlight/Prerequisites.h"
+#include "Flashlight/Export.h"
 
 #endif // %HEADER_GUARD%
-]]
-
-inlineTemplate = [[
-// Copyright (C) %COPYRIGHT%
-// This file is part of Flashlight Engine.
-// For conditions of distribution and use, see copyright notice in Export.hpp
-
-#pragma once
-
-namespace Flashlight {
-}
 ]]
 
 sourceTemplate = [[
 // Copyright (C) %COPYRIGHT%
 // This file is part of Flashlight Engine.
-// For conditions of distribution and use, see copyright notice in Export.hpp
+// For conditions of distribution and use, see copyright notice in Export.h
 
-#include "Flashlight/%CLASS_PATH%.hpp"
-
-namespace Flashlight {
-}
+#include "Flashlight/%CLASS_PATH%.h"
 ]]

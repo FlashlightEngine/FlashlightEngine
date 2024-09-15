@@ -1,6 +1,4 @@
-#include <iostream>
-
-#include <Flashlight/Core/Logger.hpp>
+#include <Flashlight/Core/Logger.h>
 
 int main() {
     FL_LOG_FATAL("A test message %f", 3.14f)

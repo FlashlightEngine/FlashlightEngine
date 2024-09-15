@@ -1,7 +1,7 @@
 target("TestBed")
-    add_files("Source/TestBed/**.cpp")
+    add_files("Source/TestBed/**.c")
 
-    for _, ext in ipairs({".h", ".hpp", ".inl"}) do
+    for _, ext in ipairs({".h"}) do
 		add_headerfiles("Include/(TestBed/**" .. ext .. ")")
 		add_headerfiles("Source/TestBed/**" .. ext, { prefixdir = "private", install = false })
 	end

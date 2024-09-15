@@ -11,6 +11,7 @@ includes("xmake/**.lua")
 
 option("static", {description = "Build the engine as a static library.", default = false})
 option("override_runtime", {description = "Override vs runtime to MD in release and MDd in debug.", default = true})
+option("enable_asserts", {description = "Enable assertions.", default = true})
 
 local logger_options = {
     warn = "warnings",
@@ -58,7 +59,7 @@ add_includedirs("Include")
 
 set_encodings("utf-8")
 set_exceptions("cxx")
-set_languages("c89", "cxx20")
+set_languages("c17")
 set_rundir("./bin/$(plat)_$(arch)_$(mode)")
 set_targetdir("./bin/$(plat)_$(arch)_$(mode)")
 set_warnings("allextra")
@@ -104,10 +105,14 @@ target("FlashlightEngine")
 		set_kind("shared")
 	end
 
+    if has_config("enable_asserts") then
+        add_defines("FL_ASSERTIONS_ENABLED")
+    end
+
 	add_defines("FL_BUILD")
 
 	-- Add header and source files
-	for _, ext in ipairs({".h", ".hpp", ".inl"}) do
+	for _, ext in ipairs({".h"}) do
 		add_headerfiles("Include/(Flashlight/**" .. ext .. ")")
 		add_headerfiles("Source/Flashlight/**" .. ext, { prefixdir = "private", install = false })
 	end
@@ -118,7 +123,7 @@ target("FlashlightEngine")
 		add_extrafiles("Source/Flashlight/**" .. ext)
 	end
 
-	add_files("Source/Flashlight/**.cpp")
+	add_files("Source/Flashlight/**.c")
 
 	add_includedirs("Source", {private = true})
 	add_packages()
