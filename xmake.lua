@@ -14,8 +14,7 @@ option("override_runtime", {description = "Override vs runtime to MD in release 
 
 includes("xmake/**.lua")
 
-add_requires(
-)
+add_requires("vulkan-loader")
 
 -- Don't link system-installed libraries on CI
 if os.getenv("CI") then
@@ -106,6 +105,6 @@ target("FlashlightEngine")
 		add_defines("FLUTILS_WINDOWS_NT6=1")
 	end
 
-	add_packages()
+	add_packages("vulkan-loader")
 
 includes("TestBed/**.lua")

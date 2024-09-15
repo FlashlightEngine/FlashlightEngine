@@ -62,8 +62,8 @@ headerTemplate = [[
 #ifndef %HEADER_GUARD%
 #define %HEADER_GUARD%
 
-#include <Flashlight/Prerequisites.hpp>
-#include <Flashlight/Export.hpp>
+#include "Flashlight/Prerequisites.hpp"
+#include "Flashlight/Export.hpp"
 
 namespace Flashlight {
     class %FL_API% %CLASS_NAME% {
@@ -81,7 +81,7 @@ namespace Flashlight {
     };
 }
 
-#include <Flashlight/%CLASS_PATH%.inl>
+#include "Flashlight/%CLASS_PATH%.inl"
 
 #endif // %HEADER_GUARD%
 ]]
@@ -102,7 +102,7 @@ sourceTemplate = [[
 // This file is part of Flashlight Engine.
 // For conditions of distribution and use, see copyright notice in Export.hpp
 
-#include <Flashlight/%CLASS_PATH%.hpp>
+#include "Flashlight/%CLASS_PATH%.hpp"
 
 namespace Flashlight {
 }

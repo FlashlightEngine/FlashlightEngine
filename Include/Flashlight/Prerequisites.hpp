@@ -213,10 +213,16 @@
 #elif defined (__unix__)
 // Catch anything not caught by the above
 #define FL_PLATFORM_UNIX
+
+	#define FL_EXPORT __attribute__((visibility("default")))
+	#define FL_IMPORT __attribute__((visibility("default")))
 #elif __APPLE__
 // Apple platforms
 #define FL_PLATFORM_APPLE
 #include <TargetConditionals.h>
+
+	#define FL_EXPORT __attribute__((visibility("default")))
+	#define FL_IMPORT __attribute__((visibility("default")))
 #if TARGET_IPHONE_SIMULATOR
 // iOS simulator
 #define FL_PLATFORM_IOS
@@ -404,6 +410,7 @@
 #define FLUnused(a) (void) a
 
 #include <climits>
+#include <cstddef>
 #include <cstdint>
 
 static_assert(CHAR_BIT == 8, "CHAR_BIT is expected to be 8");

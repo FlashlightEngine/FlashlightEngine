@@ -7,13 +7,13 @@
 #ifndef FL_TEST_HPP
 #define FL_TEST_HPP
 
-#include <Flashlight/Prerequisites.hpp>
-#include <Flashlight/Export.hpp>
+#include "Flashlight/Prerequisites.hpp"
+#include "Flashlight/Export.hpp"
 
 namespace Flashlight {
     FL_API void PrintInt(Int32 i);
 }
 
-#include <Flashlight/Test.inl>
+#include "Flashlight/Test.inl"
 
 #endif // FL_TEST_HPP
