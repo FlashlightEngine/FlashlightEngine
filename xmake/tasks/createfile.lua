@@ -1,4 +1,4 @@
-local headerTemplate, inlineTemplate, sourceTemplate
+local headerTemplate, sourceTemplateWithHeader, sourceTemplateWithoutHeader
 
 task("create-file")
 
@@ -6,7 +6,8 @@ set_menu({
     usage = "xmake create-file [options] name",
     description = "Task to help file creation.",
     options = {
-        {nil, "noc", "k", nil, "Set this to only create a header." },
+        {nil, "noc", "k", nil, "Set this to only create a header file." },
+        {nil, "noh", "k", nil, "Set this to only create a source file."},
         {nil, "name", "v", nil, "File name" }
     } 
 })
@@ -21,12 +22,18 @@ on_run(function()
 
     local className = path.basename(filePath)
 
-    local files = {
-        { TargetPath = path.join("Include/Flashlight", filePath) .. ".h", Template = headerTemplate }
-    }
+    local files = {}
+
+    if not option.get("noh") then
+        table.insert(files, { TargetPath = path.join("Include/Flashlight", filePath) .. ".h", Template = headerTemplate })
+    end
 
     if not option.get("noc") then
-        table.insert(files, { TargetPath = path.join("Source", "Flashlight", filePath) .. ".c", Template = sourceTemplate })
+        if not option.get("noh") then
+            table.insert(files, { TargetPath = path.join("Source", "Flashlight", filePath) .. ".c", Template = sourceTemplateWithHeader })
+        else
+            table.insert(files, { TargetPath = path.join("Source", "Flashlight", filePath) .. ".c", Template = sourceTemplateWithoutHeader })
+        end
     end
 
     local replacements = {
@@ -66,10 +73,16 @@ headerTemplate = [[
 #endif // %HEADER_GUARD%
 ]]
 
-sourceTemplate = [[
+sourceTemplateWithHeader = [[
 // Copyright (C) %COPYRIGHT%
 // This file is part of Flashlight Engine.
 // For conditions of distribution and use, see copyright notice in Export.h
 
 #include "Flashlight/%CLASS_PATH%.h"
+]]
+
+sourceTemplateWithoutHeader = [[
+// Copyright (C) %COPYRIGHT%
+// This file is part of Flashlight Engine.
+// For conditions of distribution and use, see copyright notice in Export.h
 ]]
