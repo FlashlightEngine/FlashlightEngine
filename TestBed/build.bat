@@ -1,6 +1,9 @@
-rem Build script for the engine
+rem Build script for the testbed
 @echo off
 SetLocal EnableDelayedExpansion
+
+rem Create the bin folder if it doesn't already exists
+if not exist "../bin" mkdir "../bin"
 
 rem Get a list of the C source file
 set cFilenames =

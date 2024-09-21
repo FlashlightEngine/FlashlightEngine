@@ -2,6 +2,9 @@ rem Build script for the engine
 @echo off
 SetLocal EnableDelayedExpansion
 
+rem Create the bin folder if it doesn't already exists
+if not exist "../bin" mkdir "../bin"
+
 rem Get a list of the C source file
 set cFilenames =
 for /R %%f in (*.c) do (
