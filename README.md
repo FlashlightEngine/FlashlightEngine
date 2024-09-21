@@ -13,6 +13,15 @@ will possibly be added to.
 - clang (If you are on Windows, please download it directly from the [LLVM website](https://llvm.org/builds/))  
 - The [Vulkan SDK](https://vulkan.lunarg.com/)  
 
+### Linux packages:
+#### Arch
+- `libx11`
+- `libxkbcommon-x11`
+
+#### Debian
+- `libx11-dev`
+- `libxkbcommon-x11-dev`
+
 ### Building:
 There is the `build-all` script in this repository to build the engine and the testbed project.
 If you want to build only one thing indivudually, you can use the `build` script inside of a

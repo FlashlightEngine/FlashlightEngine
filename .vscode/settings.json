@@ -46,17 +46,8 @@
         "isWholeLine": false,
     },
     "files.associations": {
-        "test.h": "c",
-        "vulkan.h": "c",
-        "vulkan_core.h": "c",
-        "vk_platform.h": "c",
-        "type_traits": "c",
-        "typeinfo": "c",
-        "windowsx.h": "c",
-        "vulkan_platform.h": "c",
-        "renderer_frontend.h": "c",
         "prerequisites.h": "c",
-        "system_error": "c",
-        "export.h": "c"
+        "export.h": "c",
+        "logger.h": "c"
     }
 }
