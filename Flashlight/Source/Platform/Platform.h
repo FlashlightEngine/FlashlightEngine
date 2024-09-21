@@ -7,8 +7,8 @@
 #ifndef FL_PLATFORM_PLATFORM_H
 #define FL_PLATFORM_PLATFORM_H
 
-#include "Flashlight/Prerequisites.h"
-#include "Flashlight/Export.h"
+#include "Prerequisites.h"
+#include "Export.h"
 
 typedef struct FlPlatformState {
     void* InternalState;

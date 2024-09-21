@@ -7,8 +7,13 @@
 #ifndef FL_CORE_LOGGER_H
 #define FL_CORE_LOGGER_H
 
-#include "Flashlight/Prerequisites.h"
-#include "Flashlight/Export.h"
+#define FL_LOG_WARN_ENABLED
+#define FL_LOG_INFO_ENABLED
+#define FL_LOG_DEBUG_ENABLED
+#define FL_LOG_TRACE_ENABLED
+
+#include "Prerequisites.h"
+#include "Export.h"
 
 typedef enum FlLogLevel {
     LogLevelFatal = 0,
@@ -32,7 +37,7 @@ FL_API void flLogOutput(FlLogLevel level, const char* message, ...);
     #define FL_LOG_ERROR(message, ...) flLogOutput(LogLevelError, message, ##__VA_ARGS__);
 #endif
 
-#if FL_LOG_WARN_ENABLED
+#ifdef FL_LOG_WARN_ENABLED
     #ifndef FL_LOG_WARN
         #define FL_LOG_WARN(message, ...) flLogOutput(LogLevelWarn, message, ##__VA_ARGS__);
     #endif
@@ -42,7 +47,7 @@ FL_API void flLogOutput(FlLogLevel level, const char* message, ...);
     #endif
 #endif
 
-#if FL_LOG_INFO_ENABLED
+#ifdef FL_LOG_INFO_ENABLED
     #ifndef FL_LOG_INFO
         #define FL_LOG_INFO(message, ...) flLogOutput(LogLevelInfo, message, ##__VA_ARGS__);
     #endif
@@ -62,13 +67,7 @@ FL_API void flLogOutput(FlLogLevel level, const char* message, ...);
             #define FL_LOG_DEBUG(message, ...)
         #endif
     #endif
-#else
-    #ifndef FL_LOG_DEBUG
-        #define FL_LOG_DEBUG(message, ...)
-    #endif
-#endif
 
-#ifdef FL_DEBUG
     #ifdef FL_LOG_TRACE_ENABLED
         #ifndef FL_LOG_TRACE
             #define FL_LOG_TRACE(message, ...) flLogOutput(LogLevelTrace, message, ##__VA_ARGS__);
@@ -79,6 +78,10 @@ FL_API void flLogOutput(FlLogLevel level, const char* message, ...);
         #endif
     #endif
 #else
+    #ifndef FL_LOG_DEBUG
+        #define FL_LOG_DEBUG(message, ...)
+    #endif
+    
     #ifndef FL_LOG_TRACE
         #define FL_LOG_TRACE(message, ...)
     #endif

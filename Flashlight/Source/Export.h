@@ -209,7 +209,7 @@
 #ifndef FL_EXPORT_H
 #define FL_EXPORT_H
 
-#include "Flashlight/Prerequisites.h"
+#include "Prerequisites.h"
 
 #if defined(FL_STATIC)
    #define FL_API

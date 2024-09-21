@@ -7,8 +7,8 @@
 #ifndef FL_CORE_ASSERTS_H
 #define FL_CORE_ASSERTS_H
 
-#include "Flashlight/Prerequisites.h"
-#include "Flashlight/Export.h"
+#include "Prerequisites.h"
+#include "Export.h"
 
 #ifdef FL_ASSERTIONS_ENABLED
     #ifdef _MSC_VER
@@ -55,7 +55,7 @@
 #else
 #define FL_ASSERT(expr)              // Does nothing
 #define FL_ASSERT_MSG(expr, message) // Does nothing
-#define FL_DEBUG(expr)               // Does nothing
+#define FL_ASSERT_DEBUG(expr)        // Does nothing
 #endif
 
 #endif // FL_CORE_ASSERTS_H
