@@ -127,7 +127,7 @@ void flPlatformShutdown(FlPlatformState* platformState) {
 }
 
 FlBool8 flPlatformPumpMessages(FlPlatformState* platformState) {
-    FL_UNUSED_PARAM(platformState);
+    FL_UNUSED(platformState);
 
     MSG message;
     while (PeekMessageA(&message, NULL, 0, 0, PM_REMOVE)) {
@@ -140,13 +140,13 @@ FlBool8 flPlatformPumpMessages(FlPlatformState* platformState) {
 
 // TODO: Temporary
 void* flPlatformAllocate(const FlUInt64 size, const FlBool8 aligned) {
-    FL_UNUSED_PARAM(aligned);
+    FL_UNUSED(aligned);
 
     return malloc(size);
 }
 
 void flPlatformFree(void* block, const FlBool8 aligned) {
-    FL_UNUSED_PARAM(aligned);
+    FL_UNUSED(aligned);
 
     free(block);
 }

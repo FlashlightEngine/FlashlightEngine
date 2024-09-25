@@ -116,4 +116,12 @@ target("FlashlightEngine")
 
   add_packages("vulkan-loader", {public = true})
 
+  if is_plat("windows") then
+    add_syslinks("User32")
+  end
+
+  if is_plat("linux") then
+    add_packages("libx11", "libxkbcommon")
+  end
+
 includes("TestBed/xmake.lua")
