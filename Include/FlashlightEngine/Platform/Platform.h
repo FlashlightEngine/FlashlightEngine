@@ -14,20 +14,20 @@ typedef struct FlPlatformState {
     void* InternalState;
 } FlPlatformState;
 
-// TODO: Stop exporting these functions.
-FL_API FlBool8 flPlatformStartup(FlPlatformState* platformState,
+FlBool8 flPlatformStartup(FlPlatformState* platformState,
                                  const char* applicationName,
                                  FlInt32 x,
                                  FlInt32 y,
                                  FlInt32 width,
                                  FlInt32 height);
 
-FL_API void flPlatformShutdown(FlPlatformState* platformState);
+void flPlatformShutdown(FlPlatformState* platformState);
 
-FL_API FlBool8 flPlatformPumpMessages(FlPlatformState* platformState);
+FlBool8 flPlatformPumpMessages(FlPlatformState* platformState);
 
-void* flPlatformAllocate(FlUInt64 size, FlBool8 aligned);
-void flPlatformFree(void* block, FlBool8 aligned);
+// TODO: Stop exporting
+FL_API void* flPlatformAllocate(FlUInt64 size, FlBool8 aligned);
+FL_API void flPlatformFree(void* block, FlBool8 aligned);
 void* flPlatformZeroMemory(void* dest, FlUInt64 size);
 void* flPlatformCopyMemory(void* dest, const void* source, FlUInt64 size);
 void* flPlatformSetMemory(void* dest, FlInt32 value, FlUInt64 size);

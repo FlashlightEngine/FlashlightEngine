@@ -34,6 +34,11 @@ end
 
 add_requires("vulkan-loader")
 
+if is_plat("linux") then 
+  add_requires("libx11")
+  add_requires("libxkbcommon", {configs = {x11 = true}})
+end 
+
 -- Don't link system-installed libraries in CI
 if os.getenv("CI") then
   add_requireconfs("*", {system = false})
