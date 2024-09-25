@@ -2,12 +2,11 @@
 // This file is part of Flashlight Engine.
 // For conditions of distribution and use, see copyright notice in Export.h
 
-#include "Platform.h"
+#include "FlashlightEngine/Platform/Platform.h"
 
 // Windows platform layer
 #ifdef FL_PLATFORM_WINDOWS
-
-#include "Core/Logger.h"
+#include "FlashlightEngine/Core/Logger.h"
 
 #include <Windows.h>
 #include <windowsx.h> // Param input extraction

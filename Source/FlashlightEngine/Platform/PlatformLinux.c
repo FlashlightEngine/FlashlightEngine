@@ -2,11 +2,11 @@
 // This file is part of Flashlight Engine.
 // For conditions of distribution and use, see copyright notice in Export.h
 
-#include "Platform.h"
+#include "FlashlightEngine/Platform/Platform.h"
 
 #ifdef FL_PLATFORM_LINUX
 
-#include "Core/Logger.h"
+#include "FlashlightEngine/Core/Logger.h"
 
 #include <xcb/xcb.h>
 #include <X11/keysym.h>
@@ -15,11 +15,7 @@
 #include <X11/Xlib-xcb.h>
 #include <sys/time.h>
 
-#if _POSIX_C_SOURCE >= 199309L
 #include <time.h>  // nanosleep
-#else
-#include <unistd.h>  // usleep
-#endif
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -105,6 +101,7 @@ FlBool8 flPlatformStartup(
         eventMask,
         valueList
     );
+    FL_UNUSED(cookie);
 
     // Set the window's title
     xcb_change_property(
@@ -241,10 +238,12 @@ FlBool8 flPlatformPumpMessages(FlPlatformState* platformState) {
 }
 
 void* flPlatformAllocate(FlUInt64 size, FlBool8 aligned) {
+    FL_UNUSED(aligned);
     return malloc(size);
 }
 
 void flPlatformFree(void* block, FlBool8 aligned) {
+    FL_UNUSED(aligned);
     free(block);
 }
 
@@ -279,17 +278,10 @@ FlFloat64 flPlatformGetAbsoluteTime(void) {
 }
 
 void flPlatformSleep(FlUInt64 milliseconds) {
-#if _POSIX_C_SOURCE >= 199309L
     struct timespec ts;
     ts.tv_sec = milliseconds / 1000;
     ts.tv_nsec = (milliseconds % 1000) * 1000 * 1000;
     nanosleep(&ts, 0);
-#else
-    if (milliseconds >= 1000) {
-        sleep(milliseconds / 1000);
-    }
-    usleep((milliseconds % 1000) * 1000);
-#endif
 }
 
 #endif // FL_PLATFORM_LINUX

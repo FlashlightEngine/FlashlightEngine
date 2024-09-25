@@ -97,6 +97,12 @@ STATIC_ASSERT(sizeof(FlFloat64) == 8, "Expected FlFloat64 to be 8 bytes.");
 #define FL_IMPORT __attribute__((visibility("default")))
 #endif
 
-#define FL_UNUSED_PARAM(param) (void)(param)
+#ifdef FL_PLATFORM_LINUX
+    #ifndef _POSIX_C_SOURCE
+        #define _POSIX_C_SOURCE 199309L
+    #endif
+#endif
+
+#define FL_UNUSED(a) (void)(a)
 
 #endif // FL_PREREQUISITES_H

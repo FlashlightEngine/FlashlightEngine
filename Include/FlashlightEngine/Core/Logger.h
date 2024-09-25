@@ -1,19 +1,14 @@
 // Copyright (C) 2024 Jean "Pixfri" Letessier 
 // This file is part of Flashlight Engine.
-// For conditions of distribution and use, see copyright notice in Export.h
+// For conditions of distribution and use, see copyright notice in Export.hpp
 
 #pragma once
 
 #ifndef FL_CORE_LOGGER_H
 #define FL_CORE_LOGGER_H
 
-#define FL_LOG_WARN_ENABLED
-#define FL_LOG_INFO_ENABLED
-#define FL_LOG_DEBUG_ENABLED
-#define FL_LOG_TRACE_ENABLED
-
-#include "Prerequisites.h"
-#include "Export.h"
+#include "FlashlightEngine/Prerequisites.h"
+#include "FlashlightEngine/Export.h"
 
 typedef enum FlLogLevel {
     LogLevelFatal = 0,

@@ -1,4 +1,4 @@
-#include <Core/Logger.h>
+#include <FlashlightEngine/Core/Logger.h>
 
 int main(void) {
     FL_LOG_FATAL("Fatal Log Test")

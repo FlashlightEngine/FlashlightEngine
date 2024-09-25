@@ -1,14 +1,14 @@
 // Copyright (C) 2024 Jean "Pixfri" Letessier 
 // This file is part of Flashlight Engine.
-// For conditions of distribution and use, see copyright notice in Export.h
+// For conditions of distribution and use, see copyright notice in Export.hpp
 
 #pragma once
 
-#ifndef FL_CORE_ASSERTS_H
-#define FL_CORE_ASSERTS_H
+#ifndef FL_CORE_ASSERTS_HPP
+#define FL_CORE_ASSERTS_HPP
 
-#include "Prerequisites.h"
-#include "Export.h"
+#include "FlashlightEngine/Prerequisites.h"
+#include "FlashlightEngine/Export.h"
 
 #ifdef FL_ASSERTIONS_ENABLED
     #ifdef _MSC_VER
@@ -58,4 +58,4 @@
 #define FL_ASSERT_DEBUG(expr)        // Does nothing
 #endif
 
-#endif // FL_CORE_ASSERTS_H
+#endif // FL_CORE_ASSERTS_HPP

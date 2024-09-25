@@ -1,1 +1,24 @@
+# VS Code
+/.vscode/
+
+# XMake
+/.xmake/
 /bin/
+/build/
+
+# Compile Commands
+/.cache/
+/compile_commands.json
+
+# CMake
+/CMakeLists.txt
+/cmake-build-debug/
+/cmake-build-release/
+
+# CLion
+/.idea/
+
+# Visual Studio 2022 / Rider
+/vsxmake2022/
+/.vs/
+/*/.vs/

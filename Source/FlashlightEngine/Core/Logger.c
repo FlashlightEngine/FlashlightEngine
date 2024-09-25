@@ -2,10 +2,10 @@
 // This file is part of Flashlight Engine.
 // For conditions of distribution and use, see copyright notice in Export.h
 
-#include "Logger.h"
+#include "FlashlightEngine/Core/Logger.h"
 
-#include "Asserts.h"
-#include "Platform/Platform.h"
+#include "FlashlightEngine/Core/Asserts.h"
+#include "FlashlightEngine/Platform/Platform.h"
 
 // TODO: Temporary
 #include <stdio.h>
