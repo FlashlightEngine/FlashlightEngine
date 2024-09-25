@@ -25,14 +25,14 @@ on_run(function()
     local files = {}
 
     if not option.get("noh") then
-        table.insert(files, { TargetPath = path.join("Include/Flashlight", filePath) .. ".h", Template = headerTemplate })
+        table.insert(files, { TargetPath = path.join("Include/FlashlightEngine", filePath) .. ".h", Template = headerTemplate })
     end
 
     if not option.get("noc") then
         if not option.get("noh") then
-            table.insert(files, { TargetPath = path.join("Source", "Flashlight", filePath) .. ".c", Template = sourceTemplateWithHeader })
+            table.insert(files, { TargetPath = path.join("Source", "FlashlightEngine", filePath) .. ".c", Template = sourceTemplateWithHeader })
         else
-            table.insert(files, { TargetPath = path.join("Source", "Flashlight", filePath) .. ".c", Template = sourceTemplateWithoutHeader })
+            table.insert(files, { TargetPath = path.join("Source", "FlashlightEngine", filePath) .. ".c", Template = sourceTemplateWithoutHeader })
         end
     end
 
@@ -67,8 +67,8 @@ headerTemplate = [[
 #ifndef %HEADER_GUARD%
 #define %HEADER_GUARD%
 
-#include "Flashlight/Prerequisites.h"
-#include "Flashlight/Export.h"
+#include "FlashlightEngine/Prerequisites.h"
+#include "FlashlightEngine/Export.h"
 
 #endif // %HEADER_GUARD%
 ]]
@@ -78,7 +78,7 @@ sourceTemplateWithHeader = [[
 // This file is part of Flashlight Engine.
 // For conditions of distribution and use, see copyright notice in Export.h
 
-#include "Flashlight/%CLASS_PATH%.h"
+#include "FlashlightEngine/%CLASS_PATH%.h"
 ]]
 
 sourceTemplateWithoutHeader = [[
