@@ -25,9 +25,8 @@ void flPlatformShutdown(FlPlatformState* platformState);
 
 FlBool8 flPlatformPumpMessages(FlPlatformState* platformState);
 
-// TODO: Stop exporting
-FL_API void* flPlatformAllocate(FlUInt64 size, FlBool8 aligned);
-FL_API void flPlatformFree(void* block, FlBool8 aligned);
+void* flPlatformAllocate(FlUInt64 size, FlBool8 aligned);
+void flPlatformFree(void* block, FlBool8 aligned);
 void* flPlatformZeroMemory(void* dest, FlUInt64 size);
 void* flPlatformCopyMemory(void* dest, const void* source, FlUInt64 size);
 void* flPlatformSetMemory(void* dest, FlInt32 value, FlUInt64 size);

@@ -3,8 +3,8 @@
 // For conditions of distribution and use, see copyright notice in Export.h
 
 #include <FlashlightEngine/Entry.h>
-// TODO: Remove this.
-#include <FlashlightEngine/Platform/Platform.h>
+
+#include <FlashlightEngine/Core/FlMemory.h>
 
 #include "TestBed/Game.h"
 
@@ -23,7 +23,7 @@ FlBool8 flCreateGame(FlGame* outGame) {
     outGame->Render = GameRender;
     outGame->OnResize = GameOnResize;
 
-    outGame->State = flPlatformAllocate(sizeof(GameState), FALSE);
+    outGame->State = flAllocate(sizeof(GameState), MemoryTagGame);
     
     return TRUE;
 }

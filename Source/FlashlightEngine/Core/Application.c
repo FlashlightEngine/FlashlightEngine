@@ -7,6 +7,7 @@
 #include "FlashlightEngine/GameTypes.h"
 
 #include "FlashlightEngine/Core/Logger.h"
+#include "FlashlightEngine/Core/FlMemory.h"
 
 #include "FlashlightEngine/Platform/Platform.h"
 
@@ -69,6 +70,8 @@ FlBool8 flApplicationCreate(FlGame* gameInstance) {
 }
 
 FlBool8 flApplicationRun(void) {
+    FL_LOG_INFO(flGetMemoryUsageString());
+    
     while (applicationState.IsRunning) {
         if (!flPlatformPumpMessages(&applicationState.Platform)) {
             applicationState.IsRunning = FALSE;

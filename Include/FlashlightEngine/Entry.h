@@ -14,6 +14,7 @@
 
 #include "FlashlightEngine/Core/Application.h"
 #include "FlashlightEngine/Core/Logger.h"
+#include "FlashlightEngine/Core/FlMemory.h"
 
 // Externally defined function to create a game.
 extern FlBool8 flCreateGame(FlGame* outGame);
@@ -22,6 +23,8 @@ extern FlBool8 flCreateGame(FlGame* outGame);
  * The main entry point of the application.
  */
 int main(void) {
+    flInitializeMemory();
+
     // Request the game instance from the application.
     FlGame gameInstance;
     if (!flCreateGame(&gameInstance)) {
@@ -46,6 +49,8 @@ int main(void) {
         FL_LOG_INFO("Application did not shutdown correctly.");
         return 2;
     }
+
+    flShutdownMemory();
     
     return 0;
 }
