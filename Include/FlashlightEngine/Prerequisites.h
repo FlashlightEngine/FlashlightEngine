@@ -91,7 +91,7 @@ STATIC_ASSERT(sizeof(FlFloat64) == 8, "Expected FlFloat64 to be 8 bytes.");
 
 #ifdef _MSC_VER
 #define FL_EXPORT __declspec(dllexport)
-#define FL_IMPORT __declspec(dllexport)
+#define FL_IMPORT __declspec(dllimport)
 #else
 #define FL_EXPORT __attribute__((visibility("default")))
 #define FL_IMPORT __attribute__((visibility("default")))
