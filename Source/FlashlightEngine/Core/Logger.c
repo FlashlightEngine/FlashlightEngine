@@ -13,7 +13,7 @@
 #include <string.h>
 
 void flReportAssertionFailure(const char* expression, const char* message, const char* file, FlInt32 line) {
-    flLogOutput(LogLevelFatal, "Assertion failed: %s, message: '%s', in file %s, line: %d\n",
+    flLogOutput(FlLogLevelFatal, "Assertion failed: %s, message: '%s', in file %s, line: %d\n",
                 expression, message, file, line);
 }
 
@@ -35,7 +35,7 @@ void flLogOutput(const FlLogLevel level, const char* message, ...) {
         "[DEBUG]: ",
         "[TRACE]: "
     };
-    const FlBool8 isError = level < LogLevelWarn;
+    const FlBool8 isError = level < FlLogLevelWarn;
 
     // Technically imposes a 32k character limit on a single log entry, but...
     // DON'T DO THAT

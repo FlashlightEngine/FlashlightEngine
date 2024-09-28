@@ -18,12 +18,12 @@
 
 struct FlMemoryStats {
     FlUInt64 TotalAllocated;
-    FlUInt64 TaggedAllocations[MemoryTagMaxTags];
+    FlUInt64 TaggedAllocations[FlMemoryTagMaxTags];
 };
 
 static struct FlMemoryStats stats;
 
-static const char* memoryTagStrings[MemoryTagMaxTags] = {
+static const char* memoryTagStrings[FlMemoryTagMaxTags] = {
     "UNKNOWN     ",
     "ARRAY       ",
     "DARRAY      ",
@@ -51,8 +51,8 @@ void flShutdownMemory(void) {
 }
 
 void* flAllocate(FlUInt64 size, FlMemoryTag memoryTag) {
-    if (memoryTag == MemoryTagUnknown) {
-        FL_LOG_WARN("flAllocate called with memoryTag set to MemoryTagUnknown. Re-class this allocation.");
+    if (memoryTag == FlMemoryTagUnknown) {
+        FL_LOG_WARN("flAllocate called with memoryTag set to FlMemoryTagUnknown. Re-class this allocation.");
     }
 
     stats.TotalAllocated += size;
@@ -66,8 +66,8 @@ void* flAllocate(FlUInt64 size, FlMemoryTag memoryTag) {
 }
 
 void flFree(void* block, FlUInt64 size, FlMemoryTag memoryTag) {
-    if (memoryTag == MemoryTagUnknown) {
-        FL_LOG_WARN("flFree called with memoryTag set to MemoryTagUnknown. Re-class this allocation.");
+    if (memoryTag == FlMemoryTagUnknown) {
+        FL_LOG_WARN("flFree called with memoryTag set to FlMemoryTagUnknown. Re-class this allocation.");
     }
 
     stats.TotalAllocated -= size;
@@ -97,7 +97,7 @@ char* flGetMemoryUsageString(void) {
     char buffer[8000] = "System memory use (tagged):\n";
     FlUInt64 offset = strlen(buffer);
 
-    for (FlUInt32 i = 0; i < MemoryTagMaxTags; ++i) {
+    for (FlUInt32 i = 0; i < FlMemoryTagMaxTags; ++i) {
         char unit[4] = "XiB";
         FlFloat32 amount = 1.0f;
 

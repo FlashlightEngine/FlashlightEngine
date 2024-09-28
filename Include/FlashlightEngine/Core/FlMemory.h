@@ -12,25 +12,25 @@
 
 typedef enum FlMemoryTag {
     // For temporary use. Should be assigned one of the below or have a new tag created.
-    MemoryTagUnknown,
-    MemoryTagArray,
-    MemoryTagDArray,
-    MemoryTagDict,
-    MemoryTagRingQueue,
-    MemoryTagBST,
-    MemoryTagString,
-    MemoryTagApplication,
-    MemoryTagJob,
-    MemoryTagTexture,
-    MemoryTagMaterialInstance,
-    MemoryTagRenderer,
-    MemoryTagGame,
-    MemoryTagTransform,
-    MemoryTagEntity,
-    MemoryTagEntityNode,
-    MemoryTagScene,
+    FlMemoryTagUnknown,
+    FlMemoryTagArray,
+    FlMemoryTagDArray,
+    FlMemoryTagDict,
+    FlMemoryTagRingQueue,
+    FlMemoryTagBST,
+    FlMemoryTagString,
+    FlMemoryTagApplication,
+    FlMemoryTagJob,
+    FlMemoryTagTexture,
+    FlMemoryTagMaterialInstance,
+    FlMemoryTagRenderer,
+    FlMemoryTagGame,
+    FlMemoryTagTransform,
+    FlMemoryTagEntity,
+    FlMemoryTagEntityNode,
+    FlMemoryTagScene,
 
-    MemoryTagMaxTags
+    FlMemoryTagMaxTags
 } FlMemoryTag;
 
 FL_API void flInitializeMemory(void);
