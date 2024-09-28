@@ -23,7 +23,7 @@ FlBool8 flCreateGame(FlGame* outGame) {
     outGame->Render = GameRender;
     outGame->OnResize = GameOnResize;
 
-    outGame->State = flAllocate(sizeof(GameState), MemoryTagGame);
+    outGame->State = flAllocate(sizeof(GameState), FlMemoryTagGame);
     
     return TRUE;
 }
