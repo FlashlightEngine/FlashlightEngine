@@ -8,6 +8,7 @@
 
 #include "FlashlightEngine/Core/Logger.h"
 #include "FlashlightEngine/Core/FlMemory.h"
+#include "FlashlightEngine/Core/Event.h"
 
 #include "FlashlightEngine/Platform/Platform.h"
 
@@ -45,6 +46,11 @@ FlBool8 flApplicationCreate(FlGame* gameInstance) {
 
     applicationState.IsRunning = TRUE;
     applicationState.IsSuspended = FALSE;
+
+    if (!flEventInitialize()) {
+        FL_LOG_ERROR("Event system initialization failed. Application cannot continue.")
+        return FALSE;
+    }
 
     if (!flPlatformStartup(
         &applicationState.Platform, 
@@ -94,6 +100,8 @@ FlBool8 flApplicationRun(void) {
     }
 
     applicationState.IsRunning = FALSE;
+    
+    flEventShutdown();
 
     flPlatformShutdown(&applicationState.Platform);
 
