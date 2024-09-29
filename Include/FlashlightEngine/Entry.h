@@ -40,7 +40,7 @@ int main(void) {
 
     // Initialization.
     if (!flApplicationCreate(&gameInstance)) {
-        FL_LOG_INFO("Application failed to create.");
+        FL_LOG_FATAL("Application failed to create.");
         return 1;
     }
     
