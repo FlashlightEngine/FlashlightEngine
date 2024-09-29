@@ -30,18 +30,18 @@ typedef struct FlEventSystemState {
 /**
  * Event system internal state.
  */
-static FlBool8 IsInitialized = FALSE;
+static FlBool8 Initialized = FALSE;
 static FlEventSystemState State;
 
 FlBool8 flEventInitialize(void) {
-    if (IsInitialized) {
+    if (Initialized) {
         return FALSE;
     }
 
-    IsInitialized = FALSE;
+    Initialized = FALSE;
     flZeroMemory(&State, sizeof(State));
 
-    IsInitialized = TRUE;
+    Initialized = TRUE;
 
     return TRUE;
 }
@@ -54,10 +54,12 @@ void flEventShutdown(void) {
             State.Registered[i].Events = 0;
         }
     }
+
+    Initialized = FALSE;
 }
 
 FlBool8 flEventRegister(FlUInt16 code, void* listener, PFN_flOnEvent onEvent) {
-    if (IsInitialized == FALSE) {
+    if (Initialized == FALSE) {
         return FALSE;
     }
 
@@ -83,7 +85,7 @@ FlBool8 flEventRegister(FlUInt16 code, void* listener, PFN_flOnEvent onEvent) {
 }
 
 FlBool8 flEventUnregister(FlUInt16 code, void* listener, PFN_flOnEvent onEvent) {
-    if (IsInitialized == FALSE) {
+    if (Initialized == FALSE) {
         return FALSE;
     }
 
@@ -109,7 +111,7 @@ FlBool8 flEventUnregister(FlUInt16 code, void* listener, PFN_flOnEvent onEvent) 
 }
 
 FlBool8 flEventFire(FlUInt16 code, void* sender, FlEventContext eventContext) {
-    if (IsInitialized == FALSE) {
+    if (Initialized == FALSE) {
         return FALSE;
     }
 
