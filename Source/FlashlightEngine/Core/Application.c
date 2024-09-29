@@ -9,6 +9,7 @@
 #include "FlashlightEngine/Core/Logger.h"
 #include "FlashlightEngine/Core/FlMemory.h"
 #include "FlashlightEngine/Core/Event.h"
+#include "FlashlightEngine/Core/Input.h"
 
 #include "FlashlightEngine/Platform/Platform.h"
 
@@ -34,23 +35,16 @@ FlBool8 flApplicationCreate(FlGame* gameInstance) {
     ApplicationState.GameInstance = gameInstance;
 
     // Initialize subsystems.
-    flInitializeLogging();
-
-    // TODO: Remove this when logging improved
-    FL_LOG_FATAL("Fatal Log Test Message: %f", 3.14f)
-    FL_LOG_ERROR("Error Log Test Message: %f", 3.14f)
-    FL_LOG_WARN("Warn Log Test Message: %f", 3.14f)
-    FL_LOG_INFO("Info Log Test Message: %f", 3.14f)
-    FL_LOG_DEBUG("Debug Log Test Message: %f", 3.14f)
-    FL_LOG_TRACE("Trace Log Test Message: %f", 3.14f)
-
-    ApplicationState.IsRunning = TRUE;
-    ApplicationState.IsSuspended = FALSE;
+    flLoggingInitialize();
+    flInputInitialize();
 
     if (!flEventInitialize()) {
         FL_LOG_ERROR("Event system initialization failed. Application cannot continue.")
         return FALSE;
     }
+
+    ApplicationState.IsRunning = TRUE;
+    ApplicationState.IsSuspended = FALSE;
 
     if (!flPlatformStartup(
         &ApplicationState.Platform, 
@@ -96,14 +90,24 @@ FlBool8 flApplicationRun(void) {
                 ApplicationState.IsRunning = FALSE;
                 break;
             }
+
+            // NOTE: Input update/state copying should always be handled
+            // after any input should be recored; I.E. before this line.
+            // As a safety, input is the last thing to be updated before
+            // this frame ends.
+            flInputUpdate(0);
         }
     }
 
     ApplicationState.IsRunning = FALSE;
+
+    flPlatformShutdown(&ApplicationState.Platform);
     
     flEventShutdown();
 
-    flPlatformShutdown(&ApplicationState.Platform);
+    flInputShutdown();
+
+    flLoggingShutdown();
 
     return TRUE;
 }
