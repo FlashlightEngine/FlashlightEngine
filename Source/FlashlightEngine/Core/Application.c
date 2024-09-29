@@ -22,16 +22,16 @@ typedef struct FlApplicationState {
     FlFloat64 LastTime;
 } FlApplicationState;
 
-static FlBool8 initialized = FALSE;
-static FlApplicationState applicationState;
+static FlBool8 Initialized = FALSE;
+static FlApplicationState ApplicationState;
 
 FlBool8 flApplicationCreate(FlGame* gameInstance) {
-    if (initialized) {
+    if (Initialized) {
         FL_LOG_ERROR("flApplicationCreate called more than once.");
         return FALSE;
     }
 
-    applicationState.GameInstance = gameInstance;
+    ApplicationState.GameInstance = gameInstance;
 
     // Initialize subsystems.
     flInitializeLogging();
@@ -44,8 +44,8 @@ FlBool8 flApplicationCreate(FlGame* gameInstance) {
     FL_LOG_DEBUG("Debug Log Test Message: %f", 3.14f)
     FL_LOG_TRACE("Trace Log Test Message: %f", 3.14f)
 
-    applicationState.IsRunning = TRUE;
-    applicationState.IsSuspended = FALSE;
+    ApplicationState.IsRunning = TRUE;
+    ApplicationState.IsSuspended = FALSE;
 
     if (!flEventInitialize()) {
         FL_LOG_ERROR("Event system initialization failed. Application cannot continue.")
@@ -53,7 +53,7 @@ FlBool8 flApplicationCreate(FlGame* gameInstance) {
     }
 
     if (!flPlatformStartup(
-        &applicationState.Platform, 
+        &ApplicationState.Platform, 
         gameInstance->ApplicationConfiguration.Name, 
         gameInstance->ApplicationConfiguration.StartPosX, 
         gameInstance->ApplicationConfiguration.StartPosY,
@@ -63,14 +63,14 @@ FlBool8 flApplicationCreate(FlGame* gameInstance) {
     }
 
     // Initialize the game.
-    if (!applicationState.GameInstance->Initialize(applicationState.GameInstance)) {
+    if (!ApplicationState.GameInstance->Initialize(ApplicationState.GameInstance)) {
         FL_LOG_FATAL("Game failed to initialize.");
         return FALSE;
     }
 
-    applicationState.GameInstance->OnResize(applicationState.GameInstance, applicationState.Width, applicationState.Height);
+    ApplicationState.GameInstance->OnResize(ApplicationState.GameInstance, ApplicationState.Width, ApplicationState.Height);
 
-    initialized = TRUE;
+    Initialized = TRUE;
 
     return TRUE;
 }
@@ -78,32 +78,32 @@ FlBool8 flApplicationCreate(FlGame* gameInstance) {
 FlBool8 flApplicationRun(void) {
     FL_LOG_INFO(flGetMemoryUsageString());
     
-    while (applicationState.IsRunning) {
-        if (!flPlatformPumpMessages(&applicationState.Platform)) {
-            applicationState.IsRunning = FALSE;
+    while (ApplicationState.IsRunning) {
+        if (!flPlatformPumpMessages(&ApplicationState.Platform)) {
+            ApplicationState.IsRunning = FALSE;
         }
 
-        if (!applicationState.IsSuspended) {
-            if (!applicationState.GameInstance->Update(applicationState.GameInstance, (FlFloat32)0)) {
+        if (!ApplicationState.IsSuspended) {
+            if (!ApplicationState.GameInstance->Update(ApplicationState.GameInstance, (FlFloat32)0)) {
                 FL_LOG_FATAL("Game update failed, shutting down.");
-                applicationState.IsRunning = FALSE;
+                ApplicationState.IsRunning = FALSE;
                 break;
             }
 
             // Call the game's render routine.
-            if (!applicationState.GameInstance->Render(applicationState.GameInstance, (FlFloat32)0)) {
+            if (!ApplicationState.GameInstance->Render(ApplicationState.GameInstance, (FlFloat32)0)) {
                 FL_LOG_FATAL("Game render failed, shutting down.");
-                applicationState.IsRunning = FALSE;
+                ApplicationState.IsRunning = FALSE;
                 break;
             }
         }
     }
 
-    applicationState.IsRunning = FALSE;
+    ApplicationState.IsRunning = FALSE;
     
     flEventShutdown();
 
-    flPlatformShutdown(&applicationState.Platform);
+    flPlatformShutdown(&ApplicationState.Platform);
 
     return TRUE;
 }
