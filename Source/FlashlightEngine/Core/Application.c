@@ -10,6 +10,7 @@
 #include "FlashlightEngine/Core/FlMemory.h"
 #include "FlashlightEngine/Core/Event.h"
 #include "FlashlightEngine/Core/Input.h"
+#include "FlashlightEngine/Core/Clock.h"
 
 #include "FlashlightEngine/Platform/Platform.h"
 
@@ -20,6 +21,7 @@ typedef struct FlApplicationState {
     FlPlatformState Platform;
     FlInt16 Width;
     FlInt16 Height;
+    FlClock Clock;
     FlFloat64 LastTime;
 } FlApplicationState;
 
@@ -78,6 +80,15 @@ FlBool8 flApplicationCreate(FlGame* gameInstance) {
 }
 
 FlBool8 flApplicationRun(void) {
+    flClockStart(&ApplicationState.Clock);
+    flClockUpdate(&ApplicationState.Clock);
+
+    ApplicationState.LastTime = ApplicationState.Clock.Elapsed;
+
+    FlFloat64 runningTime = 0;
+    FlUInt8 frameCount = 0;
+    FlFloat64 targetFrameSeconds = 1.0 / 60.0;
+
     FL_LOG_INFO(flGetMemoryUsageString());
     
     while (ApplicationState.IsRunning) {
@@ -86,24 +97,50 @@ FlBool8 flApplicationRun(void) {
         }
 
         if (!ApplicationState.IsSuspended) {
-            if (!ApplicationState.GameInstance->Update(ApplicationState.GameInstance, (FlFloat32)0)) {
+            // Update the clock and get delta time.
+            flClockUpdate(&ApplicationState.Clock);
+            FlFloat64 currentTime = ApplicationState.Clock.Elapsed;
+            FlFloat64 delta = (currentTime - ApplicationState.LastTime);
+            FlFloat64 frameStartTime = flPlatformGetAbsoluteTime();
+
+            if (!ApplicationState.GameInstance->Update(ApplicationState.GameInstance, (FlFloat32)delta)) {
                 FL_LOG_FATAL("Game update failed, shutting down.");
                 ApplicationState.IsRunning = FALSE;
                 break;
             }
 
             // Call the game's render routine.
-            if (!ApplicationState.GameInstance->Render(ApplicationState.GameInstance, (FlFloat32)0)) {
+            if (!ApplicationState.GameInstance->Render(ApplicationState.GameInstance, (FlFloat32)delta)) {
                 FL_LOG_FATAL("Game render failed, shutting down.");
                 ApplicationState.IsRunning = FALSE;
                 break;
+            }
+
+            // Figure out how long the frame took.
+            FlFloat64 frameEndTime = flPlatformGetAbsoluteTime();
+            FlFloat64 frameElapsedTime = frameEndTime - frameStartTime;
+            runningTime += frameElapsedTime;
+            FlFloat64 remainingSeconds = targetFrameSeconds - frameElapsedTime;
+
+            if (remainingSeconds > 0) {
+                FlUInt64 remainingMs = (remainingSeconds * 1000);
+
+                // If there is time left, give it back to the OS.
+                FlBool8 limitFrames = FALSE;
+                if (remainingMs > 0 && limitFrames) {
+                    flPlatformSleep(remainingMs - 1);
+                }
+
+                frameCount++;
             }
 
             // NOTE: Input update/state copying should always be handled
             // after any input should be recored; I.E. before this line.
             // As a safety, input is the last thing to be updated before
             // this frame ends.
-            flInputUpdate(0);
+            flInputUpdate(delta);
+
+            ApplicationState.LastTime = currentTime;
         }
     }
 
