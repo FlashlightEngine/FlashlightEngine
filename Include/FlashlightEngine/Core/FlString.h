@@ -12,4 +12,6 @@
 
 FL_API char* flStringDuplicate(const char* str);
 
+FL_API FlUInt64 flStringLength(const char* str);
+
 #endif // FL_CORE_FLSTRING_H

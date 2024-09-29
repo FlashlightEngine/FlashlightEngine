@@ -9,9 +9,13 @@
 #include <string.h>
 
 FL_API char* flStringDuplicate(const char* str) {
-    FlUInt64 length = strlen(str);
+    FlUInt64 length = flStringLength(str);
     char* copy = flAllocate(length + 1, FlMemoryTagString);
     flCopyMemory(copy, str, length + 1);
     
     return copy;
+}
+
+FL_API FlUInt64 flStringLength(const char* str) {
+    return strlen(str);
 }

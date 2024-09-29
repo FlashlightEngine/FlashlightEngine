@@ -7,6 +7,9 @@
 #ifdef FL_PLATFORM_LINUX
 
 #include "FlashlightEngine/Core/Logger.h"
+#include "FlashlightEngine/Core/Event.h"
+#include "FlashlightEngine/Core/Input.h"
+#include "FlashlightEngine/Core/FlString.h"
 
 #include <xcb/xcb.h>
 #include <X11/keysym.h>
@@ -29,6 +32,9 @@ typedef struct FlInternalState {
     xcb_atom_t WmProtocols;
     xcb_atom_t WmDeleteWin;
 } FlInternalState;
+
+// Key translation
+FlKeys flTranslateKeycode(FlUInt32 xKeycode);
 
 FlBool8 flPlatformStartup(
     FlPlatformState* platformState,
@@ -111,7 +117,7 @@ FlBool8 flPlatformStartup(
         XCB_ATOM_WM_NAME,
         XCB_ATOM_STRING,
         8, // Data should be viewed 8 bits at a time
-        strlen(applicationName),
+        flStringLength(applicationName),
         applicationName
     );
 
@@ -120,14 +126,14 @@ FlBool8 flPlatformStartup(
     xcb_intern_atom_cookie_t wmDeleteCookie = xcb_intern_atom(
         state->Connection,
         0,
-        strlen("WM_DELETE_WINDOW"),
+        flStringLength("WM_DELETE_WINDOW"),
         "WM_DELETE_WINDOW"
     );
 
     xcb_intern_atom_cookie_t wmProtocolsCookie = xcb_intern_atom(
         state->Connection,
         0,
-        strlen("WM_PROTOCOLS"),
+        flStringLength("WM_PROTOCOLS"),
         "WM_PROTOCOLS"
     );
 
@@ -198,18 +204,58 @@ FlBool8 flPlatformPumpMessages(FlPlatformState* platformState) {
         case XCB_KEY_PRESS:
         case XCB_KEY_RELEASE:
             {
-                // TODO: Key presses and releases
+                // Key press event - xcb_key_press_event_t and xcb_key_release_event_t are the same
+                xcb_key_press_event_t* kbEvent = (xcb_key_press_event_t*)event;
+                FlBool8 pressed = event->response_type == XCB_KEY_PRESS;
+
+                xcb_keycode_t code = kbEvent->detail;
+                KeySym keySym = XkbKeycodeToKeysym(
+                    state->Display,
+                    (KeyCode)code, // event.xkey.keycode
+                    0,
+                    code & ShiftMask ? 1 : 0
+                );
+
+                FlKeys key = flTranslateKeycode(keySym);
+
+                // Pass to the input subsystem for processing.
+                flInputProcessKey(key, pressed);
+
                 break;
             }
         case XCB_BUTTON_PRESS:
         case XCB_BUTTON_RELEASE:
             {
-                // TODO: Mouse button presses and releases
+                xcb_button_press_event_t* mouseEvent = (xcb_button_press_event_t*)event;
+                FlBool8 pressed = event->response_type == XCB_BUTTON_PRESS;
+                FlButtons mouseButton = FlButtonMaxButtons;
+
+                switch(mouseEvent->detail) {
+                case XCB_BUTTON_INDEX_1:
+                    mouseButton = FlButtonLeft;
+                    break;
+                case XCB_BUTTON_INDEX_2:
+                    mouseButton = FlButtonMiddle;
+                    break;
+                case XCB_BUTTON_INDEX_3:
+                    mouseButton = FlButtonRight;
+                    break;
+                }
+
+                // Pass to the input subsystem for processing.
+                if (mouseButton != FlButtonMaxButtons) {
+                    flInputProcessButton(mouseButton, pressed);
+                }
+
                 break;
             }
         case XCB_MOTION_NOTIFY:
             {
-                // TODO: Mouse movement.
+                // Mouse move
+                xcb_motion_notify_event_t* moveEvent = (xcb_motion_notify_event_t*)event;
+
+                // Pass to the input subsystem for processing.
+                flInputProcessMouseMove(moveEvent->event_x, moveEvent->event_y);
                 break;
             }
         case XCB_CONFIGURE_NOTIFY:
@@ -282,6 +328,260 @@ void flPlatformSleep(FlUInt64 milliseconds) {
     ts.tv_sec = milliseconds / 1000;
     ts.tv_nsec = (milliseconds % 1000) * 1000 * 1000;
     nanosleep(&ts, 0);
+}
+
+FlKeys flTranslateKeycode(FlUInt32 xKeycode) {
+    switch (xKeycode) {
+    case XK_BackSpace:
+        return FlKeyBackspace;
+    case XK_Return:
+        return FlKeyEnter;
+    case XK_Tab:
+        return FlKeyTab;
+        // Not supported
+        // case XK_Shift: return FlKeyShift;
+        //case XK_Control: return FlKeyControl;
+    case XK_Pause:
+        return FlKeyPause;
+    case XK_Caps_Lock:
+        return FlKeyCapital;
+    case XK_Escape:
+        return FlKeyEscape;
+        // Not supported
+        // case : return FlKeyConvert;
+        // case : return FlKeyNonConvert;
+        // case : return FlKeyAccept;
+    case XK_Mode_switch:
+        return FlKeyModeChange;
+    case XK_space:
+        return FlKeySpace;
+    case XK_Prior:
+        return FlKeyPrior;
+    case XK_Next:
+        return FlKeyNext;
+    case XK_End:
+        return FlKeyEnd;
+    case XK_Home:
+        return FlKeyHome;
+    case XK_Left:
+        return FlKeyLeft;
+    case XK_Up:
+        return FlKeyUp;
+    case XK_Right:
+        return FlKeyRight;
+    case XK_Down:
+        return FlKeyDown;
+    case XK_Select:
+        return FlKeySelect;
+    case XK_Print:
+        return FlKeyPrint;
+    case XK_Execute:
+        return FlKeyExecute;
+    // case XK_snapshot: return FlKeySnapshot; // not supported
+    case XK_Insert:
+        return FlKeyInsert;
+    case XK_Delete:
+        return FlKeyDelete;
+    case XK_Help:
+        return FlKeyHelp;
+    case XK_Meta_L:
+        return FlKeyLWin;  // TODO: not sure this is right
+    case XK_Meta_R:
+        return FlKeyRWin;
+        // case XK_apps: return FlKeyApps; // not supported
+        // case XK_sleep: return FlKeySleep; //not supported
+    case XK_KP_0:
+        return FlKeyNumpad0;
+    case XK_KP_1:
+        return FlKeyNumpad1;
+    case XK_KP_2:
+        return FlKeyNumpad2;
+    case XK_KP_3:
+        return FlKeyNumpad3;
+    case XK_KP_4:
+        return FlKeyNumpad4;
+    case XK_KP_5:
+        return FlKeyNumpad5;
+    case XK_KP_6:
+        return FlKeyNumpad6;
+    case XK_KP_7:
+        return FlKeyNumpad7;
+    case XK_KP_8:
+        return FlKeyNumpad8;
+    case XK_KP_9:
+        return FlKeyNumpad9;
+    case XK_multiply:
+        return FlKeyMultiply;
+    case XK_KP_Add:
+        return FlKeyAdd;
+    case XK_KP_Separator:
+        return FlKeySeparator;
+    case XK_KP_Subtract:
+        return FlKeySubtract;
+    case XK_KP_Decimal:
+        return FlKeyDecimal;
+    case XK_KP_Divide:
+        return FlKeyDivide;
+    case XK_F1:
+        return FlKeyF1;
+    case XK_F2:
+        return FlKeyF2;
+    case XK_F3:
+        return FlKeyF3;
+    case XK_F4:
+        return FlKeyF4;
+    case XK_F5:
+        return FlKeyF5;
+    case XK_F6:
+        return FlKeyF6;
+    case XK_F7:
+        return FlKeyF7;
+    case XK_F8:
+        return FlKeyF8;
+    case XK_F9:
+        return FlKeyF9;
+    case XK_F10:
+        return FlKeyF10;
+    case XK_F11:
+        return FlKeyF11;
+    case XK_F12:
+        return FlKeyF12;
+    case XK_F13:
+        return FlKeyF13;
+    case XK_F14:
+        return FlKeyF14;
+    case XK_F15:
+        return FlKeyF15;
+    case XK_F16:
+        return FlKeyF16;
+    case XK_F17:
+        return FlKeyF17;
+    case XK_F18:
+        return FlKeyF18;
+    case XK_F19:
+        return FlKeyF19;
+    case XK_F20:
+        return FlKeyF20;
+    case XK_F21:
+        return FlKeyF21;
+    case XK_F22:
+        return FlKeyF22;
+    case XK_F23:
+        return FlKeyF23;
+    case XK_F24:
+        return FlKeyF24;
+    case XK_Num_Lock:
+        return FlKeyNumlock;
+    case XK_Scroll_Lock:
+        return FlKeyScroll;
+    case XK_KP_Equal:
+        return FlKeyNumpadEqual;
+    case XK_Shift_L:
+        return FlKeyLShift;
+    case XK_Shift_R:
+        return FlKeyRShift;
+    case XK_Control_L:
+        return FlKeyLControl;
+    case XK_Control_R:
+        return FlKeyRControl;
+    // case XK_Menu: return FlKeyLMenu;
+    case XK_Menu:
+        return FlKeyRMenu;
+    case XK_semicolon:
+        return FlKeySemicolon;
+    case XK_plus:
+        return FlKeyPlus;
+    case XK_comma:
+        return FlKeyComma;
+    case XK_minus:
+        return FlKeyMinus;
+    case XK_period:
+        return FlKeyPeriod;
+    case XK_slash:
+        return FlKeySlash;
+    case XK_grave:
+        return FlKeyGrave;
+    case XK_a:
+    case XK_A:
+        return FlKeyA;
+    case XK_b:
+    case XK_B:
+        return FlKeyB;
+    case XK_c:
+    case XK_C:
+        return FlKeyC;
+    case XK_d:
+    case XK_D:
+        return FlKeyD;
+    case XK_e:
+    case XK_E:
+        return FlKeyE;
+    case XK_f:
+    case XK_F:
+        return FlKeyF;
+    case XK_g:
+    case XK_G:
+        return FlKeyG;
+    case XK_h:
+    case XK_H:
+        return FlKeyH;
+    case XK_i:
+    case XK_I:
+        return FlKeyI;
+    case XK_j:
+    case XK_J:
+        return FlKeyJ;
+    case XK_k:
+    case XK_K:
+        return FlKeyK;
+    case XK_l:
+    case XK_L:
+        return FlKeyL;
+    case XK_m:
+    case XK_M:
+        return FlKeyM;
+    case XK_n:
+    case XK_N:
+        return FlKeyN;
+    case XK_o:
+    case XK_O:
+        return FlKeyO;
+    case XK_p:
+    case XK_P:
+        return FlKeyP;
+    case XK_q:
+    case XK_Q:
+        return FlKeyQ;
+    case XK_r:
+    case XK_R:
+        return FlKeyR;
+    case XK_s:
+    case XK_S:
+        return FlKeyS;
+    case XK_t:
+    case XK_T:
+        return FlKeyT;
+    case XK_u:
+    case XK_U:
+        return FlKeyU;
+    case XK_v:
+    case XK_V:
+        return FlKeyV;
+    case XK_w:
+    case XK_W:
+        return FlKeyW;
+    case XK_x:
+    case XK_X:
+        return FlKeyX;
+    case XK_y:
+    case XK_Y:
+        return FlKeyY;
+    case XK_z:
+    case XK_Z:
+        return FlKeyZ;
+    default:
+        return 0;
+    }
 }
 
 #endif // FL_PLATFORM_LINUX

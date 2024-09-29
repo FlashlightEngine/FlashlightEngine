@@ -101,7 +101,7 @@ char* flGetMemoryUsageString(void) {
     const FlUInt64 kib = 1024;
 
     char buffer[8000] = "System memory use (tagged):\n";
-    FlUInt64 offset = strlen(buffer);
+    FlUInt64 offset = flStringLength(buffer);
 
     for (FlUInt32 i = 0; i < FlMemoryTagMaxTags; ++i) {
         char unit[4] = "XiB";

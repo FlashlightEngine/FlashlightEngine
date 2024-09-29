@@ -27,8 +27,8 @@ typedef enum FlKeys {
     FL_DEFINE_KEY(Shift,     0x10),
     FL_DEFINE_KEY(Control,   0x11),    
     
-    FL_DEFINE_KEY(PAUSE,   0x13),
-    FL_DEFINE_KEY(CAPITAL, 0x14),
+    FL_DEFINE_KEY(Pause,   0x13),
+    FL_DEFINE_KEY(Capital, 0x14),
     
     FL_DEFINE_KEY(Escape, 0x1B),
     

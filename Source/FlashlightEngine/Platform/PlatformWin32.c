@@ -9,6 +9,7 @@
 
 #include "FlashlightEngine/Core/Logger.h"
 #include "FlashlightEngine/Core/Input.h" 
+#include "FlashlightEngine/Core/FlString.h"
 
 #include <Windows.h>
 #include <windowsx.h> // Param input extraction
@@ -172,7 +173,7 @@ void flPlatformConsoleWrite(const char* message, const FlUInt8 color) {
     SetConsoleTextAttribute(consoleHandle, levels[color]);
 
     OutputDebugStringA(message);
-    const FlUInt64 length = strlen(message);
+    const FlUInt64 length = flStringLength(message);
     const LPDWORD numberWritten = 0;
     WriteConsoleA(consoleHandle, message, (DWORD)length, numberWritten, NULL);
 }
@@ -184,7 +185,7 @@ void flPlatformConsoleWriteError(const char* message, FlUInt8 color) {
     SetConsoleTextAttribute(consoleHandle, levels[color]);
 
     OutputDebugStringA(message);
-    const FlUInt64 length = strlen(message);
+    const FlUInt64 length = flStringLength(message);
     const LPDWORD numberWritten = 0;
     WriteConsoleA(consoleHandle, message, (DWORD)length, numberWritten, NULL);
 }
