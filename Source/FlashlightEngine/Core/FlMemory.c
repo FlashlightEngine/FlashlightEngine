@@ -5,16 +5,13 @@
 #include "FlashlightEngine/Core/FlMemory.h"
 
 #include "FlashlightEngine/Core/Logger.h"
+#include "FlashlightEngine/Core/FlString.h"
+
 #include "FlashlightEngine/Platform/Platform.h"
 
 // TODO: Custom string lib
 #include <string.h>
 #include <stdio.h>
-
-// MSVC tells us to not use strdup and use _strdup instead, but _strdup doesn't exist on other compilers.
-#if _MSC_VER
-#define strdup _strdup
-#endif
 
 struct FlMemoryStats {
     FlUInt64 TotalAllocated;
@@ -129,7 +126,7 @@ char* flGetMemoryUsageString(void) {
         offset += length;
     }
 
-    char* outString = strdup(buffer);
+    char* outString = flStringDuplicate(buffer);
 
     return outString;
 }
