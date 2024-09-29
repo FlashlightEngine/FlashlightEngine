@@ -12,18 +12,28 @@
 #include <stdarg.h>
 #include <string.h>
 
+static FlBool8 Initialized = FALSE;
+
 void flReportAssertionFailure(const char* expression, const char* message, const char* file, FlInt32 line) {
     flLogOutput(FlLogLevelFatal, "Assertion failed: %s, message: '%s', in file %s, line: %d\n",
                 expression, message, file, line);
 }
 
-FlBool8 flInitializeLogging(void) {
+FlBool8 flLoggingInitialize(void) {
+    if (Initialized) {
+        return FALSE;
+    }
+
     // TODO: Create log file.
+    Initialized = TRUE;
+    FL_LOG_INFO("Logging subsystem initialized.")
+
     return TRUE;
 }
 
-void flShutdownLogging(void) {
+void flLoggingShutdown(void) {
     // TODO: Clean up logging/writing queued entries.
+    Initialized = FALSE;
 }
 
 void flLogOutput(const FlLogLevel level, const char* message, ...) {

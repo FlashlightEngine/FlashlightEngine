@@ -19,8 +19,8 @@ typedef enum FlLogLevel {
     FlLogLevelTrace = 5
 } FlLogLevel;
 
-FlBool8 flInitializeLogging(void);
-void flShutdownLogging(void);
+FlBool8 flLoggingInitialize(void);
+void flLoggingShutdown(void);
 
 FL_API void flLogOutput(FlLogLevel level, const char* message, ...);
 
