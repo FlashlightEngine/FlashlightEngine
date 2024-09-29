@@ -38,10 +38,9 @@ FlBool8 flEventInitialize(void) {
         return FALSE;
     }
 
-    Initialized = FALSE;
     flZeroMemory(&State, sizeof(State));
-
     Initialized = TRUE;
+    FL_LOG_INFO("Event subsystem initialized")
 
     return TRUE;
 }
