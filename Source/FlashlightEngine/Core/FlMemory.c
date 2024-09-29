@@ -43,11 +43,20 @@ static const char* memoryTagStrings[FlMemoryTagMaxTags] = {
     "SCENE       "
 };
 
+static FlBool8 Initialized = FALSE;
+
 void flInitializeMemory(void) {
+    if (Initialized) {
+        return;
+    }
+
     flPlatformZeroMemory(&stats, sizeof(stats));
+    Initialized = TRUE;
+    FL_LOG_INFO("Memory subsystem initialized.")
 }
 
 void flShutdownMemory(void) {
+    Initialized = FALSE;
 }
 
 void* flAllocate(FlUInt64 size, FlMemoryTag memoryTag) {
