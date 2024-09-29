@@ -6,7 +6,9 @@
 
 // Windows platform layer
 #ifdef FL_PLATFORM_WINDOWS
+
 #include "FlashlightEngine/Core/Logger.h"
+#include "FlashlightEngine/Core/Input.h" 
 
 #include <Windows.h>
 #include <windowsx.h> // Param input extraction
@@ -225,26 +227,36 @@ LRESULT CALLBACK flWin32ProcessMessage(const HWND hWnd, const FlUInt32 msg, cons
     case WM_SYSKEYUP:
         {
             // Key pressed/released
-            // const FlBool8 pressed = FlBool8(msg == WM_KEYDOWN || msg == WM_SYSKEYDOWN);
-            // TODO: Input processing.
+            const FlBool8 pressed = (msg == WM_KEYDOWN || msg == WM_SYSKEYDOWN);
+            FlKeys key = (FlUInt16)wParam;
+
+            // Pass to the input subsystem for processing.
+            flInputProcessKey(key, pressed);
+
             break;
         }
     case WM_MOUSEMOVE:
         {
             // Mouse move.
-            // FlInt32 xPosition = GET_X_LPARAM(lParam);
-            // FlInt32 yPosition = GET_Y_LPARAM(lParam);
-            // TODO: Input processing.
+            FlInt32 xPosition = GET_X_LPARAM(lParam);
+            FlInt32 yPosition = GET_Y_LPARAM(lParam);
+
+            // Pass to the input subsystem for processing.
+            flInputProcessMouseMove((FlInt16)xPosition, (FlInt16)yPosition);
+
             break;
         }
     case WM_MOUSEWHEEL:
         {
-            // FlInt32 zDelta = GET_WHEEL_DELTA_WPARAM(wParam);
-            // if (zDelta != 0) {
-            //     // Flatten the input to an OS-independent (-1, 1)
-            //     zDelta = (zDelta < 0) ? -1 : 1;
-            // }
-            // TODO: Input processing.
+            FlInt32 zDelta = GET_WHEEL_DELTA_WPARAM(wParam);
+            if (zDelta != 0) {
+                // Flatten the input to an OS-independent (-1, 1)
+                zDelta = (zDelta < 0) ? -1 : 1;
+
+                // Pass to the input subsystem for processing.
+                flInputProcessMouseWheel((FlInt8)zDelta); // zDelta was clamped to -1;1, so it's fine to convert it to a FlInt8 
+            }
+
             break;
         }
     case WM_LBUTTONDOWN:
@@ -254,10 +266,33 @@ LRESULT CALLBACK flWin32ProcessMessage(const HWND hWnd, const FlUInt32 msg, cons
     case WM_MBUTTONUP:
     case WM_RBUTTONUP:
         {
-            // const FlBool8 pressed = FlBool8(msg == WM_LBUTTONDOWN || msg == WM_MBUTTONDOWN || msg == WM_RBUTTONDOWN);
-            // TODO: Input processing.
+            const FlBool8 pressed = (msg == WM_LBUTTONDOWN || msg == WM_MBUTTONDOWN || msg == WM_RBUTTONDOWN);
+            FlButtons mouseButton = FlButtonMaxButtons;
+            
+            switch (msg) {       
+            case WM_LBUTTONDOWN:
+            case WM_LBUTTONUP:
+                mouseButton = FlButtonLeft;
+                break;
+
+            case WM_MBUTTONDOWN:
+            case WM_MBUTTONUP:
+                mouseButton = FlButtonMiddle;
+                break;
+
+            case WM_RBUTTONDOWN:
+            case WM_RBUTTONUP:
+                mouseButton = FlButtonRight;
+                break;
+            }
+
+            // Pass to the input subsystem for processing.
+            if (mouseButton != FlButtonMaxButtons) {
+                flInputProcessButton(mouseButton, pressed);
+            }
+
             break;
-        }        
+        }
     }
 
     return DefWindowProcA(hWnd, msg, wParam, lParam);

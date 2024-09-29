@@ -94,6 +94,9 @@ void flInputProcessKey(FlKeys key, FlBool8 pressed) {
         // Update internal state.
         State.KeyboardCurrent.Keys[key] = pressed;
 
+        // NOTE: Only for debug purpose.
+        // FL_LOG_DEBUG("%c", (char)key)
+
         // Fire off an event for immediate processing.
         FlEventContext context;
         context.data.uint16[0] = key;
@@ -172,6 +175,9 @@ void flInputProcessMouseMove(FlInt16 x, FlInt16 y) {
     if (State.MouseCurrent.X != x || State.MouseCurrent.Y != y) {
         State.MouseCurrent.X = x;
         State.MouseCurrent.Y = y;
+
+        // NOTE: Only for debug purpose.
+        // FL_LOG_DEBUG("Mouse pos: (%i, %i)", x, y)
 
         // Fire the event.
         FlEventContext context;

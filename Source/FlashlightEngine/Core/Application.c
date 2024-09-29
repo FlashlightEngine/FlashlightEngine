@@ -26,6 +26,10 @@ typedef struct FlApplicationState {
 static FlBool8 Initialized = FALSE;
 static FlApplicationState ApplicationState;
 
+// Event handlers
+FlBool8 flApplicationOnEvent(FlUInt16 code, void* sender, void* listenerInstance, FlEventContext context);
+FlBool8 flApplicationOnKey(FlUInt16 code, void* sender, void* listenerInstance, FlEventContext context);
+
 FlBool8 flApplicationCreate(FlGame* gameInstance) {
     if (Initialized) {
         FL_LOG_ERROR("flApplicationCreate called more than once.");
@@ -42,6 +46,10 @@ FlBool8 flApplicationCreate(FlGame* gameInstance) {
         FL_LOG_ERROR("Event system initialization failed. Application cannot continue.")
         return FALSE;
     }
+
+    flEventRegister(FlEventCodeApplicationQuit, 0, flApplicationOnEvent);
+    flEventRegister(FlEventCodeKeyPressed, 0, flApplicationOnKey);
+    flEventRegister(FlEventCodeKeyReleased, 0, flApplicationOnKey);
 
     ApplicationState.IsRunning = TRUE;
     ApplicationState.IsSuspended = FALSE;
@@ -102,6 +110,10 @@ FlBool8 flApplicationRun(void) {
     ApplicationState.IsRunning = FALSE;
 
     flPlatformShutdown(&ApplicationState.Platform);
+
+    flEventUnregister(FlEventCodeApplicationQuit, 0, flApplicationOnEvent);
+    flEventUnregister(FlEventCodeKeyPressed, 0, flApplicationOnKey);
+    flEventUnregister(FlEventCodeKeyReleased, 0, flApplicationOnKey);
     
     flEventShutdown();
 
@@ -110,4 +122,46 @@ FlBool8 flApplicationRun(void) {
     flLoggingShutdown();
 
     return TRUE;
+}
+
+FlBool8 flApplicationOnEvent(FlUInt16 code, void* sender, void* listenerInstance, FlEventContext context) {
+    switch (code) {
+    case FlEventCodeApplicationQuit:
+        {
+            FL_LOG_INFO("FlEventCodeApplicationQuit recieved, shutting down.")
+            ApplicationState.IsRunning = FALSE;
+            return TRUE;
+        }
+    }
+
+    return FALSE;
+}
+
+FlBool8 flApplicationOnKey(FlUInt16 code, void* sender, void* listenerInstance, FlEventContext context) {
+    if (code == FlEventCodeKeyPressed) {
+        FlUInt16 keyCode = context.data.uint16[0];
+        if (keyCode == FlKeyEscape) {
+            // NOTE: Technically firing an event to itself, but there may be other listeners.
+            FlEventContext data = {};
+            flEventFire(FlEventCodeApplicationQuit, 0, data);
+
+            // Block anything else from processing this.
+            return TRUE;
+        } else if (keyCode == FlKeyA) {
+            // Example on checking for a key
+            FL_LOG_DEBUG("Explicit - A key pressed.")
+        } else {
+            FL_LOG_DEBUG("'%c' key pressed in window.", keyCode)
+        }
+    } else if (code == FlEventCodeKeyReleased) {
+        FlUInt16 keyCode = context.data.uint16[0];
+        if (keyCode == FlKeyB) {
+            // Example on checking for a key
+            FL_LOG_DEBUG("Explicit - B key released")
+        } else {
+            FL_LOG_DEBUG("'%c' key released in window.", keyCode)
+        }
+    }
+
+    return FALSE;
 }
