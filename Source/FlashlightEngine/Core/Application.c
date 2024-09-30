@@ -14,6 +14,8 @@
 
 #include "FlashlightEngine/Platform/Platform.h"
 
+#include "FlashlightEngine/Renderer/RendererFrontend.h"
+
 typedef struct FlApplicationState {
     FlGame* GameInstance;
     FlBool8 IsRunning;
@@ -63,6 +65,12 @@ FlBool8 flApplicationCreate(FlGame* gameInstance) {
         gameInstance->ApplicationConfiguration.StartPosY,
         gameInstance->ApplicationConfiguration.StartWidth, 
         gameInstance->ApplicationConfiguration.StartHeight)) {
+        return FALSE;
+    }
+
+    // Renderer startup
+    if (!flRendererInitialize(gameInstance->ApplicationConfiguration.Name, &ApplicationState.Platform)) {
+        FL_LOG_FATAL("Failed to initialize renderer. Application cannot continue.");
         return FALSE;
     }
 
@@ -116,6 +124,12 @@ FlBool8 flApplicationRun(void) {
                 break;
             }
 
+            // TODO: Refactor packet creation.
+            FlRenderPacket renderPacket;
+            renderPacket.DeltaTime = delta;
+
+            flRendererDrawFrame(&renderPacket);
+
             // Figure out how long the frame took.
             FlFloat64 frameEndTime = flPlatformGetAbsoluteTime();
             FlFloat64 frameElapsedTime = frameEndTime - frameStartTime;
@@ -145,6 +159,8 @@ FlBool8 flApplicationRun(void) {
     }
 
     ApplicationState.IsRunning = FALSE;
+
+    flRendererShutdown();
 
     flPlatformShutdown(&ApplicationState.Platform);
 

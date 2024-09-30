@@ -104,7 +104,7 @@ target("FlashlightEngine")
   add_defines("FL_BUILD")
 
   -- Add header and source files
-  for _, ext in ipairs({".h"}) do
+  for _, ext in ipairs({".h",  ".inl"}) do
     add_headerfiles("Include/(FlashlightEngine/**" .. ext .. ")")
     add_headerfiles("Source/FlashlightEngine/**" .. ext, {prefixdir = "private", install = false})
   end
