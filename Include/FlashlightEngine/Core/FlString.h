@@ -14,4 +14,7 @@ FL_API char* flStringDuplicate(const char* str);
 
 FL_API FlUInt64 flStringLength(const char* str);
 
+// Case-sensitive string comparison.
+FL_API FlBool8 flStringsEqual(const char* lhs, const char* rhs);
+
 #endif // FL_CORE_FLSTRING_H

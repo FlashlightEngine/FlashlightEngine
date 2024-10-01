@@ -10,7 +10,15 @@
 #include "FlashlightEngine/Prerequisites.h"
 #include "FlashlightEngine/Export.h"
 
+#include "FlashlightEngine/Core/Asserts.h"
+
 #include <vulkan/vulkan.h>
+
+// Check the given expression's result return value against VK_SUCCESS.
+#define VK_CHECK(expr)                 \
+    {                                  \
+        FL_ASSERT(expr == VK_SUCCESS); \
+    }
 
 typedef struct FlVulkanContext {
     VkInstance Instance;

@@ -11,6 +11,10 @@
 #include "FlashlightEngine/Core/Input.h"
 #include "FlashlightEngine/Core/FlString.h"
 
+#include "FlashlightEngine/Containers/DArray.h"
+
+#include "FlashlightEngine/Renderer/Vulkan/VulkanPlatform.h"
+
 #include <xcb/xcb.h>
 #include <X11/keysym.h>
 #include <X11/XKBlib.h>
@@ -328,6 +332,10 @@ void flPlatformSleep(FlUInt64 milliseconds) {
     ts.tv_sec = milliseconds / 1000;
     ts.tv_nsec = (milliseconds % 1000) * 1000 * 1000;
     nanosleep(&ts, 0);
+}
+
+void flPlatformGetRequiredExtensionNames(const char*** namesDArray) {
+    flDArrayPush(*namesDArray, &"VK_KHR_xcb_surface");
 }
 
 FlKeys flTranslateKeycode(FlUInt32 xKeycode) {

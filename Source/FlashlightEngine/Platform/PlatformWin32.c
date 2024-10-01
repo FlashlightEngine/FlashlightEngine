@@ -8,8 +8,12 @@
 #ifdef FL_PLATFORM_WINDOWS
 
 #include "FlashlightEngine/Core/Logger.h"
-#include "FlashlightEngine/Core/Input.h" 
+#include "FlashlightEngine/Core/Input.h"
 #include "FlashlightEngine/Core/FlString.h"
+
+#include "FlashlightEngine/Containers/DArray.h"
+
+#include "FlashlightEngine/Renderer/Vulkan/VulkanPlatform.h"
 
 #include <Windows.h>
 #include <windowsx.h> // Param input extraction
@@ -198,6 +202,10 @@ FlFloat64 flPlatformGetAbsoluteTime(void) {
 
 void flPlatformSleep(const FlUInt64 milliseconds) {
     Sleep((DWORD)milliseconds);
+}
+
+void flPlatformGetRequiredExtensionNames(const char*** namesDArray) {
+    flDArrayPush(*namesDArray, &"VK_KHR_win32_surface");
 }
 
 LRESULT CALLBACK flWin32ProcessMessage(const HWND hWnd, const FlUInt32 msg, const WPARAM wParam, const LPARAM lParam) {

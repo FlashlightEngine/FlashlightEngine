@@ -19,3 +19,7 @@ FL_API char* flStringDuplicate(const char* str) {
 FL_API FlUInt64 flStringLength(const char* str) {
     return strlen(str);
 }
+
+FL_API FlBool8 flStringsEqual(const char* lhs, const char* rhs) {
+    return strcmp(lhs, rhs) == 0;
+}
