@@ -22,14 +22,40 @@
         }                                                \
     }
 
+typedef struct FlVulkanSwapchainSupport {
+    VkSurfaceCapabilitiesKHR Capabilities;
+    FlUInt32 FormatCount;
+    VkSurfaceFormatKHR* Formats;
+    FlUInt32 PresentModeCount;
+    VkPresentModeKHR* PresentModes;
+} FlVulkanSwapchainSupport;
+
+typedef struct FlVulkanDevice {
+    VkPhysicalDevice PhysicalDevice;
+    VkDevice LogicalDevice;
+    FlVulkanSwapchainSupport SwapchainSupport;
+
+    FlInt32 GraphicsQueueIndex;
+    FlInt32 PresentQueueIndex;
+    FlInt32 TransferQueueIndex;
+
+    VkPhysicalDeviceProperties Properties;
+    VkPhysicalDeviceFeatures Features;
+    VkPhysicalDeviceMemoryProperties MemoryProperties;
+} FlVulkanDevice;
+
 typedef struct FlVulkanContext {
     VkInstance Instance;
 
     VkAllocationCallbacks* Allocator;
 
+    VkSurfaceKHR Surface;
+
 #ifdef FL_DEBUG
     VkDebugUtilsMessengerEXT DebugMessenger;
 #endif
+
+    FlVulkanDevice Device;
 } FlVulkanContext;
 
 #endif // FL_RENDERER_VULKAN_VULKANTYPES_INL

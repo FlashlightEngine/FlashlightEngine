@@ -28,6 +28,11 @@
 #include <stdio.h>
 #include <string.h>
 
+// For surface creation.
+#define VK_USE_PLATFORM_XCB_KHR
+#include <vulkan/vulkan.h>
+#include "FlashlightEngine/Renderer/Vulkan/VulkanTypes.inl"
+
 typedef struct FlInternalState {
     Display* Display;
     xcb_connection_t* Connection;
@@ -35,6 +40,7 @@ typedef struct FlInternalState {
     xcb_screen_t* Screen;
     xcb_atom_t WmProtocols;
     xcb_atom_t WmDeleteWin;
+    VkSurfaceKHR Surface;
 } FlInternalState;
 
 // Key translation
@@ -336,6 +342,29 @@ void flPlatformSleep(FlUInt64 milliseconds) {
 
 void flPlatformGetRequiredExtensionNames(const char*** namesDArray) {
     flDArrayPush(*namesDArray, &"VK_KHR_xcb_surface");
+}
+
+FlBool8 flPlatformCreateVulkanSurface(struct FlPlatformState* platformState,
+                                      struct FlVulkanContext* context) {
+    // Simply cold-cast to the known type.
+    FlInternalState* state = (FlInternalState*)platformState->InternalState;
+
+    VkXcbSurfaceCreateInfoKHR createInfo = {VK_STRUCTURE_TYPE_XCB_SURFACE_CREATE_INFO_KHR};
+    createInfo.connection = state->Connection;
+    createInfo.window = state->Window;
+
+    VkResult result = vkCreateXcbSurfaceKHR(
+        context->Instance, 
+        &createInfo, 
+        context->Allocator, 
+        &state->Surface);
+    if (result != VK_SUCCESS) {
+        FL_LOG_FATAL("Vulkan surface creation failed.")
+        return FALSE;
+    }
+
+    context->Surface = state->Surface;
+    return TRUE;
 }
 
 FlKeys flTranslateKeycode(FlUInt32 xKeycode) {

@@ -10,10 +10,16 @@
 #include "FlashlightEngine/Prerequisites.h"
 #include "FlashlightEngine/Export.h"
 
+struct FlPlatformState;
+struct FlVulkanContext;
+
 /**
  * Appends the names of required extensions for this platform to
  * the namesDArray, which should be created and passed in.
  */
 void flPlatformGetRequiredExtensionNames(const char*** namesDArray);
+
+FlBool8 flPlatformCreateVulkanSurface(struct FlPlatformState* platformState,
+                                      struct FlVulkanContext* context);
 
 #endif // FL_RENDERER_VULKAN_VULKANPLATFORM_H

@@ -14,15 +14,21 @@
 #include "FlashlightEngine/Containers/DArray.h"
 
 #include "FlashlightEngine/Renderer/Vulkan/VulkanPlatform.h"
+#include "FlashlightEngine/Renderer/Vulkan/VulkanTypes.inl"
 
 #include <Windows.h>
 #include <windowsx.h> // Param input extraction
 
 #include <stdlib.h>
 
+// For surface creation.
+#define VK_USE_PLATFORM_WIN32_KHR
+#include <vulkan/vulkan.h>
+
 typedef struct FlInternalState {
     HINSTANCE HInstance;
     HWND HWnd;
+    VkSurfaceKHR Surface;
 } FlInternalState;
 
 // Clock
@@ -206,6 +212,29 @@ void flPlatformSleep(const FlUInt64 milliseconds) {
 
 void flPlatformGetRequiredExtensionNames(const char*** namesDArray) {
     flDArrayPush(*namesDArray, &"VK_KHR_win32_surface");
+}
+
+FlBool8 flPlatformCreateVulkanSurface(struct FlPlatformState* platformState,
+                                      struct FlVulkanContext* context) {
+    // Simply cold-cast to the known type.
+    FlInternalState* state = (FlInternalState*)platformState->InternalState;
+
+    VkWin32SurfaceCreateInfoKHR createInfo = {VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR};
+    createInfo.hinstance = state->HInstance;
+    createInfo.hwnd = state->HWnd;
+
+    VkResult result = vkCreateWin32SurfaceKHR(
+        context->Instance, 
+        &createInfo, 
+        context->Allocator, 
+        &state->Surface);
+    if (result != VK_SUCCESS) {
+        FL_FATAL("Vulkan surface creation failed.");
+        return FALSE;
+    }
+
+    context->Surface = state->Surface;
+    return TRUE;
 }
 
 LRESULT CALLBACK flWin32ProcessMessage(const HWND hWnd, const FlUInt32 msg, const WPARAM wParam, const LPARAM lParam) {

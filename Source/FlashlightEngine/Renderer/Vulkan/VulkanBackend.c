@@ -6,6 +6,7 @@
 
 #include "FlashlightEngine/Renderer/Vulkan/VulkanTypes.inl"
 #include "FlashlightEngine/Renderer/Vulkan/VulkanPlatform.h"
+#include "FlashlightEngine/Renderer/Vulkan/VulkanDevice.h"
 
 #include "FlashlightEngine/Core/Logger.h"
 #include "FlashlightEngine/Core/FlString.h"
@@ -43,7 +44,7 @@ FlBool8 flVulkanRendererBackendInitialize(FlRendererBackend* backend, const char
 #ifdef FL_DEBUG
     flDArrayPush(requiredExtensions, &VK_EXT_DEBUG_UTILS_EXTENSION_NAME); // Debug utilities.
 
-    FL_LOG_DEBUG("Required Vulkan extensions:");
+    FL_LOG_DEBUG("Required Vulkan instance extensions:");
     FlUInt32 length = flDArrayLength(requiredExtensions);
     for (FlUInt32 i = 0; i < length; ++i) {
         FL_LOG_DEBUG("\t- %s", requiredExtensions[i]);
@@ -110,10 +111,10 @@ FlBool8 flVulkanRendererBackendInitialize(FlRendererBackend* backend, const char
 
 // Create the debug messenger.
 #ifdef FL_DEBUG
-    FL_LOG_DEBUG("Creating Vulkan debug messenger...")
+    FL_LOG_INFO("Creating Vulkan debug messenger...")
     FlUInt32 logSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT   |
-                           VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT; //|
-                           // VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT    |
+                           VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
+                           VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT;   // |
                            // VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT;
 
     VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo = {VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT};
@@ -127,8 +128,22 @@ FlBool8 flVulkanRendererBackendInitialize(FlRendererBackend* backend, const char
         (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(Context.Instance, "vkCreateDebugUtilsMessengerEXT");
     FL_ASSERT_MSG(func, "Failed to create debug messenger.")
     VK_CHECK(func(Context.Instance, &debugCreateInfo, Context.Allocator, &Context.DebugMessenger))
-    FL_LOG_DEBUG("Vulkan debug messenger created.")
+    FL_LOG_INFO("Vulkan debug messenger created.")
 #endif
+
+    // Surface creation.
+    FL_LOG_INFO("Creating Vulkan surface...")
+    if (!flPlatformCreateVulkanSurface(platformState, &Context)) {
+        FL_LOG_FATAL("Failed to create Vulkan surface.");
+        return FALSE;
+    }
+    FL_LOG_INFO("Vulkan surface created.")
+
+    // Device creation.
+    if (!flVulkanDeviceCreate(&Context)) {
+        FL_LOG_FATAL("Failed to create Vulkan device.");
+        return FALSE;
+    }
 
     FL_LOG_INFO("Vulkan renderer initialized successfully.")
     return TRUE;
@@ -136,13 +151,18 @@ FlBool8 flVulkanRendererBackendInitialize(FlRendererBackend* backend, const char
 
 void flVulkanRendererBackendShutdown(FlRendererBackend* backend) {
 #ifdef FL_DEBUG
-    FL_LOG_DEBUG("Destroying Vulkan debug messenger...")
     if (Context.DebugMessenger) {
+        FL_LOG_INFO("Destroying Vulkan debug messenger...")
         PFN_vkDestroyDebugUtilsMessengerEXT func = 
             (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(Context.Instance, "vkDestroyDebugUtilsMessengerEXT");
         func (Context.Instance, Context.DebugMessenger, Context.Allocator);
     }
 #endif
+
+    if (Context.Surface) {
+        FL_LOG_INFO("Destroying Vulkan surface...")
+        vkDestroySurfaceKHR(Context.Instance, Context.Surface, Context.Allocator);
+    }
     
     FL_LOG_INFO("Destroying Vulkan instance...")
     vkDestroyInstance(Context.Instance, Context.Allocator);
