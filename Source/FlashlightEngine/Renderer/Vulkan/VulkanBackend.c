@@ -14,6 +14,11 @@
 
 static FlVulkanContext Context;
 
+VKAPI_ATTR VkBool32 VKAPI_CALL flVkDebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+                                                VkDebugUtilsMessageTypeFlagsEXT messageTypes,
+                                                const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+                                                void* pUserData);
+
 FlBool8 flVulkanRendererBackendInitialize(FlRendererBackend* backend, const char* applicationName, struct FlPlatformState* platformState) {
     // TODO: Custom allocator.
     Context.Allocator = 0;
@@ -59,7 +64,7 @@ FlBool8 flVulkanRendererBackendInitialize(FlRendererBackend* backend, const char
 
     // The list of validation layers required.
     requiredValidationLayerNames = flDArrayCreate(const char*);
-    flDArrayPush(requiredValidationLayerNames, &"VK_LAYER_KHRONOS_validation")
+    flDArrayPush(requiredValidationLayerNames, &"VK_LAYER_KHRONOS_validation");
     requiredValidationLayerCount = flDArrayLength(requiredValidationLayerNames);
 
     // Obtain a list of available validation layers.
@@ -87,18 +92,59 @@ FlBool8 flVulkanRendererBackendInitialize(FlRendererBackend* backend, const char
     }
 
     FL_LOG_INFO("All required validation layers are present.")
+
+    flDArrayDestroy(availableLayers);
 #endif
 
     instanceInfo.enabledLayerCount = requiredValidationLayerCount;
     instanceInfo.ppEnabledLayerNames = requiredValidationLayerNames;
 
     VK_CHECK(vkCreateInstance(&instanceInfo, Context.Allocator, &Context.Instance));
+    FL_LOG_INFO("Vulkan Instance created.")
+
+    flDArrayDestroy(requiredExtensions);
+    
+#ifdef FL_DEBUG
+    flDArrayDestroy(requiredValidationLayerNames);
+#endif
+
+// Create the debug messenger.
+#ifdef FL_DEBUG
+    FL_LOG_DEBUG("Creating Vulkan debug messenger...")
+    FlUInt32 logSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT   |
+                           VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT; //|
+                           // VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT    |
+                           // VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT;
+
+    VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo = {VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT};
+    debugCreateInfo.messageSeverity = logSeverity;
+    debugCreateInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT     |
+                                  VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT |
+                                  VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT;
+    debugCreateInfo.pfnUserCallback = flVkDebugCallback;
+
+    PFN_vkCreateDebugUtilsMessengerEXT func = 
+        (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(Context.Instance, "vkCreateDebugUtilsMessengerEXT");
+    FL_ASSERT_MSG(func, "Failed to create debug messenger.")
+    VK_CHECK(func(Context.Instance, &debugCreateInfo, Context.Allocator, &Context.DebugMessenger))
+    FL_LOG_DEBUG("Vulkan debug messenger created.")
+#endif
 
     FL_LOG_INFO("Vulkan renderer initialized successfully.")
     return TRUE;
 }
 
 void flVulkanRendererBackendShutdown(FlRendererBackend* backend) {
+#ifdef FL_DEBUG
+    FL_LOG_DEBUG("Destroying Vulkan debug messenger...")
+    if (Context.DebugMessenger) {
+        PFN_vkDestroyDebugUtilsMessengerEXT func = 
+            (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(Context.Instance, "vkDestroyDebugUtilsMessengerEXT");
+        func (Context.Instance, Context.DebugMessenger, Context.Allocator);
+    }
+#endif
+    
+    FL_LOG_INFO("Destroying Vulkan instance...")
     vkDestroyInstance(Context.Instance, Context.Allocator);
 }
 
@@ -112,4 +158,28 @@ FlBool8 flVulkanRendererBackendBeginFrame(FlRendererBackend* backend, FlFloat32 
 
 FlBool8 flVulkanRendererBackendEndFrame(FlRendererBackend* backend, FlFloat32 deltaTime) {
     return TRUE;
+}
+
+VKAPI_ATTR VkBool32 VKAPI_CALL flVkDebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+                                                VkDebugUtilsMessageTypeFlagsEXT messageTypes,
+                                                const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+                                                void* pUserData) {
+    switch (messageSeverity) {
+        default:
+        case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
+            FL_LOG_ERROR("[Validation Layers][ERROR] %s", pCallbackData->pMessage);
+            break;
+        case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
+            FL_LOG_WARN("[Validation Layers][WARNING] %s", pCallbackData->pMessage);
+            break;
+        case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
+            FL_LOG_INFO("[Validation Layers][INFO] %s", pCallbackData->pMessage);
+            break;
+        case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
+            FL_LOG_TRACE("[Validation Layers][VERBOSE] %s", pCallbackData->pMessage);
+            break;
+    }
+
+    // Always return VK_FALSE, we don't want to abort the Vulkan call.
+    return VK_FALSE;
 }

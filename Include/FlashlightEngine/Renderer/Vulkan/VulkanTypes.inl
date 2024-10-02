@@ -26,6 +26,10 @@ typedef struct FlVulkanContext {
     VkInstance Instance;
 
     VkAllocationCallbacks* Allocator;
+
+#ifdef FL_DEBUG
+    VkDebugUtilsMessengerEXT DebugMessenger;
+#endif
 } FlVulkanContext;
 
 #endif // FL_RENDERER_VULKAN_VULKANTYPES_INL
