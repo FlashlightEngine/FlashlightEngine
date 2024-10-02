@@ -59,14 +59,14 @@ FlBool8 flVulkanRendererBackendInitialize(FlRendererBackend* backend, const char
 
     // The list of validation layers required.
     requiredValidationLayerNames = flDArrayCreate(const char*);
-    flDArrayPush(requiredValidationLayerNames, &"VK_LAYER_KHRONOS_validation");
+    flDArrayPush(requiredValidationLayerNames, &"VK_LAYER_KHRONOS_validation")
     requiredValidationLayerCount = flDArrayLength(requiredValidationLayerNames);
 
     // Obtain a list of available validation layers.
     FlUInt32 availableLayerCount = 0;
-    VK_CHECK(vkEnumerateInstanceLayerProperties(&availableLayerCount, 0));
+    VK_CHECK(vkEnumerateInstanceLayerProperties(&availableLayerCount, 0))
     VkLayerProperties* availableLayers = flDArrayReserve(VkLayerProperties, availableLayerCount);
-    VK_CHECK(vkEnumerateInstanceLayerProperties(&availableLayerCount, availableLayers));
+    VK_CHECK(vkEnumerateInstanceLayerProperties(&availableLayerCount, availableLayers))
 
     // Verify all layers are available.
     for (FlUInt32 i = 0; i < requiredValidationLayerCount; ++i) {
