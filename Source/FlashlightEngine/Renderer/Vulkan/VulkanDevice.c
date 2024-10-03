@@ -46,11 +46,121 @@ FlBool8 flVulkanDeviceCreate(FlVulkanContext* context) {
         return FALSE;
     }
 
+    FL_LOG_INFO("Creating Vulkan logical device...")
+    // NOTE: Do not create additional queues for shared indices.
+    FlBool8 presentSharesGraphicsQueue = context->Device.GraphicsQueueIndex == context->Device.PresentQueueIndex;
+    FlBool8 transferSharesGraphicsQueue = context->Device.GraphicsQueueIndex == context->Device.TransferQueueIndex;
+    FlUInt32 indexCount = 1;
+
+    if (!presentSharesGraphicsQueue) {
+        indexCount++;
+    }
+
+    if (!transferSharesGraphicsQueue) {
+        indexCount++;
+    }
+
+    FlUInt32 indices[indexCount];
+    FlUInt8 index = 0;
+    indices[index++] = context->Device.GraphicsQueueIndex;
+
+    if (!presentSharesGraphicsQueue) {
+        indices[index++] = context->Device.PresentQueueIndex;
+    }
+
+    if (!transferSharesGraphicsQueue) {
+        indices[index++] = context->Device.TransferQueueIndex;
+    }
+
+    VkDeviceQueueCreateInfo queueCreateInfos[indexCount];
+    for (FlUInt32 i = 0; i < indexCount; ++i) {
+        queueCreateInfos[i].sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+        queueCreateInfos[i].queueFamilyIndex = indices[i];
+        queueCreateInfos[i].queueCount = 1;
+        queueCreateInfos[i].flags = 0;
+        queueCreateInfos[i].pNext = 0;
+        const FlFloat32 queuePriority = 1.f;
+        queueCreateInfos[i].pQueuePriorities = &queuePriority;
+    }
+
+    // Request device features.
+    // TODO: Should be config driven.
+    VkPhysicalDeviceFeatures deviceFeatures = {};
+    deviceFeatures.samplerAnisotropy = VK_TRUE;
+
+    VkDeviceCreateInfo deviceCreateInfo = {VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO};
+    deviceCreateInfo.queueCreateInfoCount = indexCount;
+    deviceCreateInfo.pQueueCreateInfos = queueCreateInfos;
+    deviceCreateInfo.pEnabledFeatures = &deviceFeatures;
+    deviceCreateInfo.enabledExtensionCount = 1;
+    const char* extensionNames = VK_KHR_SWAPCHAIN_EXTENSION_NAME;
+    deviceCreateInfo.ppEnabledExtensionNames = &extensionNames;
+
+    // Deprecated and ignored, so pass nothing.
+    deviceCreateInfo.enabledLayerCount = 0;
+    deviceCreateInfo.ppEnabledLayerNames = 0;
+
+    VK_CHECK(vkCreateDevice(
+        context->Device.PhysicalDevice, 
+        &deviceCreateInfo, 
+        context->Allocator, 
+        &context->Device.LogicalDevice));
+
+    FL_LOG_INFO("Vulkan logical device created.")
+
+    vkGetDeviceQueue(context->Device.LogicalDevice, context->Device.GraphicsQueueIndex, 0, &context->Device.GraphicsQueue);
+    vkGetDeviceQueue(context->Device.LogicalDevice, context->Device.PresentQueueIndex, 0, &context->Device.PresentQueue);
+    vkGetDeviceQueue(context->Device.LogicalDevice, context->Device.TransferQueueIndex, 0, &context->Device.TransferQueue);
+
+    FL_LOG_INFO("Vulkan queues obtained.")
+
     return TRUE;
 }
 
 void flVulkanDeviceDestroy(FlVulkanContext* context) {
+    // Unset queues.
+    context->Device.GraphicsQueue = VK_NULL_HANDLE;
+    context->Device.PresentQueue = VK_NULL_HANDLE;
+    context->Device.TransferQueue = VK_NULL_HANDLE;
 
+    FL_LOG_INFO("Destroying Vulkan logical device...")
+    if (context->Device.LogicalDevice) {
+        vkDestroyDevice(context->Device.LogicalDevice, context->Allocator);
+        context->Device.LogicalDevice = VK_NULL_HANDLE;
+    }
+
+    // Physical devices are not destroyed.
+    FL_LOG_INFO("Releasing physical device resources...")
+    context->Device.PhysicalDevice = VK_NULL_HANDLE;
+
+    if (context->Device.SwapchainSupport.Formats) {
+        flFree(
+            context->Device.SwapchainSupport.Formats,
+            sizeof(VkSurfaceFormatKHR) * context->Device.SwapchainSupport.FormatCount,
+            FlMemoryTagRenderer
+        );
+        context->Device.SwapchainSupport.Formats = 0;
+        context->Device.SwapchainSupport.FormatCount = 0;
+    }
+
+    if (context->Device.SwapchainSupport.PresentModes) {
+        flFree(
+            context->Device.SwapchainSupport.PresentModes,
+            sizeof(VkPresentModeKHR) * context->Device.SwapchainSupport.PresentModeCount,
+            FlMemoryTagRenderer
+        );
+        context->Device.SwapchainSupport.PresentModes = 0;
+        context->Device.SwapchainSupport.PresentModeCount = 0;
+    }
+
+    flZeroMemory(
+        &context->Device.SwapchainSupport.Capabilities,
+        sizeof(context->Device.SwapchainSupport.Capabilities)
+    );
+
+    context->Device.GraphicsQueueIndex = UINT32_MAX;
+    context->Device.PresentQueueIndex = UINT32_MAX;
+    context->Device.TransferQueueIndex = UINT32_MAX;
 }
 
 FlBool8 flSelectPhysicalDevice(FlVulkanContext* context) {

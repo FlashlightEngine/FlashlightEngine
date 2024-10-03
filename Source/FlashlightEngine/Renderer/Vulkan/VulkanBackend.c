@@ -150,6 +150,8 @@ FlBool8 flVulkanRendererBackendInitialize(FlRendererBackend* backend, const char
 }
 
 void flVulkanRendererBackendShutdown(FlRendererBackend* backend) {
+    flVulkanDeviceDestroy(&Context);
+
 #ifdef FL_DEBUG
     if (Context.DebugMessenger) {
         FL_LOG_INFO("Destroying Vulkan debug messenger...")

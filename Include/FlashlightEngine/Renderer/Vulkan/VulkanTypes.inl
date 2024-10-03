@@ -35,9 +35,13 @@ typedef struct FlVulkanDevice {
     VkDevice LogicalDevice;
     FlVulkanSwapchainSupport SwapchainSupport;
 
-    FlInt32 GraphicsQueueIndex;
-    FlInt32 PresentQueueIndex;
-    FlInt32 TransferQueueIndex;
+    FlUInt32 GraphicsQueueIndex;
+    FlUInt32 PresentQueueIndex;
+    FlUInt32 TransferQueueIndex;
+
+    VkQueue GraphicsQueue;
+    VkQueue PresentQueue;
+    VkQueue TransferQueue;
 
     VkPhysicalDeviceProperties Properties;
     VkPhysicalDeviceFeatures Features;
