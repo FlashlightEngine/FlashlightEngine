@@ -60,27 +60,27 @@ FlBool8 flVulkanDeviceCreate(FlVulkanContext* context) {
         indexCount++;
     }
 
-    FlUInt32 indices[indexCount];
-    FlUInt8 index = 0;
-    indices[index++] = context->Device.GraphicsQueueIndex;
+    FlUInt32* indices = flDArrayCreate(FlUInt32);
+    flDArrayPush(indices, context->Device.GraphicsQueueIndex);
 
     if (!presentSharesGraphicsQueue) {
-        indices[index++] = context->Device.PresentQueueIndex;
+        flDArrayPush(indices, context->Device.PresentQueueIndex);
     }
 
     if (!transferSharesGraphicsQueue) {
-        indices[index++] = context->Device.TransferQueueIndex;
+        flDArrayPush(indices, context->Device.TransferQueueIndex);
     }
 
-    VkDeviceQueueCreateInfo queueCreateInfos[indexCount];
+    VkDeviceQueueCreateInfo* queueCreateInfos = flDArrayCreate(VkDeviceQueueCreateInfo);
     for (FlUInt32 i = 0; i < indexCount; ++i) {
-        queueCreateInfos[i].sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-        queueCreateInfos[i].queueFamilyIndex = indices[i];
-        queueCreateInfos[i].queueCount = 1;
-        queueCreateInfos[i].flags = 0;
-        queueCreateInfos[i].pNext = 0;
+        VkDeviceQueueCreateInfo queueCreateInfo = { VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO };
+        queueCreateInfo.queueFamilyIndex = indices[i];
+        queueCreateInfo.queueCount = 1;
+        queueCreateInfo.flags = 0;
+        queueCreateInfo.pNext = 0;
         const FlFloat32 queuePriority = 1.f;
-        queueCreateInfos[i].pQueuePriorities = &queuePriority;
+        queueCreateInfo.pQueuePriorities = &queuePriority;
+        flDArrayPush(queueCreateInfos, queueCreateInfo);
     }
 
     // Request device features.
@@ -113,6 +113,9 @@ FlBool8 flVulkanDeviceCreate(FlVulkanContext* context) {
     vkGetDeviceQueue(context->Device.LogicalDevice, context->Device.TransferQueueIndex, 0, &context->Device.TransferQueue);
 
     FL_LOG_INFO("Vulkan queues obtained.")
+
+    flDArrayDestroy(indices);
+    flDArrayDestroy(queueCreateInfos);
 
     return TRUE;
 }
@@ -171,7 +174,7 @@ FlBool8 flSelectPhysicalDevice(FlVulkanContext* context) {
         return FALSE;
     }
     
-    VkPhysicalDevice physicalDevices[physicalDeviceCount];
+    VkPhysicalDevice* physicalDevices = flDArrayReserve(VkPhysicalDevice, physicalDeviceCount);
     VK_CHECK(vkEnumeratePhysicalDevices(context->Instance, &physicalDeviceCount, physicalDevices))
 
     for (FlUInt32 i = 0; i < physicalDeviceCount; ++i) {
@@ -287,6 +290,8 @@ FlBool8 flSelectPhysicalDevice(FlVulkanContext* context) {
             context->Device.MemoryProperties = memoryProperties;
             break;
         }
+
+        flDArrayDestroy(requirements.DeviceExtensionNames);
     }
     
     // Ensure a device was selected.
@@ -294,6 +299,7 @@ FlBool8 flSelectPhysicalDevice(FlVulkanContext* context) {
         FL_LOG_ERROR("No physical devices which meet the requirements were found.")
         return FALSE;
     }
+
 
     FL_LOG_INFO("Physical device selected successfully.")
     return TRUE;
@@ -370,7 +376,7 @@ FlBool8 flPhysicalDeviceCheckRequirements(
 
     FlUInt32 queueFamilyCount = 0;
     vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, 0);
-    VkQueueFamilyProperties queueFamilies[queueFamilyCount];
+    VkQueueFamilyProperties* queueFamilies = flDArrayReserve(VkQueueFamilyProperties, queueFamilyCount);
     vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies);
 
     // Look at each queue and see what queues it supports.
@@ -396,7 +402,7 @@ FlBool8 flPhysicalDeviceCheckRequirements(
             // Take the index if it is the current lowest. This increases
             // liklihood that it is a dedicated transfer queue.
             if (currentTransferScore <= minTransferScore) {
-                minTransferScore = currentTransferScore;
+                minTransferScore = (FlUInt8)currentTransferScore;
                 outQueueFamilyInfo->TransferFamilyIndex = i;
             }
         }

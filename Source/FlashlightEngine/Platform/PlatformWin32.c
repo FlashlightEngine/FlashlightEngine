@@ -24,6 +24,7 @@
 // For surface creation.
 #define VK_USE_PLATFORM_WIN32_KHR
 #include <vulkan/vulkan.h>
+#include <vulkan/vulkan_win32.h>
 
 typedef struct FlInternalState {
     HINSTANCE HInstance;
@@ -229,7 +230,7 @@ FlBool8 flPlatformCreateVulkanSurface(struct FlPlatformState* platformState,
         context->Allocator, 
         &state->Surface);
     if (result != VK_SUCCESS) {
-        FL_FATAL("Vulkan surface creation failed.");
+        FL_LOG_FATAL("Vulkan surface creation failed.");
         return FALSE;
     }
 
