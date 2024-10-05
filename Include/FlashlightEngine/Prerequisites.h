@@ -114,5 +114,6 @@ STATIC_ASSERT(sizeof(FlFloat64) == 8, "Expected FlFloat64 to be 8 bytes.");
 #endif
 
 #define FL_UNUSED(a) (void)(a)
+#define FL_CLAMP(value, min, max) (value <= min) ? min : (value >= max) ? max : value
 
 #endif // FL_PREREQUISITES_H

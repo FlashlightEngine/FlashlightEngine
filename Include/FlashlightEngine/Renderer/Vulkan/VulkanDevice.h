@@ -21,4 +21,6 @@ void flVulkanDeviceQuerySwapchainSupport(
     VkSurfaceKHR surface, 
     FlVulkanSwapchainSupport* outSupportInfo);
 
+FlBool8 flVulkanDeviceDetectDepthFormat(FlVulkanDevice* device);
+
 #endif // FL_RENDERER_VULKAN_VULKANDEVICE_H

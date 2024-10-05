@@ -46,9 +46,35 @@ typedef struct FlVulkanDevice {
     VkPhysicalDeviceProperties Properties;
     VkPhysicalDeviceFeatures Features;
     VkPhysicalDeviceMemoryProperties MemoryProperties;
+
+    VkFormat DepthFormat;
 } FlVulkanDevice;
 
+typedef struct FlVulkanImage {
+    VkImage Handle;
+    VkDeviceMemory Memory;
+    VkImageView ImageView;
+    FlUInt32 Width;
+    FlUInt32 Height;
+} FlVulkanImage;
+
+typedef struct FlVulkanSwapchain {
+    VkSurfaceFormatKHR ImageFormat;
+    FlUInt8 MaxFramesInFlight;
+
+    VkSwapchainKHR Handle;
+
+    FlUInt32 ImageCount;
+    VkImage* Images;
+    VkImageView* ImageViews;
+
+    FlVulkanImage DepthAttachment;
+} FlVulkanSwapchain;
+
 typedef struct FlVulkanContext {
+    FlUInt32 FramebufferWidth;
+    FlUInt32 FramebufferHeight;
+
     VkInstance Instance;
 
     VkAllocationCallbacks* Allocator;
@@ -60,6 +86,14 @@ typedef struct FlVulkanContext {
 #endif
 
     FlVulkanDevice Device;
+
+    FlVulkanSwapchain Swapchain;
+    FlUInt32 ImageIndex;
+    FlUInt32 CurrentFrame;
+
+    FlBool8 RecreatingSwapchain;
+
+    FlInt32 (*FindMemoryIndex)(FlUInt32 typeFilter, FlUInt32 propertyFlags);
 } FlVulkanContext;
 
 #endif // FL_RENDERER_VULKAN_VULKANTYPES_INL

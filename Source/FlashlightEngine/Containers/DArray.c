@@ -10,7 +10,7 @@
 void* _flDArrayCreate(FlUInt64 length, FlUInt64 stride) {
     FlUInt64 headerSize = FlDarrayFieldLength * sizeof(FlUInt64);
     FlUInt64 arraySize = length * stride;
-    FlUInt64* newArray = flAllocate(headerSize + arraySize, FlMemoryTagDArray);
+    FlUInt64* newArray = (FlUInt64*)flAllocate(headerSize + arraySize, FlMemoryTagDArray);
     flSetMemory(newArray, 0, headerSize + arraySize);
     newArray[FlDArrayCapacity] = length;
     newArray[FlDArrayLength] = 0;

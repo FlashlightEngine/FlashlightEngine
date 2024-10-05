@@ -10,7 +10,7 @@
 
 FL_API char* flStringDuplicate(const char* str) {
     FlUInt64 length = flStringLength(str);
-    char* copy = flAllocate(length + 1, FlMemoryTagString);
+    char* copy = (char*)flAllocate(length + 1, FlMemoryTagString);
     flCopyMemory(copy, str, length + 1);
     
     return copy;

@@ -72,13 +72,17 @@ FlBool8 flVulkanDeviceCreate(FlVulkanContext* context) {
     }
 
     VkDeviceQueueCreateInfo* queueCreateInfos = flDArrayCreate(VkDeviceQueueCreateInfo);
+    const FlFloat32 queuePriority = 1.f;
     for (FlUInt32 i = 0; i < indexCount; ++i) {
         VkDeviceQueueCreateInfo queueCreateInfo = { VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO };
         queueCreateInfo.queueFamilyIndex = indices[i];
         queueCreateInfo.queueCount = 1;
+        // TODO: Enable this for a future enhancement.
+        // if (indices[i] == context->Device.PhysicalDevice) {
+        //     queueCreateInfo.queueCount = 2;
+        // }
         queueCreateInfo.flags = 0;
         queueCreateInfo.pNext = 0;
-        const FlFloat32 queuePriority = 1.f;
         queueCreateInfo.pQueuePriorities = &queuePriority;
         flDArrayPush(queueCreateInfos, queueCreateInfo);
     }
@@ -324,7 +328,7 @@ void flVulkanDeviceQuerySwapchainSupport(
 
     if (outSupportInfo->FormatCount != 0) {
         if (!outSupportInfo->Formats) {
-            outSupportInfo->Formats = flAllocate(sizeof(VkSurfaceFormatKHR) * outSupportInfo->FormatCount, FlMemoryTagRenderer);
+            outSupportInfo->Formats = (VkSurfaceFormatKHR*)flAllocate(sizeof(VkSurfaceFormatKHR) * outSupportInfo->FormatCount, FlMemoryTagRenderer);
         }
         VK_CHECK(vkGetPhysicalDeviceSurfaceFormatsKHR(
             physicalDevice,
@@ -341,7 +345,7 @@ void flVulkanDeviceQuerySwapchainSupport(
 
     if (outSupportInfo->PresentModeCount != 0) {
         if (!outSupportInfo->PresentModes) {
-            outSupportInfo->PresentModes = flAllocate(sizeof(VkPresentModeKHR) * outSupportInfo->PresentModeCount, FlMemoryTagRenderer);
+            outSupportInfo->PresentModes = (VkPresentModeKHR*)flAllocate(sizeof(VkPresentModeKHR) * outSupportInfo->PresentModeCount, FlMemoryTagRenderer);
         }
         VK_CHECK(vkGetPhysicalDeviceSurfacePresentModesKHR(
             physicalDevice, 
@@ -349,6 +353,33 @@ void flVulkanDeviceQuerySwapchainSupport(
             &outSupportInfo->PresentModeCount,
             outSupportInfo->PresentModes));
     }
+}
+
+FlBool8 flVulkanDeviceDetectDepthFormat(FlVulkanDevice* device) {
+    // Format candidates.
+    const FlUInt64 candidateCount = 3;
+    VkFormat candidates[3] = {
+        VK_FORMAT_D32_SFLOAT,
+        VK_FORMAT_D32_SFLOAT_S8_UINT,
+        VK_FORMAT_D24_UNORM_S8_UINT
+    };
+
+    VkFormatFeatureFlags flags = VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT;
+
+    for (FlUInt64 i = 0; i < candidateCount; ++i) {
+        VkFormatProperties properties;
+        vkGetPhysicalDeviceFormatProperties(device->PhysicalDevice, candidates[i], &properties);
+
+        if ((properties.linearTilingFeatures & flags) == flags) {
+            device->DepthFormat = candidates[i];
+            return TRUE;
+        } else if ((properties.optimalTilingFeatures & flags) == flags) {
+            device->DepthFormat = candidates[i];
+            return TRUE;
+        }
+    }
+
+    return FALSE;
 }
 
 FlBool8 flPhysicalDeviceCheckRequirements(

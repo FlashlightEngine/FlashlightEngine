@@ -7,6 +7,7 @@
 #include "FlashlightEngine/Renderer/Vulkan/VulkanTypes.inl"
 #include "FlashlightEngine/Renderer/Vulkan/VulkanPlatform.h"
 #include "FlashlightEngine/Renderer/Vulkan/VulkanDevice.h"
+#include "FlashlightEngine/Renderer/Vulkan/VulkanSwapchain.h"
 
 #include "FlashlightEngine/Core/Logger.h"
 #include "FlashlightEngine/Core/FlString.h"
@@ -20,7 +21,11 @@ VKAPI_ATTR VkBool32 VKAPI_CALL flVkDebugCallback(VkDebugUtilsMessageSeverityFlag
                                                 const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
                                                 void* pUserData);
 
+FlInt32 flVulkanBackendFindMemoryIndex(FlUInt32 typeFilter, FlUInt32 propertyFlags);
+
 FlBool8 flVulkanRendererBackendInitialize(FlRendererBackend* backend, const char* applicationName, struct FlPlatformState* platformState) {
+    Context.FindMemoryIndex = flVulkanBackendFindMemoryIndex;
+    
     // TODO: Custom allocator.
     Context.Allocator = 0;
 
@@ -145,11 +150,18 @@ FlBool8 flVulkanRendererBackendInitialize(FlRendererBackend* backend, const char
         return FALSE;
     }
 
+    // Swapchain creation.
+    flVulkanSwapchainCreate(&Context, Context.FramebufferWidth, Context.FramebufferHeight, &Context.Swapchain);
+
     FL_LOG_INFO("Vulkan renderer initialized successfully.")
     return TRUE;
 }
 
 void flVulkanRendererBackendShutdown(FlRendererBackend* backend) {
+    FL_LOG_INFO("Destroying Vulkan swapchain...")
+    flVulkanSwapchainDestroy(&Context, &Context.Swapchain);
+
+    FL_LOG_INFO("Destroying Vulkan device...")
     flVulkanDeviceDestroy(&Context);
 
 #ifdef FL_DEBUG
@@ -204,4 +216,19 @@ VKAPI_ATTR VkBool32 VKAPI_CALL flVkDebugCallback(VkDebugUtilsMessageSeverityFlag
 
     // Always return VK_FALSE, we don't want to abort the Vulkan call.
     return VK_FALSE;
+}
+
+FlInt32 flVulkanBackendFindMemoryIndex(FlUInt32 typeFilter, FlUInt32 propertyFlags) {
+    VkPhysicalDeviceMemoryProperties memoryProperties;
+    vkGetPhysicalDeviceMemoryProperties(Context.Device.PhysicalDevice, &memoryProperties);
+
+    for (FlUInt32 i = 0; i < memoryProperties.memoryTypeCount; ++i) {
+        // Check each memory type to see if its bit is set to one.
+        if (typeFilter & (1 << i) && (memoryProperties.memoryTypes[i].propertyFlags & propertyFlags) == propertyFlags) {
+            return i;
+        }
+    }
+
+    FL_LOG_WARN("Unable to find a suitable memory type.")
+    return -1;
 }
