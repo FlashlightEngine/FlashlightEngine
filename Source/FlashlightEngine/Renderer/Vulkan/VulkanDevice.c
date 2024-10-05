@@ -118,6 +118,14 @@ FlBool8 flVulkanDeviceCreate(FlVulkanContext* context) {
 
     FL_LOG_INFO("Vulkan queues obtained.")
 
+    // Create a command pool for graphics queue.
+    VkCommandPoolCreateInfo poolCreateInfo = {VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO};
+    poolCreateInfo.queueFamilyIndex = context->Device.GraphicsQueueIndex;
+    poolCreateInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+
+    VK_CHECK(vkCreateCommandPool(context->Device.LogicalDevice, &poolCreateInfo, context->Allocator, &context->Device.GraphicsCommandPool))
+    FL_LOG_INFO("Graphics command pool created.")
+
     flDArrayDestroy(indices);
     flDArrayDestroy(queueCreateInfos);
 
@@ -125,6 +133,8 @@ FlBool8 flVulkanDeviceCreate(FlVulkanContext* context) {
 }
 
 void flVulkanDeviceDestroy(FlVulkanContext* context) {
+    vkDestroyCommandPool(context->Device.LogicalDevice, context->Device.GraphicsCommandPool, context->Allocator);
+
     // Unset queues.
     context->Device.GraphicsQueue = VK_NULL_HANDLE;
     context->Device.PresentQueue = VK_NULL_HANDLE;

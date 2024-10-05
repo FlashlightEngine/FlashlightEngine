@@ -247,7 +247,7 @@ LRESULT CALLBACK flWin32ProcessMessage(const HWND hWnd, const FlUInt32 msg, cons
     case WM_CLOSE:
         FlEventContext data = {};
         flEventFire(FlEventCodeApplicationQuit, 0, data);
-        return TRUE;
+        return 0;
     case WM_DESTROY:
         PostQuitMessage(0);
         return 0;

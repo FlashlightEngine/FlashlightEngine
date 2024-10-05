@@ -43,6 +43,8 @@ typedef struct FlVulkanDevice {
     VkQueue PresentQueue;
     VkQueue TransferQueue;
 
+    VkCommandPool GraphicsCommandPool;
+
     VkPhysicalDeviceProperties Properties;
     VkPhysicalDeviceFeatures Features;
     VkPhysicalDeviceMemoryProperties MemoryProperties;
@@ -124,12 +126,14 @@ typedef struct FlVulkanContext {
 
     FlVulkanSwapchain Swapchain;
     FlVulkanRenderPass MainRenderPass;
-    
+
+    // DArray
+    FlVulkanCommandBuffer* GraphicsCommandBuffers;
+
     FlUInt32 ImageIndex;
     FlUInt32 CurrentFrame;
 
     FlBool8 RecreatingSwapchain;
-
 
     FlInt32 (*FindMemoryIndex)(FlUInt32 typeFilter, FlUInt32 propertyFlags);
 } FlVulkanContext;

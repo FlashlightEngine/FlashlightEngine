@@ -9,9 +9,11 @@
 #include "FlashlightEngine/Renderer/Vulkan/VulkanDevice.h"
 #include "FlashlightEngine/Renderer/Vulkan/VulkanSwapchain.h"
 #include "FlashlightEngine/Renderer/Vulkan/VulkanRenderPass.h"
+#include "FlashlightEngine/Renderer/Vulkan/VulkanCommandBuffer.h"
 
 #include "FlashlightEngine/Core/Logger.h"
 #include "FlashlightEngine/Core/FlString.h"
+#include "FlashlightEngine/Core/FlMemory.h"
 
 #include "FlashlightEngine/Containers/DArray.h"
 
@@ -22,10 +24,12 @@ VKAPI_ATTR VkBool32 VKAPI_CALL flVkDebugCallback(VkDebugUtilsMessageSeverityFlag
                                                 const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
                                                 void* pUserData);
 
-FlInt32 flVulkanBackendFindMemoryIndex(FlUInt32 typeFilter, FlUInt32 propertyFlags);
+FlInt32 flVulkanRendererBackendFindMemoryIndex(FlUInt32 typeFilter, FlUInt32 propertyFlags);
+
+void flVulkanRendererBackendCreateCommandBuffers(FlRendererBackend* backend);
 
 FlBool8 flVulkanRendererBackendInitialize(FlRendererBackend* backend, const char* applicationName, struct FlPlatformState* platformState) {
-    Context.FindMemoryIndex = flVulkanBackendFindMemoryIndex;
+    Context.FindMemoryIndex = flVulkanRendererBackendFindMemoryIndex;
     
     // TODO: Custom allocator.
     Context.Allocator = 0;
@@ -164,11 +168,21 @@ FlBool8 flVulkanRendererBackendInitialize(FlRendererBackend* backend, const char
         0
     );
 
+    flVulkanRendererBackendCreateCommandBuffers(backend);
+
     FL_LOG_INFO("Vulkan renderer initialized successfully.")
     return TRUE;
 }
 
 void flVulkanRendererBackendShutdown(FlRendererBackend* backend) {
+    for (FlUInt32 i = 0; i < Context.Swapchain.ImageCount; ++i) {
+        if (Context.GraphicsCommandBuffers[i].Handle) {
+            flVulkanCommandBufferFree(&Context, Context.Device.GraphicsCommandPool, &Context.GraphicsCommandBuffers[i]);
+            Context.GraphicsCommandBuffers[i].Handle = VK_NULL_HANDLE;
+        }
+    }
+    flDArrayDestroy(Context.GraphicsCommandBuffers);
+
     flVulkanRenderPassDestroy(&Context, &Context.MainRenderPass);
 
     FL_LOG_INFO("Destroying Vulkan swapchain...")
@@ -231,7 +245,7 @@ VKAPI_ATTR VkBool32 VKAPI_CALL flVkDebugCallback(VkDebugUtilsMessageSeverityFlag
     return VK_FALSE;
 }
 
-FlInt32 flVulkanBackendFindMemoryIndex(FlUInt32 typeFilter, FlUInt32 propertyFlags) {
+FlInt32 flVulkanRendererBackendFindMemoryIndex(FlUInt32 typeFilter, FlUInt32 propertyFlags) {
     VkPhysicalDeviceMemoryProperties memoryProperties;
     vkGetPhysicalDeviceMemoryProperties(Context.Device.PhysicalDevice, &memoryProperties);
 
@@ -244,4 +258,24 @@ FlInt32 flVulkanBackendFindMemoryIndex(FlUInt32 typeFilter, FlUInt32 propertyFla
 
     FL_LOG_WARN("Unable to find a suitable memory type.")
     return -1;
+}
+
+void flVulkanRendererBackendCreateCommandBuffers(FlRendererBackend* backend) {
+    if (!Context.GraphicsCommandBuffers) {
+        Context.GraphicsCommandBuffers = flDArrayReserve(FlVulkanCommandBuffer, Context.Swapchain.ImageCount);
+        for (FlUInt32 i = 0; i < Context.Swapchain.ImageCount; ++i) {
+            flZeroMemory(&Context.GraphicsCommandBuffers[i], sizeof(FlVulkanCommandBuffer));
+        }
+    }
+
+    
+    for (FlUInt32 i = 0; i < Context.Swapchain.ImageCount; ++i) {
+        if (Context.GraphicsCommandBuffers[i].Handle) {
+            flVulkanCommandBufferFree(&Context, Context.Device.GraphicsCommandPool, &Context.GraphicsCommandBuffers[i]);
+        }
+        flZeroMemory(&Context.GraphicsCommandBuffers[i], sizeof(FlVulkanCommandBuffer));
+        flVulkanCommandBufferAllocate(&Context, Context.Device.GraphicsCommandPool, TRUE, &Context.GraphicsCommandBuffers[i]);
+    }
+
+    FL_LOG_INFO("Vulkan command buffers created.")
 }
