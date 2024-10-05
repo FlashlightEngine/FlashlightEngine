@@ -10,6 +10,7 @@
 #include "FlashlightEngine/Core/Logger.h"
 #include "FlashlightEngine/Core/Input.h"
 #include "FlashlightEngine/Core/FlString.h"
+#include "FlashlightEngine/Core/Event.h"
 
 #include "FlashlightEngine/Containers/DArray.h"
 
@@ -244,8 +245,9 @@ LRESULT CALLBACK flWin32ProcessMessage(const HWND hWnd, const FlUInt32 msg, cons
         // Notify the OS that erasing will be handled by the application to prevent flickering.
         return 1;
     case WM_CLOSE:
-        // TODO: Fire an event for the application to quit.
-        return 0;
+        FlEventContext data = {};
+        flEventFire(FlEventCodeApplicationQuit, 0, data);
+        return TRUE;
     case WM_DESTROY:
         PostQuitMessage(0);
         return 0;
