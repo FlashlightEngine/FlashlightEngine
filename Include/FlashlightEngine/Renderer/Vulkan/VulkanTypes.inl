@@ -58,6 +58,26 @@ typedef struct FlVulkanImage {
     FlUInt32 Height;
 } FlVulkanImage;
 
+typedef enum FlVulkanRenderPassState {
+    FlVulkanRenderPassStateReady,
+    FlVulkanRenderPassStateRecording,
+    FlVulkanRenderPassStateInRenderPass,
+    FlVulkanRenderPassStateRecordingEnded,
+    FlVulkanRenderPassStateSubmitted,
+    FlVulkanRenderPassStateNotAllocated
+} FlVulkanRenderPassState;
+
+typedef struct FlVulkanRenderPass {
+    VkRenderPass Handle;
+    FlFloat32 X, Y, W, H;
+    FlFloat32 R, G, B, A;
+
+    FlFloat32 Depth;
+    FlUInt32 Stencil;
+
+    FlVulkanRenderPassState State;
+} FlVulkanRenderPass;
+
 typedef struct FlVulkanSwapchain {
     VkSurfaceFormatKHR ImageFormat;
     FlUInt8 MaxFramesInFlight;
@@ -70,6 +90,21 @@ typedef struct FlVulkanSwapchain {
 
     FlVulkanImage DepthAttachment;
 } FlVulkanSwapchain;
+
+typedef enum FlVulkanCommandBufferState {
+    FlVulkanCommandBufferStateReady,
+    FlVulkanCommandBufferStateRecording,
+    FlVulkanCommandBufferStateInRenderPass,
+    FlVulkanCommandBufferStateRecordingEnded,
+    FlVulkanCommandBufferStateSubmitted,
+    FlVulkanCommandBufferStateNotAllocated
+} FlVulkanCommandBufferState;
+
+typedef struct FlVulkanCommandBuffer {
+    VkCommandBuffer Handle;
+
+    FlVulkanCommandBufferState State;
+} FlVulkanCommandBuffer;
 
 typedef struct FlVulkanContext {
     FlUInt32 FramebufferWidth;
@@ -88,10 +123,13 @@ typedef struct FlVulkanContext {
     FlVulkanDevice Device;
 
     FlVulkanSwapchain Swapchain;
+    FlVulkanRenderPass MainRenderPass;
+    
     FlUInt32 ImageIndex;
     FlUInt32 CurrentFrame;
 
     FlBool8 RecreatingSwapchain;
+
 
     FlInt32 (*FindMemoryIndex)(FlUInt32 typeFilter, FlUInt32 propertyFlags);
 } FlVulkanContext;

@@ -8,6 +8,7 @@
 #include "FlashlightEngine/Renderer/Vulkan/VulkanPlatform.h"
 #include "FlashlightEngine/Renderer/Vulkan/VulkanDevice.h"
 #include "FlashlightEngine/Renderer/Vulkan/VulkanSwapchain.h"
+#include "FlashlightEngine/Renderer/Vulkan/VulkanRenderPass.h"
 
 #include "FlashlightEngine/Core/Logger.h"
 #include "FlashlightEngine/Core/FlString.h"
@@ -153,11 +154,23 @@ FlBool8 flVulkanRendererBackendInitialize(FlRendererBackend* backend, const char
     // Swapchain creation.
     flVulkanSwapchainCreate(&Context, Context.FramebufferWidth, Context.FramebufferHeight, &Context.Swapchain);
 
+    // Render pass creation.
+    flVulkanRenderPassCreate(
+        &Context,
+        &Context.MainRenderPass,
+        0, 0, Context.FramebufferWidth, Context.FramebufferHeight,
+        0.0f, 0.0f, 0.2f, 1.0f,
+        1.0f,
+        0
+    );
+
     FL_LOG_INFO("Vulkan renderer initialized successfully.")
     return TRUE;
 }
 
 void flVulkanRendererBackendShutdown(FlRendererBackend* backend) {
+    flVulkanRenderPassDestroy(&Context, &Context.MainRenderPass);
+
     FL_LOG_INFO("Destroying Vulkan swapchain...")
     flVulkanSwapchainDestroy(&Context, &Context.Swapchain);
 
