@@ -93,6 +93,8 @@ void flVulkanSwapchainPresent(
     } else if (result != VK_SUCCESS) {
         FL_LOG_FATAL("Failed to present swapchain image.")
     }
+
+    context->CurrentFrame = (context->CurrentFrame + 1) % swapchain->MaxFramesInFlight;
 }
 
 void flVulkanSwapchainInternalCreate(FlVulkanContext* context, FlUInt32 width, FlUInt32 height, FlVulkanSwapchain* swapchain) {
@@ -231,7 +233,7 @@ void flVulkanSwapchainInternalCreate(FlVulkanContext* context, FlUInt32 width, F
         &swapchain->DepthAttachment
     );
     
-    FL_LOG_INFO("Vulkan swapchain created successfully.")
+    FL_LOG_DEBUG("Vulkan swapchain created successfully.")
 }
 
 void flVulkanSwapchainInternalDestroy(FlVulkanContext* context, FlVulkanSwapchain* swapchain) {

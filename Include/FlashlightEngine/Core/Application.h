@@ -32,4 +32,6 @@ typedef struct FlApplicationConfiguration {
 FL_API FlBool8 flApplicationCreate(struct FlGame* gameInstance);
 FL_API FlBool8 flApplicationRun(void);
 
+void flApplicationGetFramebufferSize(FlUInt32* width, FlUInt32* height);
+
 #endif // FL_CORE_APPLICATION_H

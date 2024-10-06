@@ -46,7 +46,7 @@ FlBool8 flVulkanDeviceCreate(FlVulkanContext* context) {
         return FALSE;
     }
 
-    FL_LOG_INFO("Creating Vulkan logical device...")
+    FL_LOG_DEBUG("Creating Vulkan logical device...")
     // NOTE: Do not create additional queues for shared indices.
     FlBool8 presentSharesGraphicsQueue = context->Device.GraphicsQueueIndex == context->Device.PresentQueueIndex;
     FlBool8 transferSharesGraphicsQueue = context->Device.GraphicsQueueIndex == context->Device.TransferQueueIndex;
@@ -110,13 +110,13 @@ FlBool8 flVulkanDeviceCreate(FlVulkanContext* context) {
         context->Allocator, 
         &context->Device.LogicalDevice));
 
-    FL_LOG_INFO("Vulkan logical device created.")
+    FL_LOG_DEBUG("Vulkan logical device created.")
 
     vkGetDeviceQueue(context->Device.LogicalDevice, context->Device.GraphicsQueueIndex, 0, &context->Device.GraphicsQueue);
     vkGetDeviceQueue(context->Device.LogicalDevice, context->Device.PresentQueueIndex, 0, &context->Device.PresentQueue);
     vkGetDeviceQueue(context->Device.LogicalDevice, context->Device.TransferQueueIndex, 0, &context->Device.TransferQueue);
 
-    FL_LOG_INFO("Vulkan queues obtained.")
+    FL_LOG_DEBUG("Vulkan queues obtained.")
 
     // Create a command pool for graphics queue.
     VkCommandPoolCreateInfo poolCreateInfo = {VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO};
@@ -124,7 +124,7 @@ FlBool8 flVulkanDeviceCreate(FlVulkanContext* context) {
     poolCreateInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 
     VK_CHECK(vkCreateCommandPool(context->Device.LogicalDevice, &poolCreateInfo, context->Allocator, &context->Device.GraphicsCommandPool))
-    FL_LOG_INFO("Graphics command pool created.")
+    FL_LOG_DEBUG("Graphics command pool created.")
 
     flDArrayDestroy(indices);
     flDArrayDestroy(queueCreateInfos);
@@ -140,14 +140,14 @@ void flVulkanDeviceDestroy(FlVulkanContext* context) {
     context->Device.PresentQueue = VK_NULL_HANDLE;
     context->Device.TransferQueue = VK_NULL_HANDLE;
 
-    FL_LOG_INFO("Destroying Vulkan logical device...")
+    FL_LOG_DEBUG("Destroying Vulkan logical device...")
     if (context->Device.LogicalDevice) {
         vkDestroyDevice(context->Device.LogicalDevice, context->Allocator);
         context->Device.LogicalDevice = VK_NULL_HANDLE;
     }
 
     // Physical devices are not destroyed.
-    FL_LOG_INFO("Releasing physical device resources...")
+    FL_LOG_DEBUG("Releasing Vulkan physical device resources...")
     context->Device.PhysicalDevice = VK_NULL_HANDLE;
 
     if (context->Device.SwapchainSupport.Formats) {
@@ -421,7 +421,7 @@ FlBool8 flPhysicalDeviceCheckRequirements(
     vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies);
 
     // Look at each queue and see what queues it supports.
-    FL_LOG_INFO("Graphics | Present | Compute | Transfer | Name")
+    FL_LOG_DEBUG("Graphics | Present | Compute | Transfer | Name")
     FlUInt8 minTransferScore = 255;
     for (FlUInt32 i = 0; i < queueFamilyCount; ++i) {
         FlUInt32 currentTransferScore = 0;
@@ -457,7 +457,7 @@ FlBool8 flPhysicalDeviceCheckRequirements(
     }
     
     // Print out some info about the device.
-    FL_LOG_INFO("       %d |       %d |       %d |        %d | %s",
+    FL_LOG_DEBUG("       %d |       %d |       %d |        %d | %s",
         outQueueFamilyInfo->GraphicsFamilyIndex != UINT32_MAX,
         outQueueFamilyInfo->PresentFamilyIndex != UINT32_MAX,
         outQueueFamilyInfo->ComputeFamilyIndex != UINT32_MAX,
@@ -496,7 +496,7 @@ FlBool8 flPhysicalDeviceCheckRequirements(
             VK_CHECK(vkEnumerateDeviceExtensionProperties(device, 0, &availableExtensionCount, 0))
 
             if (availableExtensionCount != 0) {
-                availableExtensions = flAllocate(sizeof(VkExtensionProperties) * availableExtensionCount, FlMemoryTagRenderer);
+                availableExtensions = (VkExtensionProperties*)flAllocate(sizeof(VkExtensionProperties) * availableExtensionCount, FlMemoryTagRenderer);
                 VK_CHECK(vkEnumerateDeviceExtensionProperties(device, 0, &availableExtensionCount, availableExtensions))
 
                 FlUInt32 requiredExtensionCount = flDArrayLength(requirements->DeviceExtensionNames);

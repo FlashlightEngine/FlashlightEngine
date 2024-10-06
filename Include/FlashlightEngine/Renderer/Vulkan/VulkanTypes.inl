@@ -80,6 +80,13 @@ typedef struct FlVulkanRenderPass {
     FlVulkanRenderPassState State;
 } FlVulkanRenderPass;
 
+typedef struct FlVulkanFramebuffer {
+    VkFramebuffer Handle;
+    FlUInt32 AttachmentCount;
+    VkImageView* Attachments;
+    FlVulkanRenderPass* RenderPass;
+} FlVulkanFramebuffer;
+
 typedef struct FlVulkanSwapchain {
     VkSurfaceFormatKHR ImageFormat;
     FlUInt8 MaxFramesInFlight;
@@ -91,6 +98,8 @@ typedef struct FlVulkanSwapchain {
     VkImageView* ImageViews;
 
     FlVulkanImage DepthAttachment;
+
+    FlVulkanFramebuffer* Framebuffers;
 } FlVulkanSwapchain;
 
 typedef enum FlVulkanCommandBufferState {
@@ -107,6 +116,11 @@ typedef struct FlVulkanCommandBuffer {
 
     FlVulkanCommandBufferState State;
 } FlVulkanCommandBuffer;
+
+typedef struct FlVulkanFence {
+    VkFence Handle;
+    FlBool8 Signaled;
+} FlVulkanFence;
 
 typedef struct FlVulkanContext {
     FlUInt32 FramebufferWidth;
@@ -129,6 +143,18 @@ typedef struct FlVulkanContext {
 
     // DArray
     FlVulkanCommandBuffer* GraphicsCommandBuffers;
+
+    // DArray
+    VkSemaphore* ImageAvailableSemaphores;
+    
+    // DArray
+    VkSemaphore* QueueCompleteSemaphores;
+    
+    FlUInt32 InFlightFenceCount;
+    FlVulkanFence* InFlightFences;
+
+    // Holds pointer to fences which exist and are owned elsewhere.
+    FlVulkanFence** ImagesInFlight;
 
     FlUInt32 ImageIndex;
     FlUInt32 CurrentFrame;

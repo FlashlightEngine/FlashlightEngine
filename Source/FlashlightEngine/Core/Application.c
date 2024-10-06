@@ -177,6 +177,11 @@ FlBool8 flApplicationRun(void) {
     return TRUE;
 }
 
+void flApplicationGetFramebufferSize(FlUInt32* width, FlUInt32* height) {
+    *width = ApplicationState.Width;
+    *height = ApplicationState.Height;
+}
+
 FlBool8 flApplicationOnEvent(FlUInt16 code, void* sender, void* listenerInstance, FlEventContext context) {
     switch (code) {
     case FlEventCodeApplicationQuit:

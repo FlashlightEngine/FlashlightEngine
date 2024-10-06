@@ -10,14 +10,19 @@
 #include "FlashlightEngine/Renderer/Vulkan/VulkanSwapchain.h"
 #include "FlashlightEngine/Renderer/Vulkan/VulkanRenderPass.h"
 #include "FlashlightEngine/Renderer/Vulkan/VulkanCommandBuffer.h"
+#include "FlashlightEngine/Renderer/Vulkan/VulkanFramebuffer.h"
+#include "FlashlightEngine/Renderer/Vulkan/VulkanFence.h"
 
 #include "FlashlightEngine/Core/Logger.h"
 #include "FlashlightEngine/Core/FlString.h"
 #include "FlashlightEngine/Core/FlMemory.h"
+#include "FlashlightEngine/Core/Application.h"
 
 #include "FlashlightEngine/Containers/DArray.h"
 
 static FlVulkanContext Context;
+static FlUInt32 CachedFramebufferWidth = 0;
+static FlUInt32 CachedFramebufferHeight = 0;
 
 VKAPI_ATTR VkBool32 VKAPI_CALL flVkDebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
                                                 VkDebugUtilsMessageTypeFlagsEXT messageTypes,
@@ -27,12 +32,19 @@ VKAPI_ATTR VkBool32 VKAPI_CALL flVkDebugCallback(VkDebugUtilsMessageSeverityFlag
 FlInt32 flVulkanRendererBackendFindMemoryIndex(FlUInt32 typeFilter, FlUInt32 propertyFlags);
 
 void flVulkanRendererBackendCreateCommandBuffers(FlRendererBackend* backend);
+void flVulkanRendererBackendRegenerateFramebuffers(FlRendererBackend* backend, FlVulkanSwapchain* swapchain, FlVulkanRenderPass* renderPass);
 
 FlBool8 flVulkanRendererBackendInitialize(FlRendererBackend* backend, const char* applicationName, struct FlPlatformState* platformState) {
     Context.FindMemoryIndex = flVulkanRendererBackendFindMemoryIndex;
     
     // TODO: Custom allocator.
     Context.Allocator = 0;
+
+    flApplicationGetFramebufferSize(&CachedFramebufferWidth, &CachedFramebufferHeight);
+    Context.FramebufferWidth = (CachedFramebufferWidth != 0) ? CachedFramebufferWidth : 800;
+    Context.FramebufferHeight = (CachedFramebufferHeight != 0) ? CachedFramebufferHeight : 600;
+    CachedFramebufferWidth = 0;
+    CachedFramebufferHeight = 0;
 
     // Vulkan instance
     VkApplicationInfo applicationInfo = {VK_STRUCTURE_TYPE_APPLICATION_INFO};
@@ -71,7 +83,7 @@ FlBool8 flVulkanRendererBackendInitialize(FlRendererBackend* backend, const char
 // If validation should be done, get a list of the required validation layers names
 // and make sure they exist. Validation layers should only be enabled on non-release builds.
 #ifdef FL_DEBUG
-    FL_LOG_INFO("Validation layers enabled. Enumerating.")
+    FL_LOG_DEBUG("Validation layers enabled. Enumerating.")
 
     // The list of validation layers required.
     requiredValidationLayerNames = flDArrayCreate(const char*);
@@ -86,12 +98,12 @@ FlBool8 flVulkanRendererBackendInitialize(FlRendererBackend* backend, const char
 
     // Verify all layers are available.
     for (FlUInt32 i = 0; i < requiredValidationLayerCount; ++i) {
-        FL_LOG_INFO("Searching for layer: %s...", requiredValidationLayerNames[i]);
+        FL_LOG_DEBUG("Searching for layer: %s...", requiredValidationLayerNames[i]);
         FlBool8 found = FALSE;
         for (FlUInt32 j = 0; j < availableLayerCount; ++j) {
             if (flStringsEqual(requiredValidationLayerNames[i], availableLayers[j].layerName)) {
                 found = TRUE;
-                FL_LOG_INFO("Found.")
+                FL_LOG_DEBUG("Found.")
                 break;
             }
         }
@@ -102,7 +114,7 @@ FlBool8 flVulkanRendererBackendInitialize(FlRendererBackend* backend, const char
         }
     }
 
-    FL_LOG_INFO("All required validation layers are present.")
+    FL_LOG_DEBUG("All required validation layers are present.")
 
     flDArrayDestroy(availableLayers);
 #endif
@@ -111,7 +123,7 @@ FlBool8 flVulkanRendererBackendInitialize(FlRendererBackend* backend, const char
     instanceInfo.ppEnabledLayerNames = requiredValidationLayerNames;
 
     VK_CHECK(vkCreateInstance(&instanceInfo, Context.Allocator, &Context.Instance));
-    FL_LOG_INFO("Vulkan Instance created.")
+    FL_LOG_DEBUG("Vulkan Instance created.")
 
     flDArrayDestroy(requiredExtensions);
     
@@ -121,7 +133,7 @@ FlBool8 flVulkanRendererBackendInitialize(FlRendererBackend* backend, const char
 
 // Create the debug messenger.
 #ifdef FL_DEBUG
-    FL_LOG_INFO("Creating Vulkan debug messenger...")
+    FL_LOG_DEBUG("Creating Vulkan debug messenger...")
     FlUInt32 logSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT   |
                            VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
                            VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT;   // |
@@ -138,16 +150,16 @@ FlBool8 flVulkanRendererBackendInitialize(FlRendererBackend* backend, const char
         (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(Context.Instance, "vkCreateDebugUtilsMessengerEXT");
     FL_ASSERT_MSG(func, "Failed to create debug messenger.")
     VK_CHECK(func(Context.Instance, &debugCreateInfo, Context.Allocator, &Context.DebugMessenger))
-    FL_LOG_INFO("Vulkan debug messenger created.")
+    FL_LOG_DEBUG("Vulkan debug messenger created.")
 #endif
 
     // Surface creation.
-    FL_LOG_INFO("Creating Vulkan surface...")
+    FL_LOG_DEBUG("Creating Vulkan surface...")
     if (!flPlatformCreateVulkanSurface(platformState, &Context)) {
         FL_LOG_FATAL("Failed to create Vulkan surface.");
         return FALSE;
     }
-    FL_LOG_INFO("Vulkan surface created.")
+    FL_LOG_DEBUG("Vulkan surface created.")
 
     // Device creation.
     if (!flVulkanDeviceCreate(&Context)) {
@@ -156,9 +168,11 @@ FlBool8 flVulkanRendererBackendInitialize(FlRendererBackend* backend, const char
     }
 
     // Swapchain creation.
+    FL_LOG_DEBUG("Creating Vulkan swapchain...")
     flVulkanSwapchainCreate(&Context, Context.FramebufferWidth, Context.FramebufferHeight, &Context.Swapchain);
 
     // Render pass creation.
+    FL_LOG_DEBUG("Creating main Vulkan render pass...")
     flVulkanRenderPassCreate(
         &Context,
         &Context.MainRenderPass,
@@ -167,14 +181,77 @@ FlBool8 flVulkanRendererBackendInitialize(FlRendererBackend* backend, const char
         1.0f,
         0
     );
+    FL_LOG_DEBUG("Main Vulkan render pass created.")
 
+    // Swapchain framebuffers.
+    FL_LOG_DEBUG("Creating Vulkan framebuffers...")
+    Context.Swapchain.Framebuffers = flDArrayReserve(FlVulkanFramebuffer, Context.Swapchain.ImageCount);
+    flVulkanRendererBackendRegenerateFramebuffers(backend, &Context.Swapchain, &Context.MainRenderPass);
+    FL_LOG_DEBUG("Vulkan framebuffers created.")
+    
+    FL_LOG_DEBUG("Creating Vulkan command buffers...")
     flVulkanRendererBackendCreateCommandBuffers(backend);
+    FL_LOG_DEBUG("Vulkan command buffers created.")
 
-    FL_LOG_INFO("Vulkan renderer initialized successfully.")
+    FL_LOG_DEBUG("Creating Vulkan synchronisation objects...")
+    Context.ImageAvailableSemaphores = flDArrayReserve(VkSemaphore, Context.Swapchain.MaxFramesInFlight);
+    Context.QueueCompleteSemaphores = flDArrayReserve(VkSemaphore, Context.Swapchain.MaxFramesInFlight);
+    Context.InFlightFences = flDArrayReserve(FlVulkanFence, Context.Swapchain.MaxFramesInFlight);
+
+    for (FlUInt8 i = 0; i < Context.Swapchain.MaxFramesInFlight; ++i) {
+        VkSemaphoreCreateInfo semaphoreCreateInfo = {VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO};
+        vkCreateSemaphore(Context.Device.LogicalDevice, &semaphoreCreateInfo, Context.Allocator, &Context.ImageAvailableSemaphores[i]);
+        vkCreateSemaphore(Context.Device.LogicalDevice, &semaphoreCreateInfo, Context.Allocator, &Context.QueueCompleteSemaphores[i]);
+
+        // Create the fence in a signealed state, indicating that the first frame has already been "rendered".
+        // This will prevent the application from waiting indefinitely for the first frame to render since it
+        // cannot be rendered util a frame is "rendered" before it.
+        flVulkanFenceCreate(&Context, TRUE, &Context.InFlightFences[i]);
+    }
+
+    // In flight fences should not yet exist at this point, so clear the list. These are stored in pointers
+    // because the initial state should be 0, and will be 0 when not in use. Acutal fences are not owned 
+    // by this list.
+    Context.ImagesInFlight = flDArrayReserve(FlVulkanFence, Context.Swapchain.ImageCount);
+    for (FlUInt32 i = 0; i < Context.Swapchain.ImageCount; ++i) {
+        Context.ImagesInFlight[i] = 0;
+    }
+    FL_LOG_DEBUG("Vulkan synchronisation objects created.")
+
+    FL_LOG_INFO("Vulkan renderer backend initialized successfully.")
     return TRUE;
 }
 
 void flVulkanRendererBackendShutdown(FlRendererBackend* backend) {
+    FL_UNUSED(backend);
+
+    vkDeviceWaitIdle(Context.Device.LogicalDevice);
+
+    FL_LOG_DEBUG("Destroying Vulkan synchronisation objects...")
+    for (FlUInt8 i = 0; i < Context.Swapchain.MaxFramesInFlight; ++i) {
+        if (Context.ImageAvailableSemaphores[i]) {
+            vkDestroySemaphore(Context.Device.LogicalDevice, Context.ImageAvailableSemaphores[i], Context.Allocator);
+        }
+
+        if (Context.QueueCompleteSemaphores[i]) {
+            vkDestroySemaphore(Context.Device.LogicalDevice, Context.QueueCompleteSemaphores[i], Context.Allocator);
+        }
+
+        flVulkanFenceDestroy(&Context, &Context.InFlightFences[i]);
+    }
+    flDArrayDestroy(Context.ImageAvailableSemaphores);
+    Context.ImageAvailableSemaphores = 0;
+
+    flDArrayDestroy(Context.QueueCompleteSemaphores);
+    Context.QueueCompleteSemaphores = 0;
+
+    flDArrayDestroy(Context.InFlightFences);
+    Context.InFlightFences = 0;
+
+    flDArrayDestroy(Context.ImagesInFlight);
+    Context.ImagesInFlight = 0;
+
+    FL_LOG_DEBUG("Destroying Vulkan command buffers...")
     for (FlUInt32 i = 0; i < Context.Swapchain.ImageCount; ++i) {
         if (Context.GraphicsCommandBuffers[i].Handle) {
             flVulkanCommandBufferFree(&Context, Context.Device.GraphicsCommandPool, &Context.GraphicsCommandBuffers[i]);
@@ -182,18 +259,27 @@ void flVulkanRendererBackendShutdown(FlRendererBackend* backend) {
         }
     }
     flDArrayDestroy(Context.GraphicsCommandBuffers);
+    Context.GraphicsCommandBuffers = 0;
 
+    FL_LOG_DEBUG("Destroying Vulkan framebuffers...")
+    for (FlUInt32 i = 0; i < Context.Swapchain.ImageCount; ++i) {
+        flVulkanFramebufferDestroy(&Context, &Context.Swapchain.Framebuffers[i]);
+    }
+    flDArrayDestroy(Context.Swapchain.Framebuffers);
+    Context.Swapchain.Framebuffers = 0;
+
+    FL_LOG_DEBUG("Destroying Vulkan main render pass...")
     flVulkanRenderPassDestroy(&Context, &Context.MainRenderPass);
 
-    FL_LOG_INFO("Destroying Vulkan swapchain...")
+    FL_LOG_DEBUG("Destroying Vulkan swapchain...")
     flVulkanSwapchainDestroy(&Context, &Context.Swapchain);
 
-    FL_LOG_INFO("Destroying Vulkan device...")
+    FL_LOG_DEBUG("Destroying Vulkan device...")
     flVulkanDeviceDestroy(&Context);
 
 #ifdef FL_DEBUG
     if (Context.DebugMessenger) {
-        FL_LOG_INFO("Destroying Vulkan debug messenger...")
+        FL_LOG_DEBUG("Destroying Vulkan debug messenger...")
         PFN_vkDestroyDebugUtilsMessengerEXT func = 
             (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(Context.Instance, "vkDestroyDebugUtilsMessengerEXT");
         func (Context.Instance, Context.DebugMessenger, Context.Allocator);
@@ -201,11 +287,11 @@ void flVulkanRendererBackendShutdown(FlRendererBackend* backend) {
 #endif
 
     if (Context.Surface) {
-        FL_LOG_INFO("Destroying Vulkan surface...")
+        FL_LOG_DEBUG("Destroying Vulkan surface...")
         vkDestroySurfaceKHR(Context.Instance, Context.Surface, Context.Allocator);
     }
     
-    FL_LOG_INFO("Destroying Vulkan instance...")
+    FL_LOG_DEBUG("Destroying Vulkan instance...")
     vkDestroyInstance(Context.Instance, Context.Allocator);
 }
 
@@ -276,6 +362,25 @@ void flVulkanRendererBackendCreateCommandBuffers(FlRendererBackend* backend) {
         flZeroMemory(&Context.GraphicsCommandBuffers[i], sizeof(FlVulkanCommandBuffer));
         flVulkanCommandBufferAllocate(&Context, Context.Device.GraphicsCommandPool, TRUE, &Context.GraphicsCommandBuffers[i]);
     }
+}
 
-    FL_LOG_INFO("Vulkan command buffers created.")
+void flVulkanRendererBackendRegenerateFramebuffers(FlRendererBackend* backend, FlVulkanSwapchain* swapchain, FlVulkanRenderPass* renderPass) {
+    for (FlUInt32 i = 0; i < swapchain->ImageCount; ++i) {
+        // TODO: Make this dynamic based on the currently configured attachments.
+        FlUInt32 attachmentCount = 2;
+        VkImageView attachments[] = {
+            swapchain->ImageViews[i],
+            swapchain->DepthAttachment.ImageView
+        };
+
+        flVulkanFramebufferCreate(
+            &Context,
+            renderPass,
+            Context.FramebufferWidth,
+            Context.FramebufferHeight,
+            attachmentCount,
+            attachments,
+            &Context.Swapchain.Framebuffers[i]
+        );
+    }
 }

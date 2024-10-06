@@ -13,7 +13,7 @@
 static FlRendererBackend* Backend = 0;
 
 FlBool8 flRendererInitialize(const char* applicationName, struct FlPlatformState* platformState) {
-    Backend = flAllocate(sizeof(FlRendererBackend), FlMemoryTagRenderer);
+    Backend = (FlRendererBackend*)flAllocate(sizeof(FlRendererBackend), FlMemoryTagRenderer);
 
     // TODO: Make this configurable.
     flRendererBackendCreate(FlRendererBackendVulkan, platformState, Backend);
