@@ -35,7 +35,11 @@ void flRendererShutdown() {
 }
 
 void flRendererOnResize(FlUInt16 width, FlUInt16 height) {
-
+    if (Backend) {
+        Backend->Resized(Backend, width, height);
+    } else {
+        FL_LOG_WARN("Renderer backend does not exist to accept resize: %i %i", width, height);
+    }
 }
 
 FlBool8 flRendererBeginFrame(FlFloat32 deltaTime) {

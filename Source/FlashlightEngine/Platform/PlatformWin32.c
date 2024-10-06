@@ -254,12 +254,15 @@ LRESULT CALLBACK flWin32ProcessMessage(const HWND hWnd, const FlUInt32 msg, cons
     case WM_SIZE:
         {
             // Get the updated size
-            // RECT r;
-            // GetClientRect(hWnd, &r);
-            // FlUInt32 width = r.right - r.left;
-            // FlUInt32 height = r.bottom - r.top;
+            RECT r;
+            GetClientRect(hWnd, &r);
+            FlUInt32 width = r.right - r.left;
+            FlUInt32 height = r.bottom - r.top;
 
-            // TODO: Fire an event for window resize.
+            FlEventContext context;
+            context.data.uint16[0] = (FlUInt16)width;
+            context.data.uint16[1] = (FlUInt16)height;
+            flEventFire(FlEventCodeResized, 0, context);
             break;
         }
     case WM_KEYDOWN:

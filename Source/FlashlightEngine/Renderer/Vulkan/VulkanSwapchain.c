@@ -237,6 +237,8 @@ void flVulkanSwapchainInternalCreate(FlVulkanContext* context, FlUInt32 width, F
 }
 
 void flVulkanSwapchainInternalDestroy(FlVulkanContext* context, FlVulkanSwapchain* swapchain) {
+    vkDeviceWaitIdle(context->Device.LogicalDevice);
+    
     flVulkanImageDestroy(context, &swapchain->DepthAttachment);
 
     // Only destroy the views, not the images, since those are owned by the swapchain and are thus

@@ -126,6 +126,14 @@ typedef struct FlVulkanContext {
     FlUInt32 FramebufferWidth;
     FlUInt32 FramebufferHeight;
 
+    // Current generation of framebuffer size. If it does not match FramebufferSizeLastGeneration,
+    // a new one should be created.
+    FlUInt64 FramebufferSizeGeneration;
+
+    // The generation of the framebuffer when it was last created. Set to FramebufferSizeGeneration,
+    // when updated.
+    FlUInt64 FramebufferSizeLastGeneration;
+
     VkInstance Instance;
 
     VkAllocationCallbacks* Allocator;

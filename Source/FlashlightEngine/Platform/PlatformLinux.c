@@ -270,7 +270,15 @@ FlBool8 flPlatformPumpMessages(FlPlatformState* platformState) {
             }
         case XCB_CONFIGURE_NOTIFY:
             {
-                // TODO: Resizing.
+                // Resizing - note that this is also triggered by moving the window, but should be
+                // passed anyway since a change in the x/y could mean an upper-left resize.
+                // The application layer can decide what to do with this. 
+                xcb_configure_notify_event_t* configureEvent = (xcb_configure_notify_event_t*)event;
+                
+                FlEventContext context;
+                context.data.uint16[0] = configureEvent->width;
+                context.data.uint16[1] = configureEvent->height;
+                flEventFire(FlEventCodeResized, 0, context);
                 break;
             }
         case XCB_CLIENT_MESSAGE:

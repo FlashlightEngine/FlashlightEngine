@@ -12,6 +12,7 @@
 #include "FlashlightEngine/Renderer/Vulkan/VulkanCommandBuffer.h"
 #include "FlashlightEngine/Renderer/Vulkan/VulkanFramebuffer.h"
 #include "FlashlightEngine/Renderer/Vulkan/VulkanFence.h"
+#include "FlashlightEngine/Renderer/Vulkan/VulkanUtils.h"
 
 #include "FlashlightEngine/Core/Logger.h"
 #include "FlashlightEngine/Core/FlString.h"
@@ -33,6 +34,7 @@ FlInt32 flVulkanRendererBackendFindMemoryIndex(FlUInt32 typeFilter, FlUInt32 pro
 
 void flVulkanRendererBackendCreateCommandBuffers(FlRendererBackend* backend);
 void flVulkanRendererBackendRegenerateFramebuffers(FlRendererBackend* backend, FlVulkanSwapchain* swapchain, FlVulkanRenderPass* renderPass);
+FlBool8 flVulkanRendererBackendRecreateSwapchain(FlRendererBackend* backend);
 
 FlBool8 flVulkanRendererBackendInitialize(FlRendererBackend* backend, const char* applicationName, struct FlPlatformState* platformState) {
     Context.FindMemoryIndex = flVulkanRendererBackendFindMemoryIndex;
@@ -296,14 +298,160 @@ void flVulkanRendererBackendShutdown(FlRendererBackend* backend) {
 }
 
 void flVulkanRendererBackendOnResize(FlRendererBackend* backend, FlUInt16 width, FlUInt16 height) {
+    // Update the "framebuffer size generation", a counter which indicates when the
+    // framebuffer size has been updated.
+    CachedFramebufferWidth = width;
+    CachedFramebufferHeight = height;
+    Context.FramebufferSizeGeneration++;
 
+    FL_LOG_DEBUG("Vulkan renderer backend->Resized: w/h/gen: %i/%i/%llu", width, height, Context.FramebufferSizeGeneration);
 }
 
 FlBool8 flVulkanRendererBackendBeginFrame(FlRendererBackend* backend, FlFloat32 deltaTime) {
+    FlVulkanDevice* device = &Context.Device;
+
+    // Check if recreating swapchain and boot out.
+    if (Context.RecreatingSwapchain) {
+        VkResult result = vkDeviceWaitIdle(device->LogicalDevice);
+        if (!flVulkanResultIsSuccess(result)) {
+            FL_LOG_ERROR("flVulkanRendererBackendBeginFrame vkDeviceWaitIdle (1) failed: '%s'", flVulkanResultToString(result, TRUE))
+            return FALSE;
+        }
+        FL_LOG_INFO("Currently recreating swapchain, booting out of frame.")
+        return FALSE;
+    }
+
+    // Check if the framebuffer has been resized. If so, a new swapchain must be created.
+    if (Context.FramebufferSizeGeneration != Context.FramebufferSizeLastGeneration) {
+        VkResult result = vkDeviceWaitIdle(device->LogicalDevice);
+        if (!flVulkanResultIsSuccess(result)) {
+            FL_LOG_ERROR("flVulkanRendererBackendBeginFrame vkDeviceWaitIdle (2) failed: '%s'", flVulkanResultToString(result, TRUE))
+            return FALSE;
+        }
+        
+        // If the swapchain recreation failed (because, for example, the window was minimized),
+        // boot out before unsetting the flag.
+        if (!flVulkanRendererBackendRecreateSwapchain(backend)) {
+            return FALSE;
+        }
+
+        FL_LOG_INFO("Resized, booting out of frame.")
+        return FALSE;
+    }
+
+    // Wait for the execution of the current frame to complete. The fence being free will allow this one to move on.
+    if (!flVulkanFenceWait(
+        &Context,
+        &Context.InFlightFences[Context.CurrentFrame],
+        UINT64_MAX
+    )) {
+        FL_LOG_WARN("In-flight fence wait failure.")
+        return FALSE;
+    }
+
+    // Acquire the next image from the swapchain. Pass along the semaphore that should be signaled when this completes.
+    // This same semaphore will later be waited on by the queue submission to ensure the image is available.
+    if (!flVulkanSwapchainAcquireNextImageIndex(
+        &Context,
+        &Context.Swapchain,
+        UINT64_MAX,
+        Context.ImageAvailableSemaphores[Context.CurrentFrame],
+        0,
+        &Context.ImageIndex
+    )) {
+        return FALSE;
+    }
+
+    // Begin recording commands.
+    FlVulkanCommandBuffer* commandBuffer = &Context.GraphicsCommandBuffers[Context.ImageIndex];
+    flVulkanCommandBufferReset(commandBuffer);
+    flVulkanCommandBufferBegin(commandBuffer, FALSE, FALSE, FALSE);
+
+    // Dynamic states
+    VkViewport viewport;
+    viewport.x = 0.0f;
+    viewport.y = (FlFloat32)Context.FramebufferHeight;
+    viewport.width = (FlFloat32)Context.FramebufferWidth;
+    viewport.height = (FlFloat32)Context.FramebufferHeight;
+    viewport.minDepth = 0.0f;
+    viewport.maxDepth = 1.0f;
+
+    VkRect2D scissor;
+    scissor.offset.x = scissor.offset.y = 0;
+    scissor.extent.width = Context.FramebufferWidth;
+    scissor.extent.height = Context.FramebufferHeight;
+
+    vkCmdSetViewport(commandBuffer->Handle, 0, 1, &viewport);
+    vkCmdSetScissor(commandBuffer->Handle, 0, 1, &scissor);
+
+    Context.MainRenderPass.W = Context.FramebufferWidth;
+    Context.MainRenderPass.H = Context.FramebufferHeight;
+
+    // Begin the render pass.
+    flVulkanRenderPassBegin(commandBuffer, &Context.MainRenderPass, Context.Swapchain.Framebuffers[Context.ImageIndex].Handle);
+
     return TRUE;
 }
 
 FlBool8 flVulkanRendererBackendEndFrame(FlRendererBackend* backend, FlFloat32 deltaTime) {
+    FlVulkanCommandBuffer* commandBuffer = &Context.GraphicsCommandBuffers[Context.ImageIndex];
+
+    flVulkanRenderPassEnd(commandBuffer, &Context.MainRenderPass);
+
+    flVulkanCommandBufferEnd(commandBuffer);
+    
+    // Make sure the previous frame is not using this image (i.e. its fence is being waited on).
+    if (Context.ImagesInFlight[Context.ImageIndex] != VK_NULL_HANDLE) {
+        flVulkanFenceWait(&Context, Context.ImagesInFlight[Context.ImageIndex], UINT64_MAX);
+    }
+
+    // Mark the image fence as in-use by this frame.
+    Context.ImagesInFlight[Context.ImageIndex] = &Context.InFlightFences[Context.CurrentFrame];
+
+    // Reset the fence for use on the next frame.
+    flVulkanFenceReset(&Context, &Context.InFlightFences[Context.CurrentFrame]);
+
+    VkSubmitInfo submitInfo = {VK_STRUCTURE_TYPE_SUBMIT_INFO};
+    submitInfo.commandBufferCount = 1;
+    submitInfo.pCommandBuffers = &commandBuffer->Handle;
+
+    // The semaphore(s) to be signaled when the queue is complete.
+    submitInfo.signalSemaphoreCount = 1;
+    submitInfo.pSignalSemaphores = &Context.QueueCompleteSemaphores[Context.CurrentFrame];
+
+    // Wait semaphores ensure that the operation cannot begin until the image is available.
+    submitInfo.waitSemaphoreCount = 1;
+    submitInfo.pWaitSemaphores = &Context.ImageAvailableSemaphores[Context.CurrentFrame];
+
+    // Each semaphore waits on the corresponding pipeline stage to complete. 1:1 ratio.
+    // VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT prevents subsequent color attachment
+    // writes from executing until the semaphore signals (i.e. one frame is preseted at a time).
+    VkPipelineStageFlags flags[1] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
+    submitInfo.pWaitDstStageMask = flags;
+
+    VkResult result = vkQueueSubmit(
+        Context.Device.GraphicsQueue,
+        1,
+        &submitInfo,
+        Context.InFlightFences[Context.CurrentFrame].Handle
+    );
+
+    if (result != VK_SUCCESS) {
+        FL_LOG_ERROR("vkQueueSubmit failed with result: %s", flVulkanResultToString(result, TRUE))
+        return FALSE;
+    }
+
+    flVulkanCommandBufferUpdateSubmitted(commandBuffer);
+
+    flVulkanSwapchainPresent(
+        &Context,
+        &Context.Swapchain,
+        Context.Device.GraphicsQueue,
+        Context.Device.PresentQueue,
+        Context.QueueCompleteSemaphores[Context.CurrentFrame],
+        Context.ImageIndex
+    );
+
     return TRUE;
 }
 
@@ -383,4 +531,68 @@ void flVulkanRendererBackendRegenerateFramebuffers(FlRendererBackend* backend, F
             &Context.Swapchain.Framebuffers[i]
         );
     }
+}
+
+FlBool8 flVulkanRendererBackendRecreateSwapchain(FlRendererBackend* backend) {
+    // If already being recreated, do not try again.
+    if (Context.RecreatingSwapchain) {
+        FL_LOG_DEBUG("flVulkanRendererBackendRecreateSwapchain called when already recreating. Booting out.")
+        return FALSE;
+    }
+
+    // Detect if the window is too small to be drawn to.
+    if (Context.FramebufferWidth == 0 || Context.FramebufferHeight == 0) {
+        FL_LOG_DEBUG("flVulkanRendererBackendRecreateSwapchain called when window is < 1 in a dimension. Booting out.")
+        return FALSE;
+    }
+
+    // Mark as recreating if the dimensions are valid.
+    Context.RecreatingSwapchain = TRUE;
+
+    // Wait for any operations to complete.
+    vkDeviceWaitIdle(Context.Device.LogicalDevice);
+
+    // Clear these out just in case.
+    for (FlUInt32 i = 0; i < Context.Swapchain.ImageCount; ++i) {
+        Context.ImagesInFlight[i] = 0;
+    }
+
+    // Requery support.
+    flVulkanDeviceQuerySwapchainSupport(Context.Device.PhysicalDevice, Context.Surface, &Context.Device.SwapchainSupport);
+    flVulkanDeviceDetectDepthFormat(&Context.Device);
+
+    flVulkanSwapchainRecreate(&Context, CachedFramebufferWidth, CachedFramebufferHeight, &Context.Swapchain);
+
+    // Sync the framebuffer size with the cached sizes.
+    Context.FramebufferWidth = CachedFramebufferWidth;
+    Context.FramebufferHeight = CachedFramebufferHeight;
+    Context.MainRenderPass.W = Context.FramebufferWidth;
+    Context.MainRenderPass.H = Context.FramebufferHeight;
+    CachedFramebufferWidth = 0;
+    CachedFramebufferHeight = 0;
+
+    // Update the framebuffer size generation.
+    Context.FramebufferSizeLastGeneration = Context.FramebufferSizeGeneration;
+
+    // Cleanup swapchain
+    for (FlUInt32 i = 0; i < Context.Swapchain.ImageCount; ++i) {
+        flVulkanCommandBufferFree(&Context, Context.Device.GraphicsCommandPool, &Context.GraphicsCommandBuffers[i]);
+
+        // Framebuffers
+        flVulkanFramebufferDestroy(&Context, &Context.Swapchain.Framebuffers[i]);
+    } 
+
+    Context.MainRenderPass.X = 0;
+    Context.MainRenderPass.Y = 0;
+    Context.MainRenderPass.W = Context.FramebufferWidth;
+    Context.MainRenderPass.H = Context.FramebufferHeight;
+
+    flVulkanRendererBackendRegenerateFramebuffers(backend, &Context.Swapchain, &Context.MainRenderPass);
+
+    flVulkanRendererBackendCreateCommandBuffers(backend);
+
+    // Clear the recreating flag
+    Context.RecreatingSwapchain = FALSE;
+
+    return TRUE;
 }

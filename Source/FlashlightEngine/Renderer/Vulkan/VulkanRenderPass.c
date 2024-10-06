@@ -14,6 +14,19 @@ void flVulkanRenderPassCreate(
     FlFloat32 depth,
     FlUInt32 stencil
 ) {
+    outRenderPass->X = x;
+    outRenderPass->Y = y;
+    outRenderPass->W = w;
+    outRenderPass->H = h;
+
+    outRenderPass->R = r;
+    outRenderPass->G = g;
+    outRenderPass->B = b;
+    outRenderPass->A = a;
+
+    outRenderPass->Depth = depth;
+    outRenderPass->Stencil = stencil;
+
     // Main subpass.
     VkSubpassDescription subpass = {};
     subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;

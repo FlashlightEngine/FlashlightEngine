@@ -33,6 +33,7 @@ static FlApplicationState ApplicationState;
 // Event handlers
 FlBool8 flApplicationOnEvent(FlUInt16 code, void* sender, void* listenerInstance, FlEventContext context);
 FlBool8 flApplicationOnKey(FlUInt16 code, void* sender, void* listenerInstance, FlEventContext context);
+FlBool8 flApplicationOnResize(FlUInt16 code, void* sender, void* listenerInstance, FlEventContext context);
 
 FlBool8 flApplicationCreate(FlGame* gameInstance) {
     if (Initialized) {
@@ -54,6 +55,7 @@ FlBool8 flApplicationCreate(FlGame* gameInstance) {
     flEventRegister(FlEventCodeApplicationQuit, 0, flApplicationOnEvent);
     flEventRegister(FlEventCodeKeyPressed, 0, flApplicationOnKey);
     flEventRegister(FlEventCodeKeyReleased, 0, flApplicationOnKey);
+    flEventRegister(FlEventCodeResized, 0, flApplicationOnResize);
 
     ApplicationState.IsRunning = TRUE;
     ApplicationState.IsSuspended = FALSE;
@@ -167,6 +169,7 @@ FlBool8 flApplicationRun(void) {
     flEventUnregister(FlEventCodeApplicationQuit, 0, flApplicationOnEvent);
     flEventUnregister(FlEventCodeKeyPressed, 0, flApplicationOnKey);
     flEventUnregister(FlEventCodeKeyReleased, 0, flApplicationOnKey);
+    flEventUnregister(FlEventCodeResized, 0, flApplicationOnResize);
     
     flEventShutdown();
 
@@ -221,5 +224,34 @@ FlBool8 flApplicationOnKey(FlUInt16 code, void* sender, void* listenerInstance, 
         }
     }
 
+    return FALSE;
+}
+
+FlBool8 flApplicationOnResize(FlUInt16 code, void* sender, void* listenerInstance, FlEventContext context) {
+    if (code == FlEventCodeResized) {
+        FlUInt16 width = context.data.uint16[0];
+        FlUInt16 height = context.data.uint16[1];
+
+        // Check if different. If so, trigger a resize event.
+        if (width != ApplicationState.Width || height != ApplicationState.Height) {
+            ApplicationState.Width = width;
+            ApplicationState.Height = height;
+            
+            // Handle minimization
+            if (width == 0 || height == 0) {
+                FL_LOG_INFO("Window minimized, suspending application.")
+                ApplicationState.IsSuspended = TRUE;
+                return TRUE;
+            } else {
+                if (ApplicationState.IsSuspended) {
+                    FL_LOG_INFO("Window restored, resuming application.")
+                }
+                ApplicationState.GameInstance->OnResize(ApplicationState.GameInstance, width, height);
+                flRendererOnResize(width, height);
+            }
+        }
+    }
+
+    // Event purposely not handled to allow other listeners to get this.
     return FALSE;
 }
