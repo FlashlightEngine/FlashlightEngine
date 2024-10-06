@@ -6,6 +6,8 @@
 
 #include "FlashlightEngine/Core/FlMemory.h"
 
+#include "FlashlightEngine/Containers/DArray.h"
+
 void flVulkanRenderPassCreate(
     FlVulkanContext* context,
     FlVulkanRenderPass* outRenderPass,
@@ -33,7 +35,7 @@ void flVulkanRenderPassCreate(
     
     // Attachments. TODO: Make this configurable.
     const FlUInt32 attachmentDescriptionCount = 2;
-    VkAttachmentDescription attachmentDescriptions[attachmentDescriptionCount];
+    VkAttachmentDescription* attachmentDescriptions = flDArrayCreate(VkAttachmentDescription);
 
     // Color attachment.
      // TODO: Make this configurable.
@@ -48,7 +50,7 @@ void flVulkanRenderPassCreate(
     colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR; // Transitioned to after the renderpass.
     colorAttachment.flags = 0;
 
-    attachmentDescriptions[0] = colorAttachment;
+    flDArrayPush(attachmentDescriptions, colorAttachment);
     
     VkAttachmentReference colorAttachmentReference;
     colorAttachmentReference.attachment = 0; // Attachment description array index.
@@ -69,7 +71,7 @@ void flVulkanRenderPassCreate(
     depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
     depthAttachment.flags = 0;
 
-    attachmentDescriptions[1] = depthAttachment;
+    flDArrayPush(attachmentDescriptions, depthAttachment);
 
     // Depth attachment reference.
     VkAttachmentReference depthAttachmentReference;
@@ -115,7 +117,9 @@ void flVulkanRenderPassCreate(
         &renderPassInfo,
         context->Allocator,
         &outRenderPass->Handle
-    ))    
+    ))
+
+    flDArrayDestroy(attachmentDescriptions);
 }
 
 void flVulkanRenderPassDestroy(FlVulkanContext* context, FlVulkanRenderPass* renderPass) {
