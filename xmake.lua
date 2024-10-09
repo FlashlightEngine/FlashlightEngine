@@ -56,7 +56,7 @@ add_includedirs("Include")
 
 set_encodings("utf-8")
 set_exceptions("cxx")
-set_languages("clatest")
+set_languages("cxx20")
 set_rundir("./bin/$(plat)_$(arch)_$(mode)")
 set_targetdir("./bin/$(plat)_$(arch)_$(mode)")
 set_warnings("allextra")
@@ -104,12 +104,12 @@ target("FlashlightEngine")
   add_defines("FL_BUILD")
 
   -- Add header and source files
-  for _, ext in ipairs({".h",  ".inl"}) do
+  for _, ext in ipairs({".hpp",  ".inl"}) do
     add_headerfiles("Include/(FlashlightEngine/**" .. ext .. ")")
     add_headerfiles("Source/FlashlightEngine/**" .. ext, {prefixdir = "private", install = false})
   end
 
-  add_files("Source/FlashlightEngine/**.c")
+  add_files("Source/FlashlightEngine/**.cpp")
 
   add_includedirs("Source", {private = true})
   add_rpathdirs("$ORIGIN")

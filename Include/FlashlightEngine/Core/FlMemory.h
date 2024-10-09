@@ -7,10 +7,10 @@
 #ifndef FL_CORE_FLMEMORY_H
 #define FL_CORE_FLMEMORY_H
 
-#include "FlashlightEngine/Prerequisites.h"
+#include "FlashlightEngine/Prerequisites.hpp"
 #include "FlashlightEngine/Export.h"
 
-typedef enum FlMemoryTag {
+enum class MemoryTag {
     // For temporary use. Should be assigned one of the below or have a new tag created.
     FlMemoryTagUnknown,
     FlMemoryTagArray,
@@ -31,7 +31,7 @@ typedef enum FlMemoryTag {
     FlMemoryTagScene,
 
     FlMemoryTagMaxTags
-} FlMemoryTag;
+};
 
 FL_API void flInitializeMemory(void);
 FL_API void flShutdownMemory(void);

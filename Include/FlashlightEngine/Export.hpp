@@ -206,10 +206,10 @@
 
 #pragma once
 
-#ifndef FL_EXPORT_H
-#define FL_EXPORT_H
+#ifndef FL_EXPORT_HPP
+#define FL_EXPORT_HPP
 
-#include "FlashlightEngine/Prerequisites.h"
+#include "FlashlightEngine/Prerequisites.hpp"
 
 #if defined(FL_STATIC)
    #define FL_API
@@ -219,4 +219,4 @@
    #define FL_API FL_IMPORT
 #endif
 
-#endif // FL_EXPORT_H
+#endif // FL_EXPORT_HPP

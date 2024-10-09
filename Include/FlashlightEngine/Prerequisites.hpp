@@ -1,52 +1,45 @@
 // Copyright (C) Jean "Pixfri" Letessier
 // This file is part of Flashlight Engine.
-// For conditions of distribution and use, see copyright notice in Export.h
+// For conditions of distribution and use, see copyright notice in Export.hpp
 
 #pragma once
 
-#ifndef FL_PREREQUISITES_H
-#define FL_PREREQUISITES_H
+#ifndef FL_PREREQUISITES_HPP
+#define FL_PREREQUISITES_HPP
+
+#include <cstdint>
+
+namespace Fl {
 
 // Unsigned integer types
-typedef unsigned char FlUInt8;
-typedef unsigned short FlUInt16;
-typedef unsigned int FlUInt32;
-typedef unsigned long long FlUInt64;
+using UInt8  = std::uint8_t;
+using UInt16 = std::uint16_t;
+using UInt32 = std::uint32_t;
+using UInt64 = std::uint64_t;
 
 // Signed integer types
-typedef signed char FlInt8;
-typedef signed short FlInt16;
-typedef signed int FlInt32;
-typedef signed long long FlInt64;
+using Int8  = std::int8_t;
+using Int16 = std::int16_t;
+using Int32 = std::int32_t;
+using Int64 = std::int64_t;
 
 // Floating point types
-typedef float FlFloat32;
-typedef double FlFloat64;
-
-// Boolean
-typedef int FlBool32;
-typedef char FlBool8;
-
-// Properly define static assertions.
-#if defined(__clang__) || defined(__gcc__)
-#define STATIC_ASSERT _Static_assert
-#else
-#define STATIC_ASSERT static_assert
-#endif
+using Float32 = float;
+using Float64 = double;
 
 // Ensure all types are of the correct size
-STATIC_ASSERT(sizeof(FlUInt8) == 1, "Expected FlUInt8 to be 1 byte.");
-STATIC_ASSERT(sizeof(FlUInt16) == 2, "Expected FlUInt16 to be 2 bytes.");
-STATIC_ASSERT(sizeof(FlUInt32) == 4, "Expected FlUInt32 to be 4 bytes.");
-STATIC_ASSERT(sizeof(FlUInt64) == 8, "Expected FlUInt64 to be 8 bytes.");
+static_assert(sizeof(UInt8) == 1, "Expected Fl::UInt8 to be 1 byte.");
+static_assert(sizeof(UInt16) == 2, "Expected Fl::UInt16 to be 2 bytes.");
+static_assert(sizeof(UInt32) == 4, "Expected Fl::UInt32 to be 4 bytes.");
+static_assert(sizeof(UInt64) == 8, "Expected Fl::UInt64 to be 8 bytes.");
 
-STATIC_ASSERT(sizeof(FlInt8) == 1, "Expected FlInt8 to be 1 byte.");
-STATIC_ASSERT(sizeof(FlInt16) == 2, "Expected FlInt16 to be 2 bytes.");
-STATIC_ASSERT(sizeof(FlInt32) == 4, "Expected FlInt32 to be 4 bytes.");
-STATIC_ASSERT(sizeof(FlInt64) == 8, "Expected FlInt64 to be 8 bytes.");
+static_assert(sizeof(Int8) == 1, "Expected Fl::Int8 to be 1 byte.");
+static_assert(sizeof(Int16) == 2, "Expected Fl::Int16 to be 2 bytes.");
+static_assert(sizeof(Int32) == 4, "Expected Fl::Int32 to be 4 bytes.");
+static_assert(sizeof(Int64) == 8, "Expected Fl::Int64 to be 8 bytes.");
 
-STATIC_ASSERT(sizeof(FlFloat32) == 4, "Expected FlFloat32 to be 4 bytes.");
-STATIC_ASSERT(sizeof(FlFloat64) == 8, "Expected FlFloat64 to be 8 bytes.");
+static_assert(sizeof(Float32) == 4, "Expected Fl::Float32 to be 4 bytes.");
+static_assert(sizeof(Float64) == 8, "Expected Fl::Float64 to be 8 bytes.");
 
 #define TRUE 1
 #define FALSE 0
@@ -107,12 +100,6 @@ STATIC_ASSERT(sizeof(FlFloat64) == 8, "Expected FlFloat64 to be 8 bytes.");
     #define FL_TYPEOF(x) typeof(x)
 #endif
 
-#ifdef FL_PLATFORM_LINUX
-    #ifndef _POSIX_C_SOURCE
-        #define _POSIX_C_SOURCE 199309L
-    #endif
-#endif
-
 #ifdef _MSC_VER
 #define FL_INLINE __forceinline
 #define FL_NO_INLINE __declspec(noinline)
@@ -124,4 +111,6 @@ STATIC_ASSERT(sizeof(FlFloat64) == 8, "Expected FlFloat64 to be 8 bytes.");
 #define FL_UNUSED(a) (void)(a)
 #define FL_CLAMP(value, min, max) (value <= min) ? min : (value >= max) ? max : value
 
-#endif // FL_PREREQUISITES_H
+}
+
+#endif // FL_PREREQUISITES_HPP
