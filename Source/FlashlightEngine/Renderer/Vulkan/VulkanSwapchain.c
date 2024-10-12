@@ -99,7 +99,6 @@ void flVulkanSwapchainPresent(
 
 void flVulkanSwapchainInternalCreate(FlVulkanContext* context, FlUInt32 width, FlUInt32 height, FlVulkanSwapchain* swapchain) {
     VkExtent2D swapchainExtent = {width, height};
-    swapchain->MaxFramesInFlight = 2;
 
     // Choose a swapchain surface format.
     FlBool8 found = false;
@@ -151,6 +150,7 @@ void flVulkanSwapchainInternalCreate(FlVulkanContext* context, FlUInt32 width, F
     if (context->Device.SwapchainSupport.Capabilities.maxImageCount > 0 && imageCount > context->Device.SwapchainSupport.Capabilities.maxImageCount) {
         imageCount = context->Device.SwapchainSupport.Capabilities.maxImageCount;
     }
+    swapchain->MaxFramesInFlight = imageCount - 1;
 
     VkSwapchainCreateInfoKHR swapchainCreateInfo = {VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR};
     swapchainCreateInfo.surface = context->Surface;
