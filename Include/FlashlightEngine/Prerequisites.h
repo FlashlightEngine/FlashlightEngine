@@ -89,11 +89,14 @@ STATIC_ASSERT(sizeof(FlFloat64) == 8, "Expected FlFloat64 to be 8 bytes.");
 #endif
 
 #ifdef _MSC_VER
-#define FL_INLINE __forceinline
-#define FL_NO_INLINE __declspec(noinline)
+    #define FL_INLINE __forceinline
+    #define FL_NO_INLINE __declspec(noinline)
+#elif defined(__clang__) || defined (__gcc__)
+    #define FL_INLINE __attribute__((always_inline)) inline
+    #define FL_NO_INLINE __attribute__((noinline))
 #else
-#define FL_INLINE static inline
-#define FL_NO_INLINE
+    #define FL_INLINE static inline
+    #define FL_NO_INLINE
 #endif
 
 #define FL_UNUSED(a) (void)(a)

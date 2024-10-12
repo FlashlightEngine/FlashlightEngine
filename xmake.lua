@@ -38,6 +38,8 @@ add_requires("glslang", {configs = {binaryonly = true}})
 if is_plat("linux") then 
   add_requires("libx11")
   add_requires("libxkbcommon", {configs = {x11 = true}})
+elseif is_plat("macosx") then
+  add_requires("glfw")
 end 
 
 -- Don't link system-installed libraries in CI
@@ -138,6 +140,8 @@ target("FlashlightEngine")
 
   if is_plat("linux") then
     add_packages("libx11", "libxkbcommon")
+  elseif is_plat("macosx") then
+    add_packages("glfw")
   end
 
 includes("TestBed/xmake.lua")
