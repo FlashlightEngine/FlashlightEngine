@@ -33,6 +33,7 @@ for opt, level in table.orderpairs(logger_options) do
 end
 
 add_requires("vulkan-loader")
+add_requires("glslang", {configs = {binaryonly = true}})
 
 if is_plat("linux") then 
   add_requires("libx11")
@@ -94,6 +95,8 @@ if has_config("enable_assertions") then
 end
 
 target("FlashlightEngine")
+  add_rules("utils.glsl2spv", {outputdir = "./bin/$(plat)_$(arch)_$(mode)/Assets/Shaders"})
+
   if has_config("static") then
     set_kind("static")
     add_defines("FL_STATIC", {public = true})
@@ -110,6 +113,14 @@ target("FlashlightEngine")
   end
 
   add_files("Source/FlashlightEngine/**.c")
+
+  -- Add shader files for glslang
+  for _, ext in ipairs({".vert", ".frag"}) do
+    add_files("Assets/Shaders/**" .. ext)
+
+    -- Just so that they show up in VS/Rider solutions.
+    add_extrafiles("Assets/Shaders/**" .. ext)
+  end
 
   add_includedirs("Source", {private = true})
   add_rpathdirs("$ORIGIN")
