@@ -50,7 +50,7 @@ end
 add_rules("mode.coverage", "mode.debug", "mode.releasedbg", "mode.release")
 add_rules("plugin.vsxmake.autoupdate")
 
-set_allowedplats("windows", "mingw", "linux")
+set_allowedplats("windows", "linux", "android", "iphoneos", "macosx")
 set_allowedmodes("coverage", "debug", "releasedbg", "release")
 
 add_includedirs("Include")
@@ -92,6 +92,19 @@ end
 
 if has_config("enable_assertions") then 
   add_defines("Fl_ASSERTIONS_ENABLED")
+end
+
+-- Platform detection
+if is_plat("windows") then 
+  add_defines("FL_PLATFORM_WINDOWS", "VK_USE_PLATFORM_WIN32_KHR")
+elseif is_plat("linux") then
+  add_defines("FL_PLATFORM_LINUX", "VK_USE_PLATFORM_XCB_KHR")
+elseif is_plat("android") then
+  add_defines("FL_PLATFORM_LINUX", "FL_PLATFORM_ANDROID")
+elseif is_plat("iphoneos") then
+  add_defines("FL_PLATFORM_IOS", "FL_PLATFORM_APPLE")
+elseif is_plat("macosx") then
+  add_defines("FL_PLATFORM_MACOS", "FL_PLATFORM_APPLE")
 end
 
 target("FlashlightEngine")

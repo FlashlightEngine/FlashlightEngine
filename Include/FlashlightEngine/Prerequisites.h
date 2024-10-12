@@ -52,41 +52,16 @@ STATIC_ASSERT(sizeof(FlFloat64) == 8, "Expected FlFloat64 to be 8 bytes.");
 #define false 0
 
 // Platform detection
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__)
-    #define FL_PLATFORM_WINDOWS
+#if defined(FL_PLATFORM_WINDOWS)
     #ifndef _WIN64
         #error "Flashlight Engine only supports 64-bit windows."
     #endif
-#elif defined(__linux__) || defined(__gnu_linux__)
-    #define FL_PLATFORM_LINUX
-    #if defined(__ANDROID__)
-        #define FL_PLATFORM_ANDROID
-    #endif
-#elif defined(__unix__)
-    // Catch anything not caught by the above
-    #define FL_PLATFORM_UNIX
-#elif defined(_POSIX_VERSION)
-    // Posix
-    #define FL_PLATFORM_POSIX
-#elif __APPLE__
-    // Apple platforms
-    #define FL_PLATFORM_APPLE
-
+#elif defined(FL_PLATFORM_APPLE)
     #include <TargetConditionals.h>
+
     #if TARGET_SIMULATOR_IPHONE
-        // iOS simulator
         #define FL_PLATFORM_IOS_SIMULATOR
-        #define FL_PLATFORM_IOS
-    #elif TARGET_OS_IPHONE
-        // iOS device
-        #define FL_PLATFORM_IOS
-    #elif TARGET_OS_MAC
-        // Other kinds of macOS
-    #else
-        #error "Unknown Apple platform"
     #endif
-#else
-#error "Unknown platform"
 #endif
 
 #ifdef _MSC_VER
