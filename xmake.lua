@@ -47,11 +47,11 @@ if os.getenv("CI") then
 end
 
 -- Global configuration
-add_rules("mode.coverage", "mode.debug", "mode.releasedbg", "mode.release")
+add_rules("mode.debug", "mode.release")
 add_rules("plugin.vsxmake.autoupdate")
 
 set_allowedplats("windows", "linux", "android", "iphoneos", "macosx")
-set_allowedmodes("coverage", "debug", "releasedbg", "release")
+set_allowedmodes("debug", "release")
 
 add_includedirs("Include")
 
@@ -64,30 +64,22 @@ set_warnings("allextra")
 
 if is_mode("debug") then
   add_defines("FL_DEBUG")
-elseif is_mode("coverage") then
-  if not is_plat("windows") then
-    add_links("gcov")
-  end
-elseif is_mode("releasedbg", "release") then
+  
+  set_symbols("debug", "hidden")
+elseif is_mode("release") then
   set_fpmodels("fast")
   add_vectorexts("sse", "sse2", "sse3", "ssse3")
 end
 
 if not is_mode("release") then
-  set_symbols("debug", "hidden")
 end
 
-add_cxflags("-Wno-missing-field-initializers", {tools = {"clang", "gcc"}})
+add_cxflags("-Wno-missing-field-initializers -Werror=vla", {tools = {"clang", "gcc"}})
 
 if is_plat("windows") then
   if has_config("override_runtime") then
     set_runtimes(is_mode("debug") and "MDd" or "MD")
   end
-elseif is_plat("mingw") then
-  if is_mode("debug") then
-    add_cxflags("-Og")
-  end
-  add_cxflags("-Wa,-mbig-obj")
 end
 
 if has_config("enable_assertions") then 
