@@ -26,7 +26,7 @@ typedef struct FlInputState {
 } FlInputState;
 
 // Internal input state
-static FlBool8 Initialized = FALSE;
+static FlBool8 Initialized = false;
 static FlInputState State = {};
 
 void flInputInitialize(void) {
@@ -35,13 +35,13 @@ void flInputInitialize(void) {
     }
 
     flZeroMemory(&State, sizeof(FlInputState));
-    Initialized = TRUE;
+    Initialized = true;
     FL_LOG_INFO("Input subsystem initialized.")
 }
 
 void flInputShutdown(void) {
     // TODO: Add shutdown routines when needed.
-    Initialized = FALSE;
+    Initialized = false;
 }
 
 void flInputUpdate(FlFloat64 deltaTime) {
@@ -58,34 +58,34 @@ void flInputUpdate(FlFloat64 deltaTime) {
 
 FlBool8 flInputIsKeyDown(FlKeys key) {
     if (!Initialized) {
-        return FALSE;
+        return false;
     }
 
-    return State.KeyboardCurrent.Keys[key] == TRUE;
+    return State.KeyboardCurrent.Keys[key] == true;
 }
 
 FlBool8 flInputIsKeyUp(FlKeys key) {
     if (!Initialized) {
-        return TRUE;
+        return true;
     }
 
-    return State.KeyboardCurrent.Keys[key] == FALSE;
+    return State.KeyboardCurrent.Keys[key] == false;
 }
 
 FlBool8 flInputWasKeyDown(FlKeys key) {
     if (!Initialized) {
-        return FALSE;
+        return false;
     }
 
-    return State.KeyboardPrevious.Keys[key] == TRUE;
+    return State.KeyboardPrevious.Keys[key] == true;
 }
 
 FlBool8 flInputWasKeyUp(FlKeys key) {
     if (!Initialized) {
-        return TRUE;
+        return true;
     }
 
-    return State.KeyboardPrevious.Keys[key] == FALSE;
+    return State.KeyboardPrevious.Keys[key] == false;
 }
 
 void flInputProcessKey(FlKeys key, FlBool8 pressed) {
@@ -106,34 +106,34 @@ void flInputProcessKey(FlKeys key, FlBool8 pressed) {
 
 FlBool8 flInputIsButtonDown(FlButtons button) {
     if (!Initialized) {
-        return FALSE;
+        return false;
     }
 
-    return State.MouseCurrent.Buttons[button] == TRUE;
+    return State.MouseCurrent.Buttons[button] == true;
 }
 
 FlBool8 flInputIsButtonUp(FlButtons button) {
     if (!Initialized) {
-        return TRUE;
+        return true;
     }
 
-    return State.MouseCurrent.Buttons[button] == FALSE;
+    return State.MouseCurrent.Buttons[button] == false;
 }
 
 FlBool8 flInputWasButtonDown(FlButtons button) {
     if (!Initialized) {
-        return FALSE;
+        return false;
     }
 
-    return State.MousePrevious.Buttons[button] == TRUE;
+    return State.MousePrevious.Buttons[button] == true;
 }
 
 FlBool8 flInputWasButtonUp(FlButtons button) {
     if (!Initialized) {
-        return TRUE;
+        return true;
     }
 
-    return State.MousePrevious.Buttons[button] == FALSE;
+    return State.MousePrevious.Buttons[button] == false;
 }
 
 void flInputGetMousePosition(FlInt32* x, FlInt32* y) {

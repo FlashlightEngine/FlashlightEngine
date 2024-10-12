@@ -18,7 +18,7 @@
 #define VK_CHECK(expr)                                   \
     {                                                    \
         if ((expr) != VK_SUCCESS) {                      \
-            FL_ASSERT_MSG(FALSE, "Vulkan call failed."); \
+            FL_ASSERT_MSG(false, "Vulkan call failed."); \
         }                                                \
     }
 

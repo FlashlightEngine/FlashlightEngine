@@ -25,7 +25,7 @@ typedef double FlFloat64;
 
 // Boolean
 typedef int FlBool32;
-typedef char FlBool8;
+typedef _Bool FlBool8;
 
 // Properly define static assertions.
 #if defined(__clang__) || defined(__gcc__)
@@ -48,8 +48,8 @@ STATIC_ASSERT(sizeof(FlInt64) == 8, "Expected FlInt64 to be 8 bytes.");
 STATIC_ASSERT(sizeof(FlFloat32) == 4, "Expected FlFloat32 to be 4 bytes.");
 STATIC_ASSERT(sizeof(FlFloat64) == 8, "Expected FlFloat64 to be 8 bytes.");
 
-#define TRUE 1
-#define FALSE 0
+#define true 1
+#define false 0
 
 // Platform detection
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__)

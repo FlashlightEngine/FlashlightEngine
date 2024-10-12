@@ -18,10 +18,10 @@ FlBool8 flRendererBackendCreate(FlRendererBackendType type, struct FlPlatformSta
         outRenderBackend->EndFrame = flVulkanRendererBackendEndFrame;
         outRenderBackend->Resized = flVulkanRendererBackendOnResize;
 
-        return TRUE;
+        return true;
     }
 
-    return FALSE;
+    return false;
 }
 
 void flRendererBackendDestroy(FlRendererBackend* rendererBackend) {

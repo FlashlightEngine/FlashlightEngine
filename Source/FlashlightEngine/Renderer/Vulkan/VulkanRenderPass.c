@@ -137,10 +137,10 @@ void flVulkanRenderPassBegin(
     VkRenderPassBeginInfo beginInfo = {VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO};
     beginInfo.renderPass = renderPass->Handle;
     beginInfo.framebuffer = framebuffer;
-    beginInfo.renderArea.offset.x = renderPass->X;
-    beginInfo.renderArea.offset.y = renderPass->Y;
-    beginInfo.renderArea.extent.width = renderPass->W;
-    beginInfo.renderArea.extent.height = renderPass->H;
+    beginInfo.renderArea.offset.x = (FlUInt32)renderPass->X;
+    beginInfo.renderArea.offset.y = (FlUInt32)renderPass->Y;
+    beginInfo.renderArea.extent.width = (FlUInt32)renderPass->W;
+    beginInfo.renderArea.extent.height = (FlUInt32)renderPass->H;
     
     VkClearValue clearValues[2];
     clearValues[0].color.float32[0] = renderPass->R;
@@ -159,6 +159,7 @@ void flVulkanRenderPassBegin(
 }
 
 void flVulkanRenderPassEnd(FlVulkanCommandBuffer* commandBuffer, FlVulkanRenderPass* renderPass) {
+    FL_UNUSED(renderPass);
     vkCmdEndRenderPass(commandBuffer->Handle);
     commandBuffer->State = FlVulkanCommandBufferStateRecording;
 }

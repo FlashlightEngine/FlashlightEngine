@@ -24,21 +24,21 @@ void flVulkanFenceDestroy(FlVulkanContext* context, FlVulkanFence* fence) {
         vkDestroyFence(context->Device.LogicalDevice, fence->Handle, context->Allocator);
         fence->Handle = VK_NULL_HANDLE;
     }
-    fence->Signaled = FALSE;
+    fence->Signaled = false;
 }
 
 FlBool8 flVulkanFenceWait(FlVulkanContext* context, FlVulkanFence* fence, FlUInt64 timeoutNs) {
     if (fence->Signaled) {
         // If already signaled, do not wait.
-        return TRUE;
+        return true;
     }
 
-    VkResult result = vkWaitForFences(context->Device.LogicalDevice, 1, &fence->Handle, TRUE, timeoutNs);
+    VkResult result = vkWaitForFences(context->Device.LogicalDevice, 1, &fence->Handle, true, timeoutNs);
     
     switch (result) {
     case VK_SUCCESS:
-        fence->Signaled = TRUE;
-        return TRUE;
+        fence->Signaled = true;
+        return true;
     case VK_TIMEOUT:
         FL_LOG_WARN("flVulkanFenceWait - Timed Out")
         break;
@@ -56,12 +56,12 @@ FlBool8 flVulkanFenceWait(FlVulkanContext* context, FlVulkanFence* fence, FlUInt
         break;
     }
 
-    return FALSE;
+    return false;
 }
 
 void flVulkanFenceReset(FlVulkanContext* context, FlVulkanFence* fence) {
     if (fence->Signaled) {
         VK_CHECK(vkResetFences(context->Device.LogicalDevice, 1, &fence->Handle))
-        fence->Signaled = FALSE;
+        fence->Signaled = false;
     }
 }

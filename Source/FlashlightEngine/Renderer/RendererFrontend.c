@@ -21,12 +21,12 @@ FlBool8 flRendererInitialize(const char* applicationName, struct FlPlatformState
 
     if (!Backend->Initialize(Backend, applicationName, platformState)) {
         FL_LOG_FATAL("Renderer backend failed to initialize. Shutting down.")
-        return FALSE;
+        return false;
     }
 
     FL_LOG_INFO("Renderer subsystem initialized.")
 
-    return TRUE;
+    return true;
 }
 
 void flRendererShutdown() {
@@ -61,9 +61,9 @@ FlBool8 flRendererDrawFrame(FlRenderPacket* packet) {
 
         if (!result) {
             FL_LOG_ERROR("flRendererEndFrame failed. Shutting down application.")
-            return FALSE;
+            return false;
         } 
     }
 
-    return TRUE; 
+    return true; 
 }

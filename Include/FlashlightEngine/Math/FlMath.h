@@ -237,14 +237,14 @@ FL_INLINE FlVec2 flVec2Normalized(FlVec2 vector) {
  */
 FL_INLINE FlBool8 flVec2Compare(FlVec2 vector0, FlVec2 vector1, FlFloat32 tolerance) {
     if (flAbs(vector0.X - vector1.X) > tolerance) {
-        return FALSE;
+        return false;
     }
 
     if (flAbs(vector0.Y - vector1.Y) > tolerance) {
-        return FALSE;
+        return false;
     }
 
-    return TRUE;
+    return true;
 }
 
 /**
@@ -532,18 +532,18 @@ FL_INLINE FlVec3 flVec3Cross(FlVec3 vector0, FlVec3 vector1) {
  */
 FL_INLINE FlBool8 flVec3Compare(FlVec3 vector0, FlVec3 vector1, FlFloat32 tolerance) {
     if (flAbs(vector0.X - vector1.X) > tolerance) {
-        return FALSE;
+        return false;
     }
 
     if (flAbs(vector0.Y - vector1.Y) > tolerance) {
-        return FALSE;
+        return false;
     }
 
     if (flAbs(vector0.Z - vector1.Z) > tolerance) {
-        return FALSE;
+        return false;
     }
 
-    return TRUE;
+    return true;
 }
 
 /**
@@ -747,22 +747,22 @@ FL_INLINE FlVec4 flVec4Normalized(FlVec4 vector) {
  */
 FL_INLINE FlBool8 flVec4Compare(FlVec3 vector0, FlVec3 vector1, FlFloat32 tolerance) {
     if (flAbs(vector0.X - vector1.X) > tolerance) {
-        return FALSE;
+        return false;
     }
 
     if (flAbs(vector0.Y - vector1.Y) > tolerance) {
-        return FALSE;
+        return false;
     }
 
     if (flAbs(vector0.Z - vector1.Z) > tolerance) {
-        return FALSE;
+        return false;
     }
 
     if (flAbs(vector0.W - vector1.W) > tolerance) {
-        return FALSE;
+        return false;
     }
 
-    return TRUE;
+    return true;
 }
 
 FL_INLINE FlFloat32 flVec4DotF32(

@@ -101,10 +101,10 @@ FlBool8 flVulkanRendererBackendInitialize(FlRendererBackend* backend, const char
     // Verify all layers are available.
     for (FlUInt32 i = 0; i < requiredValidationLayerCount; ++i) {
         FL_LOG_DEBUG("Searching for layer: %s...", requiredValidationLayerNames[i]);
-        FlBool8 found = FALSE;
+        FlBool8 found = false;
         for (FlUInt32 j = 0; j < availableLayerCount; ++j) {
             if (flStringsEqual(requiredValidationLayerNames[i], availableLayers[j].layerName)) {
-                found = TRUE;
+                found = true;
                 FL_LOG_DEBUG("Found.")
                 break;
             }
@@ -112,7 +112,7 @@ FlBool8 flVulkanRendererBackendInitialize(FlRendererBackend* backend, const char
 
         if (!found) {
             FL_LOG_FATAL("Required validation layer is missing: %s", requiredValidationLayerNames[i]);
-            return FALSE;
+            return false;
         }
     }
 
@@ -159,14 +159,14 @@ FlBool8 flVulkanRendererBackendInitialize(FlRendererBackend* backend, const char
     FL_LOG_DEBUG("Creating Vulkan surface...")
     if (!flPlatformCreateVulkanSurface(platformState, &Context)) {
         FL_LOG_FATAL("Failed to create Vulkan surface.");
-        return FALSE;
+        return false;
     }
     FL_LOG_DEBUG("Vulkan surface created.")
 
     // Device creation.
     if (!flVulkanDeviceCreate(&Context)) {
         FL_LOG_FATAL("Failed to create Vulkan device.");
-        return FALSE;
+        return false;
     }
 
     // Swapchain creation.
@@ -208,7 +208,7 @@ FlBool8 flVulkanRendererBackendInitialize(FlRendererBackend* backend, const char
         // Create the fence in a signealed state, indicating that the first frame has already been "rendered".
         // This will prevent the application from waiting indefinitely for the first frame to render since it
         // cannot be rendered util a frame is "rendered" before it.
-        flVulkanFenceCreate(&Context, TRUE, &Context.InFlightFences[i]);
+        flVulkanFenceCreate(&Context, true, &Context.InFlightFences[i]);
     }
 
     // In flight fences should not yet exist at this point, so clear the list. These are stored in pointers
@@ -221,7 +221,7 @@ FlBool8 flVulkanRendererBackendInitialize(FlRendererBackend* backend, const char
     FL_LOG_DEBUG("Vulkan synchronisation objects created.")
 
     FL_LOG_INFO("Vulkan renderer backend initialized successfully.")
-    return TRUE;
+    return true;
 }
 
 void flVulkanRendererBackendShutdown(FlRendererBackend* backend) {
@@ -314,29 +314,29 @@ FlBool8 flVulkanRendererBackendBeginFrame(FlRendererBackend* backend, FlFloat32 
     if (Context.RecreatingSwapchain) {
         VkResult result = vkDeviceWaitIdle(device->LogicalDevice);
         if (!flVulkanResultIsSuccess(result)) {
-            FL_LOG_ERROR("flVulkanRendererBackendBeginFrame vkDeviceWaitIdle (1) failed: '%s'", flVulkanResultToString(result, TRUE))
-            return FALSE;
+            FL_LOG_ERROR("flVulkanRendererBackendBeginFrame vkDeviceWaitIdle (1) failed: '%s'", flVulkanResultToString(result, true))
+            return false;
         }
         FL_LOG_INFO("Currently recreating swapchain, booting out of frame.")
-        return FALSE;
+        return false;
     }
 
     // Check if the framebuffer has been resized. If so, a new swapchain must be created.
     if (Context.FramebufferSizeGeneration != Context.FramebufferSizeLastGeneration) {
         VkResult result = vkDeviceWaitIdle(device->LogicalDevice);
         if (!flVulkanResultIsSuccess(result)) {
-            FL_LOG_ERROR("flVulkanRendererBackendBeginFrame vkDeviceWaitIdle (2) failed: '%s'", flVulkanResultToString(result, TRUE))
-            return FALSE;
+            FL_LOG_ERROR("flVulkanRendererBackendBeginFrame vkDeviceWaitIdle (2) failed: '%s'", flVulkanResultToString(result, true))
+            return false;
         }
         
         // If the swapchain recreation failed (because, for example, the window was minimized),
         // boot out before unsetting the flag.
         if (!flVulkanRendererBackendRecreateSwapchain(backend)) {
-            return FALSE;
+            return false;
         }
 
         FL_LOG_INFO("Resized, booting out of frame.")
-        return FALSE;
+        return false;
     }
 
     // Wait for the execution of the current frame to complete. The fence being free will allow this one to move on.
@@ -346,7 +346,7 @@ FlBool8 flVulkanRendererBackendBeginFrame(FlRendererBackend* backend, FlFloat32 
         UINT64_MAX
     )) {
         FL_LOG_WARN("In-flight fence wait failure.")
-        return FALSE;
+        return false;
     }
 
     // Acquire the next image from the swapchain. Pass along the semaphore that should be signaled when this completes.
@@ -359,13 +359,13 @@ FlBool8 flVulkanRendererBackendBeginFrame(FlRendererBackend* backend, FlFloat32 
         0,
         &Context.ImageIndex
     )) {
-        return FALSE;
+        return false;
     }
 
     // Begin recording commands.
     FlVulkanCommandBuffer* commandBuffer = &Context.GraphicsCommandBuffers[Context.ImageIndex];
     flVulkanCommandBufferReset(commandBuffer);
-    flVulkanCommandBufferBegin(commandBuffer, FALSE, FALSE, FALSE);
+    flVulkanCommandBufferBegin(commandBuffer, false, false, false);
 
     // Dynamic states
     VkViewport viewport;
@@ -390,7 +390,7 @@ FlBool8 flVulkanRendererBackendBeginFrame(FlRendererBackend* backend, FlFloat32 
     // Begin the render pass.
     flVulkanRenderPassBegin(commandBuffer, &Context.MainRenderPass, Context.Swapchain.Framebuffers[Context.ImageIndex].Handle);
 
-    return TRUE;
+    return true;
 }
 
 FlBool8 flVulkanRendererBackendEndFrame(FlRendererBackend* backend, FlFloat32 deltaTime) {
@@ -437,8 +437,8 @@ FlBool8 flVulkanRendererBackendEndFrame(FlRendererBackend* backend, FlFloat32 de
     );
 
     if (result != VK_SUCCESS) {
-        FL_LOG_ERROR("vkQueueSubmit failed with result: %s", flVulkanResultToString(result, TRUE))
-        return FALSE;
+        FL_LOG_ERROR("vkQueueSubmit failed with result: %s", flVulkanResultToString(result, true))
+        return false;
     }
 
     flVulkanCommandBufferUpdateSubmitted(commandBuffer);
@@ -452,7 +452,7 @@ FlBool8 flVulkanRendererBackendEndFrame(FlRendererBackend* backend, FlFloat32 de
         Context.ImageIndex
     );
 
-    return TRUE;
+    return true;
 }
 
 VKAPI_ATTR VkBool32 VKAPI_CALL flVkDebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
@@ -508,7 +508,7 @@ void flVulkanRendererBackendCreateCommandBuffers(FlRendererBackend* backend) {
             flVulkanCommandBufferFree(&Context, Context.Device.GraphicsCommandPool, &Context.GraphicsCommandBuffers[i]);
         }
         flZeroMemory(&Context.GraphicsCommandBuffers[i], sizeof(FlVulkanCommandBuffer));
-        flVulkanCommandBufferAllocate(&Context, Context.Device.GraphicsCommandPool, TRUE, &Context.GraphicsCommandBuffers[i]);
+        flVulkanCommandBufferAllocate(&Context, Context.Device.GraphicsCommandPool, true, &Context.GraphicsCommandBuffers[i]);
     }
 }
 
@@ -537,17 +537,17 @@ FlBool8 flVulkanRendererBackendRecreateSwapchain(FlRendererBackend* backend) {
     // If already being recreated, do not try again.
     if (Context.RecreatingSwapchain) {
         FL_LOG_DEBUG("flVulkanRendererBackendRecreateSwapchain called when already recreating. Booting out.")
-        return FALSE;
+        return false;
     }
 
     // Detect if the window is too small to be drawn to.
     if (Context.FramebufferWidth == 0 || Context.FramebufferHeight == 0) {
         FL_LOG_DEBUG("flVulkanRendererBackendRecreateSwapchain called when window is < 1 in a dimension. Booting out.")
-        return FALSE;
+        return false;
     }
 
     // Mark as recreating if the dimensions are valid.
-    Context.RecreatingSwapchain = TRUE;
+    Context.RecreatingSwapchain = true;
 
     // Wait for any operations to complete.
     vkDeviceWaitIdle(Context.Device.LogicalDevice);
@@ -592,7 +592,7 @@ FlBool8 flVulkanRendererBackendRecreateSwapchain(FlRendererBackend* backend) {
     flVulkanRendererBackendCreateCommandBuffers(backend);
 
     // Clear the recreating flag
-    Context.RecreatingSwapchain = FALSE;
+    Context.RecreatingSwapchain = false;
 
-    return TRUE;
+    return true;
 }

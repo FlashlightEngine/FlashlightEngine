@@ -40,7 +40,7 @@ static const char* memoryTagStrings[FlMemoryTagMaxTags] = {
     "SCENE       "
 };
 
-static FlBool8 Initialized = FALSE;
+static FlBool8 Initialized = false;
 
 void flInitializeMemory(void) {
     if (Initialized) {
@@ -48,12 +48,12 @@ void flInitializeMemory(void) {
     }
 
     flPlatformZeroMemory(&stats, sizeof(stats));
-    Initialized = TRUE;
+    Initialized = true;
     FL_LOG_INFO("Memory subsystem initialized.")
 }
 
 void flShutdownMemory(void) {
-    Initialized = FALSE;
+    Initialized = false;
 }
 
 void* flAllocate(FlUInt64 size, FlMemoryTag memoryTag) {
@@ -65,7 +65,7 @@ void* flAllocate(FlUInt64 size, FlMemoryTag memoryTag) {
     stats.TaggedAllocations[memoryTag] += size;
 
     // TODO: Memory alignment
-    void* block = flPlatformAllocate(size, FALSE);
+    void* block = flPlatformAllocate(size, false);
     flPlatformZeroMemory(block, size);
 
     return block;
@@ -80,7 +80,7 @@ void flFree(void* block, FlUInt64 size, FlMemoryTag memoryTag) {
     stats.TaggedAllocations[memoryTag] -= size;
 
     // TODO: Memory alignment
-    flPlatformFree(block, FALSE);
+    flPlatformFree(block, false);
 }
 
 void flZeroMemory(void* block, FlUInt64 size) {

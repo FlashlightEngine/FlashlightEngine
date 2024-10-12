@@ -12,7 +12,7 @@
 #include <stdarg.h>
 #include <string.h>
 
-static FlBool8 Initialized = FALSE;
+static FlBool8 Initialized = false;
 
 void flReportAssertionFailure(const char* expression, const char* message, const char* file, FlInt32 line) {
     flLogOutput(FlLogLevelFatal, "Assertion failed: %s, message: '%s', in file %s, line: %d\n",
@@ -21,19 +21,19 @@ void flReportAssertionFailure(const char* expression, const char* message, const
 
 FlBool8 flLoggingInitialize(void) {
     if (Initialized) {
-        return FALSE;
+        return false;
     }
 
     // TODO: Create log file.
-    Initialized = TRUE;
+    Initialized = true;
     FL_LOG_INFO("Logging subsystem initialized.")
 
-    return TRUE;
+    return true;
 }
 
 void flLoggingShutdown(void) {
     // TODO: Clean up logging/writing queued entries.
-    Initialized = FALSE;
+    Initialized = false;
 }
 
 void flLogOutput(const FlLogLevel level, const char* message, ...) {

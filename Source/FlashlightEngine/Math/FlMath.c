@@ -9,7 +9,7 @@
 #include <math.h>
 #include <stdlib.h>
 
-static FlBool8 RandSeeded = FALSE;
+static FlBool8 RandSeeded = false;
 
 /*
  * NOTE: These are here in order to prevent including
@@ -43,7 +43,7 @@ FlFloat32 flAbs(FlFloat32 x) {
 FlInt32 flRandom() {
     if (!RandSeeded) {
         srand((FlUInt32)flPlatformGetAbsoluteTime());
-        RandSeeded = TRUE;
+        RandSeeded = true;
     }
     return rand();
 }
@@ -51,7 +51,7 @@ FlInt32 flRandom() {
 FlInt32 flRandomInRange(FlInt32 min, FlInt32 max) {
     if (!RandSeeded) {
         srand((FlUInt32)flPlatformGetAbsoluteTime());
-        RandSeeded = TRUE;
+        RandSeeded = true;
     }
 
     return (rand() % (max - min + 1)) + min;

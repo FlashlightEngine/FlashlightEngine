@@ -30,19 +30,19 @@ typedef struct FlEventSystemState {
 /**
  * Event system internal state.
  */
-static FlBool8 Initialized = FALSE;
+static FlBool8 Initialized = false;
 static FlEventSystemState State;
 
 FlBool8 flEventInitialize(void) {
     if (Initialized) {
-        return FALSE;
+        return false;
     }
 
     flZeroMemory(&State, sizeof(State));
-    Initialized = TRUE;
+    Initialized = true;
     FL_LOG_INFO("Event subsystem initialized")
 
-    return TRUE;
+    return true;
 }
 
 void flEventShutdown(void) {
@@ -54,12 +54,12 @@ void flEventShutdown(void) {
         }
     }
 
-    Initialized = FALSE;
+    Initialized = false;
 }
 
 FlBool8 flEventRegister(FlUInt16 code, void* listener, PFN_flOnEvent onEvent) {
-    if (Initialized == FALSE) {
-        return FALSE;
+    if (Initialized == false) {
+        return false;
     }
 
     if (State.Registered[code].Events == 0) {
@@ -70,7 +70,7 @@ FlBool8 flEventRegister(FlUInt16 code, void* listener, PFN_flOnEvent onEvent) {
     for (FlUInt64 i = 0; i < registeredCount; ++i) {
         if (State.Registered[code].Events[i].Listener == listener) {
             FL_LOG_WARN("Event listener already registered. Aborting registration.")
-            return FALSE;
+            return false;
         }
     }
 
@@ -80,18 +80,18 @@ FlBool8 flEventRegister(FlUInt16 code, void* listener, PFN_flOnEvent onEvent) {
     event.Callback = onEvent;
     flDArrayPush(State.Registered[code].Events, event);
 
-    return TRUE;
+    return true;
 }
 
 FlBool8 flEventUnregister(FlUInt16 code, void* listener, PFN_flOnEvent onEvent) {
-    if (Initialized == FALSE) {
-        return FALSE;
+    if (Initialized == false) {
+        return false;
     }
 
     // If nothing is registered for the code, boot out.
     if (State.Registered[code].Events == 0) {
         FL_LOG_WARN("The is no registered event for the code 0x%X. Aborting unregistration.", code)
-        return FALSE;
+        return false;
     }
 
     FlUInt64 registeredCount = flDArrayLength(State.Registered[code].Events);
@@ -101,22 +101,22 @@ FlBool8 flEventUnregister(FlUInt16 code, void* listener, PFN_flOnEvent onEvent) 
             // Found one, remove it.
             FlRegisteredEvent poppedEvent;
             flDArrayPopAt(State.Registered[code].Events, i, &poppedEvent);
-            return TRUE;
+            return true;
         }
     }
 
     // Not found.
-    return FALSE;
+    return false;
 }
 
 FlBool8 flEventFire(FlUInt16 code, void* sender, FlEventContext eventContext) {
-    if (Initialized == FALSE) {
-        return FALSE;
+    if (Initialized == false) {
+        return false;
     }
 
     // If nothing is registered for the code, boot out.
     if (State.Registered[code].Events == 0) {
-        return FALSE;
+        return false;
     }
 
     FlUInt64 registeredCount = flDArrayLength(State.Registered[code].Events);
@@ -124,10 +124,10 @@ FlBool8 flEventFire(FlUInt16 code, void* sender, FlEventContext eventContext) {
         FlRegisteredEvent e = State.Registered[code].Events[i];
         if (e.Callback(code, sender, e.Listener, eventContext)) {
             // Message has been handled, do not send to any other listeneners.
-            return TRUE;
+            return true;
         }
     }
 
     // Not found.
-    return FALSE;
+    return false;
 }

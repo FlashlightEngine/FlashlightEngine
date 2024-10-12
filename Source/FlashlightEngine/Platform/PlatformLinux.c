@@ -68,7 +68,7 @@ FlBool8 flPlatformStartup(
 
     if (xcb_connection_has_error(state->Connection)) {
         FL_LOG_FATAL("Failed to connect to X server via XCB")
-        return FALSE;
+        return false;
     }
 
     // Get data from the X server
@@ -178,10 +178,10 @@ FlBool8 flPlatformStartup(
     FlInt32 streamResult = xcb_flush(state->Connection);
     if (streamResult <= 0) {
         FL_LOG_FATAL("An error occured when flushing the stream: %d", streamResult)
-        return FALSE;
+        return false;
     }
 
-    return TRUE;
+    return true;
 }
 
 void flPlatformShutdown(FlPlatformState* platformState) {
@@ -201,7 +201,7 @@ FlBool8 flPlatformPumpMessages(FlPlatformState* platformState) {
     xcb_generic_event_t* event;
     xcb_client_message_event_t* clientMessage;
 
-    FlBool8 quitFlagged = FALSE;
+    FlBool8 quitFlagged = false;
 
     while (event != 0) {
         event = xcb_poll_for_event(state->Connection);
@@ -287,7 +287,7 @@ FlBool8 flPlatformPumpMessages(FlPlatformState* platformState) {
 
                 // Window close
                 if (clientMessage->data.data32[0] == state->WmDeleteWin) {
-                    quitFlagged = TRUE;
+                    quitFlagged = true;
                 }
                 break;
             }
@@ -368,11 +368,11 @@ FlBool8 flPlatformCreateVulkanSurface(struct FlPlatformState* platformState,
         &state->Surface);
     if (result != VK_SUCCESS) {
         FL_LOG_FATAL("Vulkan surface creation failed.")
-        return FALSE;
+        return false;
     }
 
     context->Surface = state->Surface;
-    return TRUE;
+    return true;
 }
 
 FlKeys flTranslateKeycode(FlUInt32 xKeycode) {

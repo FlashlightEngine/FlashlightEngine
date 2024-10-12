@@ -8,15 +8,15 @@
 
 FlBool8 GameInitialize(FlGame* gameInstance) {
     FL_LOG_DEBUG("GameInitialize() called.");
-    return TRUE;
+    return true;
 }
 
 FlBool8 GameUpdate(FlGame* gameInstance, FlFloat32 deltaTime) {
-    return TRUE;
+    return true;
 }
 
 FlBool8 GameRender(FlGame* gameInstance, FlFloat32 deltaTime) {
-    return TRUE;
+    return true;
 }
 
 void GameOnResize(FlGame* gameInstance, FlUInt32 width, FlUInt32 height) {

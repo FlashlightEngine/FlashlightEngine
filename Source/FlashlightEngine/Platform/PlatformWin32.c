@@ -66,7 +66,7 @@ FlBool8 flPlatformStartup(
 
     if (!RegisterClassA(&windowClass)) {
         MessageBoxA(NULL, "Window registration failed!", "Error!", MB_ICONEXCLAMATION | MB_OK);
-        return FALSE;
+        return false;
     }
 
     // Create window
@@ -91,7 +91,7 @@ FlBool8 flPlatformStartup(
 
     // Obtain the size of the border
     RECT borderRect = {0, 0, 0, 0};
-    AdjustWindowRectEx(&borderRect, windowStyle, FALSE, windowExStyle);
+    AdjustWindowRectEx(&borderRect, windowStyle, false, windowExStyle);
 
     // In this case, the border rectangle is negative.
     windowX += borderRect.left;
@@ -110,13 +110,13 @@ FlBool8 flPlatformStartup(
         MessageBoxA(NULL, "Window creation failed!", "Error!", MB_ICONEXCLAMATION | MB_OK);
 
         FL_LOG_FATAL("Window creation failed!")
-        return FALSE;
+        return false;
     }
 
     state->HWnd = handle;
 
     // Show the window
-    const FlBool32 shouldActivate = TRUE; // TODO: If the window should not accept input, this should be false.
+    const FlBool32 shouldActivate = true; // TODO: If the window should not accept input, this should be false.
     const FlInt32 showWindowCommandFlags = shouldActivate ? SW_SHOW : SW_SHOWNOACTIVATE;
     // If initially minimized, use SW_MINIMIZE : SW_SHOWMINNOACTIVATE;
     // If initially maximized, use SW_SHOWMAXIMIZED : SW_MAXIMIZE
@@ -128,7 +128,7 @@ FlBool8 flPlatformStartup(
     flClockFrequency = 1.0 / (FlFloat64)frequency.QuadPart;
     QueryPerformanceCounter(&flStartTime);
 
-    return TRUE;
+    return true;
 }
 
 void flPlatformShutdown(FlPlatformState* platformState) {
@@ -150,7 +150,7 @@ FlBool8 flPlatformPumpMessages(FlPlatformState* platformState) {
         DispatchMessageA(&message);
     }
 
-    return TRUE;
+    return true;
 }
 
 // TODO: Temporary
@@ -232,11 +232,11 @@ FlBool8 flPlatformCreateVulkanSurface(struct FlPlatformState* platformState,
         &state->Surface);
     if (result != VK_SUCCESS) {
         FL_LOG_FATAL("Vulkan surface creation failed.");
-        return FALSE;
+        return false;
     }
 
     context->Surface = state->Surface;
-    return TRUE;
+    return true;
 }
 
 LRESULT CALLBACK flWin32ProcessMessage(const HWND hWnd, const FlUInt32 msg, const WPARAM wParam, const LPARAM lParam) {

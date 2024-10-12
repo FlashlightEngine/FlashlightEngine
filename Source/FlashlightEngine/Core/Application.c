@@ -27,7 +27,7 @@ typedef struct FlApplicationState {
     FlFloat64 LastTime;
 } FlApplicationState;
 
-static FlBool8 Initialized = FALSE;
+static FlBool8 Initialized = false;
 static FlApplicationState ApplicationState;
 
 // Event handlers
@@ -38,7 +38,7 @@ FlBool8 flApplicationOnResize(FlUInt16 code, void* sender, void* listenerInstanc
 FlBool8 flApplicationCreate(FlGame* gameInstance) {
     if (Initialized) {
         FL_LOG_ERROR("flApplicationCreate called more than once.");
-        return FALSE;
+        return false;
     }
 
     ApplicationState.GameInstance = gameInstance;
@@ -49,7 +49,7 @@ FlBool8 flApplicationCreate(FlGame* gameInstance) {
 
     if (!flEventInitialize()) {
         FL_LOG_ERROR("Event system initialization failed. Application cannot continue.")
-        return FALSE;
+        return false;
     }
 
     flEventRegister(FlEventCodeApplicationQuit, 0, flApplicationOnEvent);
@@ -57,8 +57,8 @@ FlBool8 flApplicationCreate(FlGame* gameInstance) {
     flEventRegister(FlEventCodeKeyReleased, 0, flApplicationOnKey);
     flEventRegister(FlEventCodeResized, 0, flApplicationOnResize);
 
-    ApplicationState.IsRunning = TRUE;
-    ApplicationState.IsSuspended = FALSE;
+    ApplicationState.IsRunning = true;
+    ApplicationState.IsSuspended = false;
 
     if (!flPlatformStartup(
         &ApplicationState.Platform, 
@@ -67,26 +67,26 @@ FlBool8 flApplicationCreate(FlGame* gameInstance) {
         gameInstance->ApplicationConfiguration.StartPosY,
         gameInstance->ApplicationConfiguration.StartWidth, 
         gameInstance->ApplicationConfiguration.StartHeight)) {
-        return FALSE;
+        return false;
     }
 
     // Renderer startup
     if (!flRendererInitialize(gameInstance->ApplicationConfiguration.Name, &ApplicationState.Platform)) {
         FL_LOG_FATAL("Failed to initialize renderer. Application cannot continue.");
-        return FALSE;
+        return false;
     }
 
     // Initialize the game.
     if (!ApplicationState.GameInstance->Initialize(ApplicationState.GameInstance)) {
         FL_LOG_FATAL("Game failed to initialize.");
-        return FALSE;
+        return false;
     }
 
     ApplicationState.GameInstance->OnResize(ApplicationState.GameInstance, ApplicationState.Width, ApplicationState.Height);
 
-    Initialized = TRUE;
+    Initialized = true;
 
-    return TRUE;
+    return true;
 }
 
 FlBool8 flApplicationRun(void) {
@@ -103,7 +103,7 @@ FlBool8 flApplicationRun(void) {
     
     while (ApplicationState.IsRunning) {
         if (!flPlatformPumpMessages(&ApplicationState.Platform)) {
-            ApplicationState.IsRunning = FALSE;
+            ApplicationState.IsRunning = false;
         }
 
         if (!ApplicationState.IsSuspended) {
@@ -115,14 +115,14 @@ FlBool8 flApplicationRun(void) {
 
             if (!ApplicationState.GameInstance->Update(ApplicationState.GameInstance, (FlFloat32)delta)) {
                 FL_LOG_FATAL("Game update failed, shutting down.");
-                ApplicationState.IsRunning = FALSE;
+                ApplicationState.IsRunning = false;
                 break;
             }
 
             // Call the game's render routine.
             if (!ApplicationState.GameInstance->Render(ApplicationState.GameInstance, (FlFloat32)delta)) {
                 FL_LOG_FATAL("Game render failed, shutting down.");
-                ApplicationState.IsRunning = FALSE;
+                ApplicationState.IsRunning = false;
                 break;
             }
 
@@ -142,7 +142,7 @@ FlBool8 flApplicationRun(void) {
                 FlUInt64 remainingMs = (remainingSeconds * 1000);
 
                 // If there is time left, give it back to the OS.
-                FlBool8 limitFrames = FALSE;
+                FlBool8 limitFrames = false;
                 if (remainingMs > 0 && limitFrames) {
                     flPlatformSleep(remainingMs - 1);
                 }
@@ -160,7 +160,7 @@ FlBool8 flApplicationRun(void) {
         }
     }
 
-    ApplicationState.IsRunning = FALSE;
+    ApplicationState.IsRunning = false;
 
     flRendererShutdown();
 
@@ -177,7 +177,7 @@ FlBool8 flApplicationRun(void) {
 
     flLoggingShutdown();
 
-    return TRUE;
+    return true;
 }
 
 void flApplicationGetFramebufferSize(FlUInt32* width, FlUInt32* height) {
@@ -190,12 +190,12 @@ FlBool8 flApplicationOnEvent(FlUInt16 code, void* sender, void* listenerInstance
     case FlEventCodeApplicationQuit:
         {
             FL_LOG_INFO("FlEventCodeApplicationQuit recieved, shutting down.")
-            ApplicationState.IsRunning = FALSE;
-            return TRUE;
+            ApplicationState.IsRunning = false;
+            return true;
         }
     }
 
-    return FALSE;
+    return false;
 }
 
 FlBool8 flApplicationOnKey(FlUInt16 code, void* sender, void* listenerInstance, FlEventContext context) {
@@ -207,7 +207,7 @@ FlBool8 flApplicationOnKey(FlUInt16 code, void* sender, void* listenerInstance, 
             flEventFire(FlEventCodeApplicationQuit, 0, data);
 
             // Block anything else from processing this.
-            return TRUE;
+            return true;
         } else if (keyCode == FlKeyA) {
             // Example on checking for a key
             FL_LOG_DEBUG("Explicit - A key pressed.")
@@ -224,7 +224,7 @@ FlBool8 flApplicationOnKey(FlUInt16 code, void* sender, void* listenerInstance, 
         }
     }
 
-    return FALSE;
+    return false;
 }
 
 FlBool8 flApplicationOnResize(FlUInt16 code, void* sender, void* listenerInstance, FlEventContext context) {
@@ -240,8 +240,8 @@ FlBool8 flApplicationOnResize(FlUInt16 code, void* sender, void* listenerInstanc
             // Handle minimization
             if (width == 0 || height == 0) {
                 FL_LOG_INFO("Window minimized, suspending application.")
-                ApplicationState.IsSuspended = TRUE;
-                return TRUE;
+                ApplicationState.IsSuspended = true;
+                return true;
             } else {
                 if (ApplicationState.IsSuspended) {
                     FL_LOG_INFO("Window restored, resuming application.")
@@ -253,5 +253,5 @@ FlBool8 flApplicationOnResize(FlUInt16 code, void* sender, void* listenerInstanc
     }
 
     // Event purposely not handled to allow other listeners to get this.
-    return FALSE;
+    return false;
 }

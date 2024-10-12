@@ -43,7 +43,7 @@ FlBool8 flPhysicalDeviceCheckRequirements(
 
 FlBool8 flVulkanDeviceCreate(FlVulkanContext* context) {
     if (!flSelectPhysicalDevice(context)) {
-        return FALSE;
+        return false;
     }
 
     FL_LOG_DEBUG("Creating Vulkan logical device...")
@@ -129,7 +129,7 @@ FlBool8 flVulkanDeviceCreate(FlVulkanContext* context) {
     flDArrayDestroy(indices);
     flDArrayDestroy(queueCreateInfos);
 
-    return TRUE;
+    return true;
 }
 
 void flVulkanDeviceDestroy(FlVulkanContext* context) {
@@ -185,7 +185,7 @@ FlBool8 flSelectPhysicalDevice(FlVulkanContext* context) {
     VK_CHECK(vkEnumeratePhysicalDevices(context->Instance, &physicalDeviceCount, 0))
     if (physicalDeviceCount == 0) {
         FL_LOG_FATAL("No devices which support Vulkan were found.")
-        return FALSE;
+        return false;
     }
     
     VkPhysicalDevice* physicalDevices = flDArrayReserve(VkPhysicalDevice, physicalDeviceCount);
@@ -204,13 +204,13 @@ FlBool8 flSelectPhysicalDevice(FlVulkanContext* context) {
         // TODO: These requirements should be driven by engine
         // configuration.
         FlVulkanPhysicalDeviceRequirements requirements = {};
-        requirements.Graphics = TRUE;
-        requirements.Present = TRUE;
-        requirements.Transfer = TRUE;
+        requirements.Graphics = true;
+        requirements.Present = true;
+        requirements.Transfer = true;
         // NOTE: Enable if compute will be required.
-        // requirements.Compute = TRUE;
-        requirements.SamplerAnisotropy = TRUE;
-        requirements.DiscreteGPU = TRUE;
+        // requirements.Compute = true;
+        requirements.SamplerAnisotropy = true;
+        requirements.DiscreteGPU = true;
         requirements.DeviceExtensionNames = flDArrayCreate(const char*);
         flDArrayPush(requirements.DeviceExtensionNames, &VK_KHR_SWAPCHAIN_EXTENSION_NAME);
 
@@ -311,12 +311,12 @@ FlBool8 flSelectPhysicalDevice(FlVulkanContext* context) {
     // Ensure a device was selected.
     if (!context->Device.PhysicalDevice) {
         FL_LOG_ERROR("No physical devices which meet the requirements were found.")
-        return FALSE;
+        return false;
     }
 
 
     FL_LOG_INFO("Physical device selected successfully.")
-    return TRUE;
+    return true;
 }
 
 void flVulkanDeviceQuerySwapchainSupport(
@@ -382,14 +382,14 @@ FlBool8 flVulkanDeviceDetectDepthFormat(FlVulkanDevice* device) {
 
         if ((properties.linearTilingFeatures & flags) == flags) {
             device->DepthFormat = candidates[i];
-            return TRUE;
+            return true;
         } else if ((properties.optimalTilingFeatures & flags) == flags) {
             device->DepthFormat = candidates[i];
-            return TRUE;
+            return true;
         }
     }
 
-    return FALSE;
+    return false;
 }
 
 FlBool8 flPhysicalDeviceCheckRequirements(
@@ -411,7 +411,7 @@ FlBool8 flPhysicalDeviceCheckRequirements(
     if (requirements->DiscreteGPU) {
         if (properties->deviceType != VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
             FL_LOG_INFO("Device is not a discrete GPU, and one is required. Skipping.")
-            return TRUE;
+            return true;
         }
     }
 
@@ -486,7 +486,7 @@ FlBool8 flPhysicalDeviceCheckRequirements(
                 flFree(outSwapchainSupport->PresentModes, sizeof(VkPresentModeKHR) * outSwapchainSupport->PresentModeCount, FlMemoryTagRenderer);
             }
             FL_LOG_INFO("Required swapchain support not present, skipping device.")
-            return FALSE;
+            return false;
         }
 
         // Device extensions.
@@ -501,10 +501,10 @@ FlBool8 flPhysicalDeviceCheckRequirements(
 
                 FlUInt32 requiredExtensionCount = flDArrayLength(requirements->DeviceExtensionNames);
                 for (FlUInt32 i = 0; i < requiredExtensionCount; ++i) {
-                    FlBool8 found = FALSE;
+                    FlBool8 found = false;
                     for (FlUInt32 j = 0; j < availableExtensionCount; ++j) {
                         if (flStringsEqual(requirements->DeviceExtensionNames[i], availableExtensions[j].extensionName)) {
-                            found = TRUE;
+                            found = true;
                             break;
                         }
                     }
@@ -512,7 +512,7 @@ FlBool8 flPhysicalDeviceCheckRequirements(
                     if (!found) {
                         FL_LOG_INFO("Required extension not found: '%s', skipping device.", requirements->DeviceExtensionNames[i])
                         flFree(availableExtensions, sizeof(VkExtensionProperties) * availableExtensionCount, FlMemoryTagRenderer);
-                        return FALSE;
+                        return false;
                     }
                 }
             }
@@ -523,12 +523,12 @@ FlBool8 flPhysicalDeviceCheckRequirements(
         // Sampler anisotropy.
         if (requirements->SamplerAnisotropy && !features->samplerAnisotropy) {
             FL_LOG_INFO("Device does not support samplerAnisotropy, skipping.")
-            return FALSE;
+            return false;
         }
 
         // Device meets all requirements.
-        return TRUE;
+        return true;
     }
 
-    return FALSE;
+    return false;
 }

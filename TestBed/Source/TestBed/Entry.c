@@ -25,5 +25,5 @@ FlBool8 flCreateGame(FlGame* outGame) {
 
     outGame->State = flAllocate(sizeof(GameState), FlMemoryTagGame);
     
-    return TRUE;
+    return true;
 }

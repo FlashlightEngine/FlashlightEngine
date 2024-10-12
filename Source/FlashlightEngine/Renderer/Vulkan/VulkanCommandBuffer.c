@@ -88,8 +88,8 @@ void flVulkanCommandBufferAllocateAndBeginSingleUse(
     VkCommandPool pool,
     FlVulkanCommandBuffer* outCommandBuffer
 ) {
-    flVulkanCommandBufferAllocate(context, pool, TRUE, outCommandBuffer);
-    flVulkanCommandBufferBegin(outCommandBuffer, TRUE, FALSE, FALSE);
+    flVulkanCommandBufferAllocate(context, pool, true, outCommandBuffer);
+    flVulkanCommandBufferBegin(outCommandBuffer, true, false, false);
 }
 
 void flVulkanCommandBufferEndSingleUse(
