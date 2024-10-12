@@ -273,6 +273,14 @@ LRESULT CALLBACK flWin32ProcessMessage(const HWND hWnd, const FlUInt32 msg, cons
             const FlBool8 pressed = (msg == WM_KEYDOWN || msg == WM_SYSKEYDOWN);
             FlKeys key = (FlUInt16)wParam;
 
+            if (wParam == VK_MENU) {
+                if (GetKeyState(VK_RMENU) & 0x8000) {
+                    key = FlKeyRAlt;
+                } else if (GetKeyState(VK_LMENU) & 0x8000) {
+                    key = FlKeyLAlt;
+                }
+            }
+
             // Pass to the input subsystem for processing.
             flInputProcessKey(key, pressed);
 

@@ -530,7 +530,7 @@ FlKeys flTranslateKeycode(FlUInt32 xKeycode) {
         return FlKeyRControl;
     // case XK_Menu: return FlKeyLMenu;
     case XK_Menu:
-        return FlKeyRMenu;
+        return FlKeyRAlt;
     case XK_semicolon:
         return FlKeySemicolon;
     case XK_plus:

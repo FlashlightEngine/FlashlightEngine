@@ -138,8 +138,8 @@ typedef enum FlKeys {
     FL_DEFINE_KEY(RShift,   0xA1),
     FL_DEFINE_KEY(LControl, 0xA2),
     FL_DEFINE_KEY(RControl, 0xA3),
-    FL_DEFINE_KEY(LMenu,    0xA4),
-    FL_DEFINE_KEY(RMenu,    0xA5),
+    FL_DEFINE_KEY(LAlt,    0xA4),
+    FL_DEFINE_KEY(RAlt,    0xA5),
     
     FL_DEFINE_KEY(Semicolon, 0xBA),
     FL_DEFINE_KEY(Plus,      0xBB),
