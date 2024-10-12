@@ -1149,12 +1149,12 @@ FL_INLINE FlVec3 flMat4Down(FlMat4 matrix) {
  * @return A 3 component directional vector.
  */
 FL_INLINE FlVec3 flMat4Left(FlMat4 matrix) {
-    FlVec3 right;
-    right.X = -matrix.Data[0];
-    right.Y = -matrix.Data[4];
-    right.Z = -matrix.Data[8];
-    flVec3Normalize(&right);
-    return right;
+    FlVec3 left;
+    left.X = -matrix.Data[0];
+    left.Y = -matrix.Data[4];
+    left.Z = -matrix.Data[8];
+    flVec3Normalize(&left);
+    return left;
 }
 /**
  * @brief Returns a right vector relative to the provided matrix.
@@ -1164,12 +1164,12 @@ FL_INLINE FlVec3 flMat4Left(FlMat4 matrix) {
  * @return A 3 component directional vector.
  */
 FL_INLINE FlVec3 flMat4Right(FlMat4 matrix) {
-    FlVec3 left;
-    left.X = matrix.Data[0];
-    left.Y = matrix.Data[4];
-    left.Z = matrix.Data[8];
-    flVec3Normalize(&left);
-    return left;
+    FlVec3 right;
+    right.X = matrix.Data[0];
+    right.Y = matrix.Data[4];
+    right.Z = matrix.Data[8];
+    flVec3Normalize(&right);
+    return right;
 }
 
 // ---------- //
