@@ -4,31 +4,20 @@ Flashlight engine is a game engine made with C.
 It will be a 3D engine, with as little dependencies as possible, made from scratch and using Vulkan for rendering.
 
 ### Supported platforms
-Only Windows and Linux are supported for now. Mac support will probably be added in the future. Android and iOS support
+Only Windows and Linux are supported for now. Native (non-GLFW) Mac support will probably be added in the future. Android and iOS support
 will possibly be added to.
 
 ## Compiling & Running
 
 ### Dependencies:
-- clang (If you are on Windows, please download it directly from the [LLVM website](https://llvm.org/builds/))  
 - The [Vulkan SDK](https://vulkan.lunarg.com/)  
-
-### Linux packages:
-#### Arch
-- `libx11`
-- `libxkbcommon-x11`
-
-#### Debian
-- `libx11-dev`
-- `libxkbcommon-x11-dev`
+- [XMake](https://xmake.io/) (build system)
 
 ### Building:
-There is the `build-all` script in this repository to build the engine and the testbed project.
-If you want to build only one thing indivudually, you can use the `build` script inside of a
-project's folder.  
+Flashlight Engine uses XMake as the build system. It allows easier dependency and toolchain management, and way more.
 
 ### Running:
-The testbed executable should be in the `bin` folder after you built the project.  
+The testbed executable should be in the `bin/plat_arch_mode` folder after you built the project.  
 
 ## Roadmap:
 - Fully 3D engine with various lighting models and material types available (basic 3D lighting, PBR, etc.)  
