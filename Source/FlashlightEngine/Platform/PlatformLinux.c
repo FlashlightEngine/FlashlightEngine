@@ -29,7 +29,6 @@
 #include <string.h>
 
 // For surface creation.
-#define VK_USE_PLATFORM_XCB_KHR
 #include <vulkan/vulkan.h>
 #include "FlashlightEngine/Renderer/Vulkan/VulkanTypes.inl"
 
