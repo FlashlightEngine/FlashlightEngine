@@ -75,6 +75,12 @@ FlBool8 flVulkanRendererBackendInitialize(FlRendererBackend* backend, const char
     }
 #endif
 
+#ifdef FL_PLATFORM_MACOS
+    flDArrayPush(requiredExtensions, VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
+
+    instanceInfo.flags |= VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
+#endif
+
     instanceInfo.enabledExtensionCount = flDArrayLength(requiredExtensions);
     instanceInfo.ppEnabledExtensionNames = requiredExtensions;
 

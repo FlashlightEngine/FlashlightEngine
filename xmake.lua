@@ -39,7 +39,7 @@ if is_plat("linux") then
   add_requires("libx11")
   add_requires("libxkbcommon", {configs = {x11 = true}})
 elseif is_plat("macosx") then
-  add_requires("glfw")
+  add_requires("glfw", "moltenvk")
 end 
 
 -- Don't link system-installed libraries in CI
@@ -66,14 +66,10 @@ set_warnings("allextra")
 
 if is_mode("debug") then
   add_defines("FL_DEBUG")
-  
-  set_symbols("debug", "hidden")
 elseif is_mode("release") then
   set_fpmodels("fast")
   add_vectorexts("sse", "sse2", "sse3", "ssse3")
-end
-
-if not is_mode("release") then
+  set_symbols("debug", "hidden")
 end
 
 add_cxflags("-Wno-missing-field-initializers -Werror=vla", {tools = {"clang", "gcc"}})
@@ -141,7 +137,7 @@ target("FlashlightEngine")
   if is_plat("linux") then
     add_packages("libx11", "libxkbcommon")
   elseif is_plat("macosx") then
-    add_packages("glfw")
+    add_packages("glfw", "moltenvk")
   end
 
 includes("TestBed/xmake.lua")

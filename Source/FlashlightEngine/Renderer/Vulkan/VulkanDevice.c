@@ -92,13 +92,34 @@ FlBool8 flVulkanDeviceCreate(FlVulkanContext* context) {
     VkPhysicalDeviceFeatures deviceFeatures = {};
     deviceFeatures.samplerAnisotropy = VK_TRUE;
 
+    FlBool8 portabilityRequired = false;
+    FlUInt32 availableExtensionCount = 0;
+    VkExtensionProperties* availableExtensions = 0;
+    VK_CHECK(vkEnumerateDeviceExtensionProperties(context->Device.PhysicalDevice, 0, &availableExtensionCount, 0));
+    if (availableExtensionCount != 0) {
+        availableExtensions = flAllocate(sizeof(VkExtensionProperties) * availableExtensionCount, FlMemoryTagRenderer);
+        VK_CHECK(vkEnumerateDeviceExtensionProperties(context->Device.PhysicalDevice, 0, &availableExtensionCount, availableExtensions));
+        for (FlUInt32 i = 0; i < availableExtensionCount; ++i) {
+            if (flStringsEqual(availableExtensions[i].extensionName, "VK_KHR_portability_subset")) {
+                FL_LOG_INFO("Adding required extension 'VK_KHR_portability_subset'.")
+                portabilityRequired = true;
+                break;
+            }
+        }
+    }
+    flFree(availableExtensions, sizeof(VkExtensionProperties) * availableExtensionCount, FlMemoryTagRenderer);
+
+    FlUInt32 extensionCount = portabilityRequired ? 2 : 1;
+    const char** extensionNames = portabilityRequired
+        ? (const char*[2]) { VK_KHR_SWAPCHAIN_EXTENSION_NAME, "VK_KHR_portability_subset" }
+        : (const char*[1]) { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
+
     VkDeviceCreateInfo deviceCreateInfo = {VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO};
     deviceCreateInfo.queueCreateInfoCount = indexCount;
     deviceCreateInfo.pQueueCreateInfos = queueCreateInfos;
     deviceCreateInfo.pEnabledFeatures = &deviceFeatures;
-    deviceCreateInfo.enabledExtensionCount = 1;
-    const char* extensionNames = VK_KHR_SWAPCHAIN_EXTENSION_NAME;
-    deviceCreateInfo.ppEnabledExtensionNames = &extensionNames;
+    deviceCreateInfo.enabledExtensionCount = extensionCount;
+    deviceCreateInfo.ppEnabledExtensionNames = extensionNames;
 
     // Deprecated and ignored, so pass nothing.
     deviceCreateInfo.enabledLayerCount = 0;
@@ -210,7 +231,11 @@ FlBool8 flSelectPhysicalDevice(FlVulkanContext* context) {
         // NOTE: Enable if compute will be required.
         // requirements.Compute = true;
         requirements.SamplerAnisotropy = true;
+#ifdef FL_PLATFORM_MACOS
+        requirements.DiscreteGPU = false;
+#else
         requirements.DiscreteGPU = true;
+#endif
         requirements.DeviceExtensionNames = flDArrayCreate(const char*);
         flDArrayPush(requirements.DeviceExtensionNames, &VK_KHR_SWAPCHAIN_EXTENSION_NAME);
 

@@ -4,7 +4,7 @@ Flashlight engine is a game engine made with C.
 It will be a 3D engine, with as little dependencies as possible, made from scratch and using Vulkan for rendering.
 
 ### Supported platforms
-Only Windows and Linux are supported for now. Native (non-GLFW) Mac support will probably be added in the future. Android and iOS support
+Only Windows and Linux are supported for now. Native Mac support will probably be added in the future. Android and iOS support
 will possibly be added to.
 
 ## Compiling & Running

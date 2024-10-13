@@ -12,7 +12,11 @@
 
 #include "FlashlightEngine/Core/Asserts.h"
 
-#include <vulkan/vulkan.h>
+#ifdef FL_PLATFORM_MACOS
+    #include <MoltenVK/mvk_vulkan.h>
+#else
+    #include <vulkan/vulkan.h>
+#endif
 
 // Check the given expression's result return value against VK_SUCCESS.
 #define VK_CHECK(expr)                                   \
