@@ -5,6 +5,8 @@ set_license("Apache-2.0")
 
 includes("xmake/**.lua")
 
+add_repositories("FlashlightEngine https://github.com/Pixfri/FlashlightEngine")
+
 option("static", {description = "Build the engine as a static library.", default = false})
 option("override_runtime", {description = "Override VS runtime to MD in release and MDd in debug.", default = true})
 option("enable_asserts", {description = "Enable assertions.", default = true})
@@ -39,7 +41,7 @@ if is_plat("linux") then
   add_requires("libx11")
   add_requires("libxkbcommon", {configs = {x11 = true}})
 elseif is_plat("macosx") then
-  add_requires("glfw", "moltenvk")
+  add_requires("glfw", "moltenvk v1.2.11")
 end 
 
 -- Don't link system-installed libraries in CI
@@ -137,7 +139,7 @@ target("FlashlightEngine")
   if is_plat("linux") then
     add_packages("libx11", "libxkbcommon")
   elseif is_plat("macosx") then
-    add_packages("glfw", "moltenvk")
+    add_packages("glfw", "moltenvk v1.2.11")
   end
 
 includes("TestBed/xmake.lua")
